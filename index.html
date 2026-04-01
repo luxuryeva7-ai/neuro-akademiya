@@ -2110,78 +2110,87 @@ function PipelineMech({
 }
 
 // ═══ MODULES DATA ════════════════════════════════
-// ═══ MISSION MECH — REDESIGNED ═══════════════════
+// ═══ MISSION MECH — PATTERN GAME ═══════════════════
 
 const PATTERNS = [
   {
-    seq: ['🔴','🔵','🔴','🔵'],
+    label: '🟢 Разминка',
+    skill: 'ChatGPT предсказывает следующее слово точно так же',
+    seq: ['🍎','🍊','🍎','🍊'],
+    ans: '🍎',
+    opts: ['🍎','🍋','🍇','🍊'],
+    hint: 'Найди закономерность как нейросеть',
+    fact: 'ChatGPT читал весь интернет — и теперь угадывает следующее слово по паттернам. Ты только что сделал то же самое!'
+  },
+  {
+    label: '🟢 Три цвета',
+    skill: 'Распознавание цикличных паттернов — основа ИИ',
+    seq: ['🔴','🔵','🟡','🔴'],
+    ans: '🔵',
+    opts: ['🔴','🔵','🟡','🟢'],
+    hint: 'Найди цикл из трёх элементов',
+    fact: 'Именно так Siri находит паттерны в твоём голосе — и понимает когда ты задаёшь вопрос!'
+  },
+  {
+    label: '🟡 Луна растёт',
+    skill: 'Прогноз временных рядов — ИИ предсказывает будущее',
+    seq: ['🌑','🌒','🌓','🌔'],
+    ans: '🌕',
+    opts: ['🌕','🌑','🌛','🌙'],
+    hint: 'Каждый шаг прибавляет — что дальше?',
+    fact: 'ИИ предсказывает погоду точно так же — смотрит на цепочку данных за часы и находит куда движется!'
+  },
+  {
+    label: '🟡 Времена года',
+    skill: 'Цикличные паттерны — ИИ видит повторы в данных',
+    seq: ['🌸','☀️','🍂','❄️'],
+    ans: '🌸',
+    opts: ['🌸','🌺','🌻','☁️'],
+    hint: 'Цикл из 4 элементов — снова с начала',
+    fact: 'ИИ Яндекс.Погоды нашёл такие циклы за 50 лет наблюдений. Теперь точность прогноза — 95% на 3 дня вперёд!'
+  },
+  {
+    label: '🟡 Жизнь курочки',
+    skill: 'Биологические циклы — ИИ находит их в ДНК',
+    seq: ['🥚','🐣','🐥','🐔'],
+    ans: '🥚',
+    opts: ['🥚','🐣','🦅','🐓'],
+    hint: 'Конец цикла — возвращаемся в начало',
+    fact: 'ИИ AlphaFold нашёл такие паттерны в белках — это помогло создать лекарства от болезней быстрее в 100 раз!'
+  },
+  {
+    label: '🟡 Светофор',
+    skill: 'Паттерны в правилах — ИИ автоматизирует системы',
+    seq: ['🔴','🟡','🟢','🟡'],
     ans: '🔴',
-    opts: ['🔴','🟢','🟡','🔵'],
-    fact: 'ChatGPT предсказывает каждое следующее слово, найдя паттерны в миллиардах текстов — как ты сейчас!'
+    opts: ['🔴','🟢','🟡','⚫'],
+    hint: 'Не просто чередование — найди точный порядок!',
+    fact: 'Умные светофоры в Москве: ИИ смотрит на пробки в реальном времени и сам меняет время каждого сигнала!'
   },
   {
-    seq: ['🌱','🌿','🌳','🌿'],
-    ans: '🌱',
-    opts: ['🌳','🌱','🍃','🌵'],
-    fact: 'ИИ видит такие циклы в данных погоды, биржах и ритме сердца. Паттерны — везде!'
+    label: '🔴 Взрослеем',
+    skill: 'Прогрессия данных — ИИ предсказывает изменения',
+    seq: ['👶','🧒','👦','👨'],
+    ans: '👴',
+    opts: ['👴','👶','🧒','🧑'],
+    hint: 'Каждый шаг — следующий этап жизни',
+    fact: 'ИИ умеет предсказывать как ты будешь выглядеть через 30 лет — он нашёл такие паттерны в тысячах фотографий!'
   },
   {
-    seq: ['😀','😀','😢','😀'],
-    ans: '😢',
-    opts: ['😀','😢','😡','😎'],
-    fact: 'Так работает сентимент-анализ — ИИ читает эмоции в отзывах и постах. Instagram использует это каждый день!'
-  },
-  {
-    seq: ['⬆️','➡️','⬇️','⬅️'],
-    ans: '⬆️',
-    opts: ['⬆️','↗️','⬇️','↙️'],
-    fact: 'Роботы-пылесосы используют паттерны движения чтобы покрыть всю комнату и не пропустить ни сантиметра!'
-  },
-  {
-    seq: ['🌙','☀️','🌙','☀️'],
-    ans: '🌙',
-    opts: ['🌙','⭐','☁️','☀️'],
-    fact: 'Алиса и Siri анализируют паттерны в ТВОИХ вопросах чтобы со временем понимать тебя лучше!'
+    label: '🔴 Космос',
+    skill: 'Сложные последовательности — высший уровень ИИ',
+    seq: ['🌍','🚀','💫','⭐'],
+    ans: '🌌',
+    opts: ['🌌','🪐','☄️','💫'],
+    hint: 'Путешествие от Земли в глубокий космос...',
+    fact: 'NASA использует ИИ чтобы находить планеты — ИИ видит паттерны в свете звёзд которые человек пропустил бы!'
   }
 ];
 
-const SCENARIOS = [
-  {
-    icon: '🎵',
-    title: 'Spotify сам подбирает тебе новую музыку которая тебе понравится',
-    isAI: true,
-    fact: 'Spotify анализирует 30 секунд каждой прослушанной песни и сравнивает с 400 миллионами других слушателей!'
-  },
-  {
-    icon: '🚗',
-    title: 'Автомобиль Tesla тормозит сам когда видит пешехода на дороге',
-    isAI: true,
-    fact: 'Tesla проехала более 5 миллиардов км на автопилоте — это 13 000 раз до Луны и обратно!'
-  },
-  {
-    icon: '🔦',
-    title: 'Фонарик включается когда нажимаешь кнопку',
-    isAI: false,
-    fact: 'Простые правила "если кнопка нажата — включить свет" — это НЕ ИИ. ИИ учится сам без прописанных правил!'
-  },
-  {
-    icon: '📱',
-    title: 'Телефон разблокируется увидев твоё лицо',
-    isAI: true,
-    fact: 'Face ID строит 3D-карту из 30 000 точек на лице и обновляет её каждый день пока ты взрослеешь!'
-  },
-  {
-    icon: '🌡️',
-    title: 'Обычный термометр измеряет температуру тела',
-    isAI: false,
-    fact: 'Термометр — это физика, не ИИ. Для ИИ нужны данные и обучение. Умный термометр с прогнозом болезни — уже ИИ!'
-  }
-];
-
-const FACTS_LEARNED = [
-  '🧠 ИИ учится находя паттерны — как ты в первой игре',
-  '🤖 ИИ уже везде: Spotify, Tesla, Face ID',
-  '💡 Не всё "умное" — ИИ. Нужно уметь отличать!'
+const MISSION_FACTS = [
+  '🧠 ИИ учится находя паттерны — точно как ты сейчас',
+  '🌍 ИИ уже предсказывает погоду, пробки и болезни',
+  '🚀 NASA, Яндекс, Spotify — везде внутри ИИ'
 ];
 
 function PatternStage({ onDone }) {
@@ -2190,9 +2199,9 @@ function PatternStage({ onDone }) {
   const [score, setScore] = React.useState(0);
   const [showFact, setShowFact] = React.useState(false);
 
-  const p = PATTERNS[round];
+  var p = PATTERNS[round];
 
-  const choose = function(opt) {
+  var choose = function(opt) {
     if (selected !== null) return;
     var correct = opt === p.ans;
     var newScore = score + (correct ? 1 : 0);
@@ -2209,201 +2218,127 @@ function PatternStage({ onDone }) {
       } else {
         onDone(newScore);
       }
-    }, 2300);
+    }, 2600);
   };
 
+  var progressColor = round < 3 ? C.green : round < 6 ? C.gold : C.red;
+
   return React.createElement('div', null,
-    React.createElement('div', { style: { textAlign: 'center', marginBottom: 14 } },
+    // Header
+    React.createElement('div', { style: { textAlign: 'center', marginBottom: 12 } },
       React.createElement('div', { style: {
         fontSize: 11, color: C.neon, letterSpacing: 1.5,
-        fontFamily: "'Orbitron'", fontWeight: 800
-      } }, 'ИГРА 1 — НАЙДИ ПАТТЕРН'),
-      React.createElement('div', { style: { fontSize: 12, color: C.textDim, marginTop: 5 } },
-        'Что идёт следующим? • ' + (round + 1) + '/' + PATTERNS.length)
+        fontFamily: "'Orbitron'", fontWeight: 800, marginBottom: 4
+      } }, 'НАЙДИ ПАТТЕРН'),
+      React.createElement('div', { style: {
+        display: 'inline-block',
+        background: progressColor + '20',
+        border: '1px solid ' + progressColor + '50',
+        borderRadius: 20, padding: '3px 12px',
+        fontSize: 12, color: progressColor, fontWeight: 700
+      } }, p.label + '  ' + (round + 1) + ' / ' + PATTERNS.length),
+      React.createElement('div', { style: {
+        fontSize: 11, color: C.textDim, marginTop: 8,
+        background: C.bgMid, borderRadius: 10, padding: '5px 12px',
+        display: 'inline-block'
+      } }, '🤖 ' + p.skill)
     ),
-    React.createElement('div', { style: { display: 'flex', gap: 5, justifyContent: 'center', marginBottom: 16 } },
+    // Progress bar
+    React.createElement('div', { style: {
+      display: 'flex', gap: 4, marginBottom: 18
+    } },
       PATTERNS.map(function(_, i) {
         return React.createElement('div', { key: i, style: {
-          width: 10, height: 10, borderRadius: '50%',
-          background: i < round ? C.neon : i === round ? C.neon : C.cardBorder,
-          opacity: i < round ? 0.4 : 1, transition: 'all 0.3s'
+          flex: 1, height: 5, borderRadius: 3,
+          background: i < round ? C.neon : i === round ? C.neon + 'aa' : C.cardBorder,
+          transition: 'all 0.4s'
         } });
       })
     ),
+    // Sequence card
     React.createElement('div', { style: {
       background: C.card, border: '1px solid ' + C.cardBorder,
-      borderRadius: 20, padding: '22px 16px', marginBottom: 16, textAlign: 'center'
+      borderRadius: 22, padding: '20px 14px', marginBottom: 14, textAlign: 'center'
     } },
       React.createElement('div', { style: {
-        fontSize: 10, color: C.textDim, letterSpacing: 1.5, marginBottom: 14
+        fontSize: 10, color: C.textDim, letterSpacing: 1.5, marginBottom: 4
       } }, 'ПОСЛЕДОВАТЕЛЬНОСТЬ'),
       React.createElement('div', { style: {
-        display: 'flex', gap: 6, justifyContent: 'center', alignItems: 'center'
+        fontSize: 11, color: C.gold, marginBottom: 14, fontStyle: 'italic'
+      } }, p.hint),
+      React.createElement('div', { style: {
+        display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', flexWrap: 'nowrap'
       } },
         p.seq.map(function(s, i) {
-          return React.createElement('div', { key: i, style: { fontSize: 34 } }, s);
+          return React.createElement('div', { key: i, style: {
+            fontSize: 32, background: C.bgMid, borderRadius: 12,
+            width: 48, height: 48, display: 'flex',
+            alignItems: 'center', justifyContent: 'center'
+          } }, s);
         }),
-        React.createElement('div', { style: { fontSize: 20, color: C.textDim, margin: '0 2px' } }, '→'),
         React.createElement('div', { style: {
-          width: 52, height: 52, borderRadius: 14, fontSize: 30,
+          fontSize: 18, color: C.textDim, margin: '0 2px'
+        } }, '→'),
+        React.createElement('div', { style: {
+          width: 48, height: 48, borderRadius: 12, fontSize: 28,
           background: selected
             ? (selected === p.ans ? C.green + '25' : C.red + '20')
-            : C.bgMid,
+            : 'transparent',
           border: '2px dashed ' + (selected
             ? (selected === p.ans ? C.green : C.red)
-            : C.cardBorder),
+            : C.neon + '60'),
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.2s'
-        } }, selected || '?')
+          transition: 'all 0.25s', fontWeight: 700
+        } }, selected
+          ? React.createElement('span', null, selected)
+          : React.createElement('span', { style: { color: C.neon, fontSize: 20 } }, '?')
+        )
       )
     ),
+    // Options 2x2 grid
     React.createElement('div', { style: {
       display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14
     } },
       p.opts.map(function(opt, i) {
         var isSelected = selected === opt;
         var isCorrect = opt === p.ans;
+        var showCorrect = isCorrect && selected !== null && !isSelected;
         return React.createElement('button', {
           key: i,
           onClick: function() { choose(opt); },
           disabled: selected !== null,
           style: {
-            padding: '18px 8px', borderRadius: 16, fontSize: 34, cursor: selected ? 'default' : 'pointer',
+            padding: '20px 8px', borderRadius: 18, fontSize: 36,
+            cursor: selected ? 'default' : 'pointer',
             border: '2px solid',
             borderColor: isSelected
               ? (isCorrect ? C.green : C.red)
-              : (isCorrect && selected !== null ? C.green : C.cardBorder),
+              : showCorrect ? C.green + '80' : C.cardBorder,
             background: isSelected
               ? (isCorrect ? C.green + '22' : C.red + '18')
-              : (isCorrect && selected !== null ? C.green + '10' : C.card),
+              : showCorrect ? C.green + '10' : C.card,
             transition: 'all 0.2s',
-            transform: isSelected ? 'scale(1.06)' : 'scale(1)'
+            transform: isSelected ? 'scale(1.08)' : 'scale(1)',
+            boxShadow: isSelected && isCorrect ? '0 0 16px ' + C.green + '40' : 'none'
           }
         }, opt);
       })
     ),
+    // Fact popup
     showFact && React.createElement('div', { style: {
       background: (selected === p.ans ? C.green : C.red) + '12',
       border: '1px solid ' + (selected === p.ans ? C.green : C.red) + '45',
-      borderRadius: 14, padding: '12px 16px',
+      borderRadius: 16, padding: '14px 16px',
       animation: 'fadeIn 0.3s ease-out'
     } },
       React.createElement('div', { style: {
-        fontSize: 13, fontWeight: 800,
+        fontSize: 14, fontWeight: 800,
         color: selected === p.ans ? C.green : C.red,
         marginBottom: 6
-      } }, selected === p.ans ? '🎯 Правильно!' : '❌ Не то, но запомни:'),
-      React.createElement('div', { style: { fontSize: 13, color: C.text, lineHeight: 1.65 } },
-        '💡 ' + p.fact)
-    )
-  );
-}
-
-function ScenarioStage({ onDone }) {
-  const [round, setRound] = React.useState(0);
-  const [selected, setSelected] = React.useState(null);
-  const [score, setScore] = React.useState(0);
-  const [showFact, setShowFact] = React.useState(false);
-
-  var s = SCENARIOS[round];
-
-  var choose = function(isAI) {
-    if (selected !== null) return;
-    var correct = isAI === s.isAI;
-    var newScore = score + (correct ? 1 : 0);
-    setSelected(isAI);
-    setScore(newScore);
-    setShowFact(true);
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback)
-      window.Telegram.WebApp.HapticFeedback.impactOccurred(correct ? 'medium' : 'heavy');
-    setTimeout(function() {
-      setShowFact(false);
-      setSelected(null);
-      if (round + 1 < SCENARIOS.length) {
-        setRound(function(r) { return r + 1; });
-      } else {
-        onDone(newScore);
-      }
-    }, 2500);
-  };
-
-  return React.createElement('div', null,
-    React.createElement('div', { style: { textAlign: 'center', marginBottom: 14 } },
+      } }, selected === p.ans ? '🎯 Правильно!' : '❌ Не то! Правильный: ' + p.ans),
       React.createElement('div', { style: {
-        fontSize: 11, color: C.purple, letterSpacing: 1.5,
-        fontFamily: "'Orbitron'", fontWeight: 800
-      } }, 'ИГРА 2 — ЭТО ИИ?'),
-      React.createElement('div', { style: { fontSize: 12, color: C.textDim, marginTop: 5 } },
-        'Где здесь настоящий ИИ? • ' + (round + 1) + '/' + SCENARIOS.length)
-    ),
-    React.createElement('div', { style: { display: 'flex', gap: 5, justifyContent: 'center', marginBottom: 16 } },
-      SCENARIOS.map(function(_, i) {
-        return React.createElement('div', { key: i, style: {
-          width: 10, height: 10, borderRadius: '50%',
-          background: i < round ? C.purple : i === round ? C.purple : C.cardBorder,
-          opacity: i < round ? 0.4 : 1, transition: 'all 0.3s'
-        } });
-      })
-    ),
-    React.createElement('div', { style: {
-      background: selected !== null
-        ? (selected === s.isAI ? C.green + '14' : C.red + '12')
-        : C.card,
-      border: '2px solid ' + (selected !== null
-        ? (selected === s.isAI ? C.green : C.red)
-        : C.cardBorder),
-      borderRadius: 22, padding: '26px 20px',
-      textAlign: 'center', marginBottom: 16, transition: 'all 0.3s'
-    } },
-      React.createElement('div', { style: { fontSize: 64, marginBottom: 12 } }, s.icon),
-      React.createElement('div', { style: {
-        fontSize: 16, fontWeight: 700, color: C.text, lineHeight: 1.55
-      } }, s.title),
-      selected !== null && React.createElement('div', { style: {
-        fontSize: 30, marginTop: 10, animation: 'pop 0.3s ease-out'
-      } }, selected === s.isAI ? '✅' : '❌')
-    ),
-    React.createElement('div', { style: { display: 'flex', gap: 12, marginBottom: 14 } },
-      React.createElement('button', {
-        onClick: function() { choose(false); },
-        disabled: selected !== null,
-        style: {
-          flex: 1, padding: '16px 8px', borderRadius: 18, fontSize: 13, fontWeight: 800,
-          background: 'rgba(255,68,100,0.1)', border: '2px solid ' + C.red,
-          color: C.red, cursor: selected ? 'default' : 'pointer',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-          opacity: selected !== null ? 0.5 : 1, transition: 'opacity 0.2s'
-        }
-      },
-        React.createElement('span', { style: { fontSize: 26 } }, '❌'),
-        'НЕ ИИ'
-      ),
-      React.createElement('button', {
-        onClick: function() { choose(true); },
-        disabled: selected !== null,
-        style: {
-          flex: 1, padding: '16px 8px', borderRadius: 18, fontSize: 13, fontWeight: 800,
-          background: 'rgba(6,214,160,0.1)', border: '2px solid ' + C.green,
-          color: C.green, cursor: selected ? 'default' : 'pointer',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-          opacity: selected !== null ? 0.5 : 1, transition: 'opacity 0.2s'
-        }
-      },
-        React.createElement('span', { style: { fontSize: 26 } }, '🤖'),
-        'ЭТО ИИ!'
-      )
-    ),
-    showFact && React.createElement('div', { style: {
-      background: (selected === s.isAI ? C.green : C.red) + '12',
-      border: '1px solid ' + (selected === s.isAI ? C.green : C.red) + '45',
-      borderRadius: 14, padding: '12px 16px', animation: 'fadeIn 0.3s ease-out'
-    } },
-      React.createElement('div', { style: {
-        fontSize: 13, fontWeight: 800,
-        color: selected === s.isAI ? C.green : C.red, marginBottom: 6
-      } }, selected === s.isAI ? '🎯 Правильно!' : '❌ Не то, но запомни:'),
-      React.createElement('div', { style: { fontSize: 13, color: C.text, lineHeight: 1.65 } },
-        '💡 ' + s.fact)
+        fontSize: 13, color: C.text, lineHeight: 1.7
+      } }, '💡 ' + p.fact)
     )
   );
 }
@@ -2412,59 +2347,67 @@ function MissionMech({
   room,
   onDone
 }) {
-  const [stage, setStage] = React.useState(0); // 0=patterns, 1=scenarios, 2=results
-  const [scores, setScores] = React.useState([]);
+  const [stage, setStage] = React.useState(0); // 0=game, 1=results
+  const [finalScore, setFinalScore] = React.useState(0);
 
-  var nextStage = function(score) {
-    var newScores = scores.concat([score]);
-    setScores(newScores);
-    if (stage === 0) {
-      setStage(1);
-    } else {
-      setStage(2);
-      setTimeout(function() { onDone(10); }, 5000);
-    }
+  var handleDone = function(score) {
+    setFinalScore(score);
+    setStage(1);
+    setTimeout(function() { onDone(10); }, 6000);
   };
 
-  if (stage === 2) {
-    var total = scores.reduce(function(a, b) { return a + b; }, 0);
-    var maxScore = PATTERNS.length + SCENARIOS.length;
+  if (stage === 1) {
+    var pct = Math.round(finalScore / PATTERNS.length * 100);
+    var medal = finalScore >= 7 ? '🥇' : finalScore >= 5 ? '🥈' : '🥉';
+    var msg = finalScore >= 7 ? 'Ты настоящий ИИ-детектив!' : finalScore >= 5 ? 'Отличный результат!' : 'Хорошее начало!';
     return React.createElement('div', { style: { textAlign: 'center', animation: 'fadeIn 0.5s ease-out' } },
-      React.createElement('div', { style: { fontSize: 76, marginBottom: 6, animation: 'rocketFloat 2s ease-in-out infinite' } }, '🎓'),
-      React.createElement('div', { style: { fontSize: 22, fontWeight: 900, color: C.gold, marginBottom: 6, fontFamily: "'Orbitron'" } }, 'МИССИЯ ВЫПОЛНЕНА!'),
       React.createElement('div', { style: {
-        display: 'inline-block', background: C.gold + '20',
-        border: '1px solid ' + C.gold + '50', borderRadius: 20,
-        padding: '6px 18px', fontSize: 15, color: C.gold, fontWeight: 800, marginBottom: 22
-      } }, total + ' / ' + maxScore + ' правильных'),
+        fontSize: 80, marginBottom: 6,
+        animation: 'rocketFloat 2s ease-in-out infinite'
+      } }, medal),
+      React.createElement('div', { style: {
+        fontSize: 21, fontWeight: 900, color: C.gold,
+        marginBottom: 4, fontFamily: "'Orbitron'"
+      } }, 'МИССИЯ ВЫПОЛНЕНА!'),
+      React.createElement('div', { style: {
+        fontSize: 14, color: C.textDim, marginBottom: 6
+      } }, msg),
+      React.createElement('div', { style: {
+        display: 'inline-flex', alignItems: 'center', gap: 10,
+        background: C.gold + '18', border: '1px solid ' + C.gold + '40',
+        borderRadius: 24, padding: '8px 20px', marginBottom: 22
+      } },
+        React.createElement('span', { style: { fontSize: 22, fontWeight: 900, color: C.gold } },
+          finalScore + ' / ' + PATTERNS.length),
+        React.createElement('div', { style: {
+          width: 100, height: 8, borderRadius: 4, background: C.bgMid, overflow: 'hidden'
+        } },
+          React.createElement('div', { style: {
+            height: '100%', borderRadius: 4,
+            width: pct + '%',
+            background: 'linear-gradient(90deg,' + C.neon + ',' + C.gold + ')',
+            transition: 'width 1.5s ease'
+          } })
+        )
+      ),
       React.createElement('div', { style: {
         fontSize: 11, color: C.neon, fontFamily: "'Orbitron'",
         letterSpacing: 1.5, marginBottom: 12
-      } }, 'ТЫ УЗНАЛ:'),
-      FACTS_LEARNED.map(function(fact, i) {
+      } }, '🧠 ТЫ УЗНАЛ:'),
+      MISSION_FACTS.map(function(fact, i) {
         return React.createElement('div', { key: i, style: {
-          background: C.card, border: '1px solid ' + C.neon + '25',
-          borderRadius: 12, padding: '11px 14px', marginBottom: 8,
-          fontSize: 13, color: C.text, textAlign: 'left', lineHeight: 1.6
+          background: C.card,
+          border: '1px solid ' + C.neon + '22',
+          borderRadius: 14, padding: '12px 16px', marginBottom: 8,
+          fontSize: 13, color: C.text, textAlign: 'left', lineHeight: 1.65
         } }, fact);
       }),
-      React.createElement('div', { style: { fontSize: 32, marginTop: 16 } }, '⭐⭐⭐')
+      React.createElement('div', { style: { fontSize: 34, marginTop: 14, letterSpacing: 4 } }, '⭐⭐⭐')
     );
   }
 
   return React.createElement('div', { style: { animation: 'cardIn 0.3s ease-out' } },
-    React.createElement('div', { style: { display: 'flex', gap: 6, marginBottom: 20 } },
-      [0, 1].map(function(i) {
-        return React.createElement('div', { key: i, style: {
-          flex: 1, height: 4, borderRadius: 4,
-          background: i < stage ? C.gold : i === stage ? C.neon : C.cardBorder,
-          transition: 'background 0.3s'
-        } });
-      })
-    ),
-    stage === 0
-      ? React.createElement(PatternStage, { key: 'p', onDone: nextStage })
-      : React.createElement(ScenarioStage, { key: 's', onDone: nextStage })
+    React.createElement(PatternStage, { onDone: handleDone })
   );
 }
 
@@ -2598,7 +2541,7 @@ const MODULES = [{
   rooms: [{
     name: "Запусти свой ИИ",
     type: "mission",
-    desc: "2 игры: найди паттерн + угадай ИИ. С фактами после каждого ответа!"
+    desc: "8 паттернов с нарастающей сложностью. Угадай — узнай факт про ИИ!"
   }]
 }, {
   id: "nav",
