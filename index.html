@@ -1,0 +1,3455 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>Нейро Академия</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#080C18;font-family:'Nunito',sans-serif;overflow-x:hidden;padding-top:var(--tg-safe-area-inset-top,0px)}
+    .safe-bottom{padding-bottom:max(var(--tg-safe-area-inset-bottom,0px),20px)}
+    button{font-family:inherit;-webkit-tap-highlight-color:transparent;cursor:pointer;border:none;outline:none}
+    ::-webkit-scrollbar{width:0}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-20px) translateX(-50%)}to{opacity:1;transform:translateY(0) translateX(-50%)}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+    @keyframes rocketFloat{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-12px) rotate(1.5deg)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+    @keyframes cardIn{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    @keyframes twinkle{0%,100%{opacity:.15;transform:scale(1)}50%{opacity:.9;transform:scale(1.5)}}
+    @keyframes borderPulse{0%,100%{border-color:rgba(196,77,255,.3)}50%{border-color:rgba(196,77,255,.75)}}
+    @keyframes orbitSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .anim-pop{animation:pop .35s ease-out}
+    .anim-shake{animation:shake .4s ease-in-out}
+    .anim-fadeIn{animation:fadeIn .4s ease-out}
+    .anim-card{animation:cardIn .35s ease-out}
+  </style>
+</head>
+<body>
+<div id="loading" style="position:fixed;inset:0;background:#080C18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999"><div style="width:56px;height:56px;border:4px solid #1A2D48;border-top:4px solid #00E5FF;border-radius:50%;animation:sp 1s linear infinite"></div><div style="color:#4ECDC4;margin-top:16px;font-size:12px;letter-spacing:2px;font-family:sans-serif">НЕЙРО АКАДЕМИЯ</div><style>@keyframes sp{to{transform:rotate(360deg)}}</style></div>
+<div id="root"></div>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script>
+const {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef
+} = React;
+
+// ═══ TELEGRAM ═══════════════════════════════════
+const TG = window.Telegram?.WebApp || {};
+const tgUser = TG.initDataUnsafe?.user || {};
+const tgUserId = tgUser.id || 0;
+const tgFirstName = tgUser.first_name || "Пилот";
+if (TG.ready) TG.ready();
+if (TG.expand) TG.expand();
+if (TG.setHeaderColor) TG.setHeaderColor('#080C18');
+if (TG.setBackgroundColor) TG.setBackgroundColor('#080C18');
+const generateUnlockCode = uid => {
+  const n = Math.abs(uid * 31337 + 99991 ^ 0xDEAD) % 900000 + 100000;
+  return String(n);
+};
+const UNLOCK_CODE = tgUserId ? generateUnlockCode(tgUserId) : null;
+
+// ═══ PALETTE ════════════════════════════════════
+const C = {
+  bg: "#080C18",
+  bgMid: "#0D1427",
+  card: "#101C32",
+  cardBorder: "#1A2D48",
+  neon: "#00E5FF",
+  neonDim: "#009EBF",
+  neonGlow: "rgba(0,229,255,0.2)",
+  purple: "#C44DFF",
+  purpleGlow: "rgba(196,77,255,0.2)",
+  pink: "#FF4492",
+  pinkGlow: "rgba(255,68,146,0.15)",
+  gold: "#FFD60A",
+  goldGlow: "rgba(255,214,10,0.2)",
+  green: "#06D6A0",
+  greenGlow: "rgba(6,214,160,0.2)",
+  orange: "#FF8E53",
+  orangeGlow: "rgba(255,142,83,0.2)",
+  red: "#FF6B6B",
+  white: "#F0F4FF",
+  text: "#C4D4EE",
+  textDim: "#738AAA",
+  textMuted: "#364A66",
+  neuro: "#4ECDC4",
+  neuroGlow: "rgba(78,205,196,0.25)"
+};
+const MOD_COLORS = {
+  core: C.neon,
+  engine: C.orange,
+  nav: C.green,
+  comms: C.gold,
+  shield: C.purple
+};
+
+// ═══ STARS ══════════════════════════════════════
+function Stars({
+  count = 55
+}) {
+  const stars = useMemo(() => [...Array(count)].map((_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 2.5 + 0.4,
+    delay: Math.random() * 6,
+    dur: Math.random() * 3 + 2
+  })), [count]);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      pointerEvents: "none",
+      overflow: "hidden",
+      zIndex: 0
+    }
+  }, stars.map(s => /*#__PURE__*/React.createElement("div", {
+    key: s.id,
+    style: {
+      position: "absolute",
+      left: `${s.x}%`,
+      top: `${s.y}%`,
+      width: s.size,
+      height: s.size,
+      borderRadius: "50%",
+      background: "white",
+      animation: `twinkle ${s.dur}s ease-in-out infinite`,
+      animationDelay: `${s.delay}s`
+    }
+  })));
+}
+
+// ═══ SPACESHIP ══════════════════════════════════
+function Spaceship({
+  modules = [],
+  size = 160,
+  floating = true
+}) {
+  const has = id => modules.includes(id);
+  const w = Math.round(size * 0.62);
+  const h = size;
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 90 180",
+    width: w,
+    height: h,
+    style: {
+      display: "block",
+      margin: "0 auto",
+      overflow: "visible",
+      filter: `drop-shadow(0 0 ${size * 0.06}px rgba(0,229,255,0.5))`,
+      animation: floating ? "rocketFloat 4s ease-in-out infinite" : "none"
+    }
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("radialGradient", {
+    id: "noseG",
+    cx: "38%",
+    cy: "28%"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0%",
+    stopColor: "#9BB8D0"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "100%",
+    stopColor: "#3A5070"
+  })), /*#__PURE__*/React.createElement("radialGradient", {
+    id: "bodyG",
+    cx: "28%",
+    cy: "18%"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0%",
+    stopColor: "#1E3555"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "100%",
+    stopColor: "#0C1828"
+  })), /*#__PURE__*/React.createElement("radialGradient", {
+    id: "engG",
+    cx: "50%",
+    cy: "20%"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0%",
+    stopColor: "#FF6B00"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "100%",
+    stopColor: "#CC4400"
+  })), /*#__PURE__*/React.createElement("radialGradient", {
+    id: "flameG",
+    cx: "50%",
+    cy: "5%"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0%",
+    stopColor: "#FFF5A0"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "35%",
+    stopColor: "#FF8E53"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "100%",
+    stopColor: "#FF4400",
+    stopOpacity: "0"
+  })), /*#__PURE__*/React.createElement("filter", {
+    id: "gS",
+    x: "-80%",
+    y: "-80%",
+    width: "260%",
+    height: "260%"
+  }, /*#__PURE__*/React.createElement("feGaussianBlur", {
+    stdDeviation: "4",
+    result: "b"
+  }), /*#__PURE__*/React.createElement("feMerge", null, /*#__PURE__*/React.createElement("feMergeNode", {
+    in: "b"
+  }), /*#__PURE__*/React.createElement("feMergeNode", {
+    in: "SourceGraphic"
+  }))), /*#__PURE__*/React.createElement("filter", {
+    id: "gL",
+    x: "-120%",
+    y: "-120%",
+    width: "340%",
+    height: "340%"
+  }, /*#__PURE__*/React.createElement("feGaussianBlur", {
+    stdDeviation: "7",
+    result: "b"
+  }), /*#__PURE__*/React.createElement("feMerge", null, /*#__PURE__*/React.createElement("feMergeNode", {
+    in: "b"
+  }), /*#__PURE__*/React.createElement("feMergeNode", {
+    in: "SourceGraphic"
+  })))), has('shield') && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("ellipse", {
+    cx: 45,
+    cy: 88,
+    rx: 53,
+    ry: 96,
+    fill: "none",
+    stroke: "#C44DFF",
+    strokeWidth: "1.5",
+    opacity: "0.35",
+    filter: "url(#gL)"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "rx",
+    values: "53;57;53",
+    dur: "2.5s",
+    repeatCount: "indefinite"
+  }), /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.25;0.5;0.25",
+    dur: "2.5s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("ellipse", {
+    cx: 45,
+    cy: 88,
+    rx: 50,
+    ry: 93,
+    fill: "#C44DFF",
+    opacity: "0.025"
+  })), has('engine') && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("ellipse", {
+    cx: 45,
+    cy: 168,
+    rx: 12,
+    ry: 18,
+    fill: "url(#flameG)",
+    opacity: "0.95"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "ry",
+    values: "18;24;18",
+    dur: "0.17s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("ellipse", {
+    cx: 29,
+    cy: 163,
+    rx: 7,
+    ry: 12,
+    fill: "url(#flameG)",
+    opacity: "0.7"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "ry",
+    values: "12;16;12",
+    dur: "0.13s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("ellipse", {
+    cx: 61,
+    cy: 163,
+    rx: 7,
+    ry: 12,
+    fill: "url(#flameG)",
+    opacity: "0.7"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "ry",
+    values: "12;16;12",
+    dur: "0.21s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("ellipse", {
+    cx: 45,
+    cy: 155,
+    rx: 28,
+    ry: 6,
+    fill: "#FF7700",
+    opacity: "0.22",
+    filter: "url(#gS)"
+  })), /*#__PURE__*/React.createElement("path", {
+    d: "M20,133 Q45,144 70,133 L66,155 Q45,162 24,155 Z",
+    fill: has('engine') ? "url(#engG)" : "#0D1827",
+    stroke: has('engine') ? "#FF8E53" : C.cardBorder,
+    strokeWidth: "1.5"
+  }), has('engine') && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+    cx: 45,
+    cy: 142,
+    r: 6,
+    fill: "#FF8E53",
+    opacity: "0.5"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.3;0.7;0.3",
+    dur: "0.45s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("circle", {
+    cx: 31,
+    cy: 138,
+    r: 3,
+    fill: "#FF8E53",
+    opacity: "0.4"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 59,
+    cy: 138,
+    r: 3,
+    fill: "#FF8E53",
+    opacity: "0.4"
+  })), /*#__PURE__*/React.createElement("path", {
+    d: "M20,110 L6,138 L20,138 Z",
+    fill: "#152238",
+    stroke: C.cardBorder,
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M70,110 L84,138 L70,138 Z",
+    fill: "#152238",
+    stroke: C.cardBorder,
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M20,110 L10,130 L20,130 Z",
+    fill: "white",
+    opacity: "0.04"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M70,110 L80,130 L70,130 Z",
+    fill: "white",
+    opacity: "0.04"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M20,55 L14,133 Q45,142 76,133 L70,55 Z",
+    fill: "url(#bodyG)",
+    stroke: "rgba(255,255,255,0.07)",
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: 20,
+    y1: 82,
+    x2: 70,
+    y2: 82,
+    stroke: "rgba(255,255,255,0.045)",
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: 18,
+    y1: 110,
+    x2: 72,
+    y2: 110,
+    stroke: "rgba(255,255,255,0.045)",
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M26,57 L22,95 L37,95 L38,57 Z",
+    fill: "white",
+    opacity: "0.035"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 63,
+    y: 67,
+    width: 9,
+    height: 56,
+    rx: 3.5,
+    fill: "rgba(0,0,0,0.45)",
+    stroke: "rgba(255,255,255,0.06)",
+    strokeWidth: "0.5"
+  }), ['core', 'engine', 'nav', 'comms', 'shield'].map((id, i) => /*#__PURE__*/React.createElement("circle", {
+    key: id,
+    cx: 67.5,
+    cy: 73 + i * 10,
+    r: 3,
+    fill: has(id) ? MOD_COLORS[id] : C.textMuted,
+    opacity: has(id) ? 1 : 0.35
+  }, has(id) && /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.55;1;0.55",
+    dur: "2s",
+    begin: `${i * 0.3}s`,
+    repeatCount: "indefinite"
+  }))), /*#__PURE__*/React.createElement("circle", {
+    cx: 42,
+    cy: 96,
+    r: 11,
+    fill: has('core') ? "#001620" : "#090E1A",
+    stroke: has('core') ? C.neon : C.cardBorder,
+    strokeWidth: "1.5"
+  }), has('core') ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+    cx: 42,
+    cy: 96,
+    r: 7,
+    fill: C.neon,
+    opacity: "0.2"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "r",
+    values: "7;10;7",
+    dur: "1.8s",
+    repeatCount: "indefinite"
+  }), /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.2;0.45;0.2",
+    dur: "1.8s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("circle", {
+    cx: 42,
+    cy: 96,
+    r: 3.5,
+    fill: C.neon
+  }), [0, 90, 180, 270].map((a, i) => /*#__PURE__*/React.createElement("circle", {
+    key: i,
+    cx: 42 + 8 * Math.cos(a * Math.PI / 180),
+    cy: 96 + 8 * Math.sin(a * Math.PI / 180),
+    r: 1.5,
+    fill: C.neon,
+    opacity: "0.65",
+    style: {
+      transformOrigin: "42px 96px",
+      animation: `spin ${i % 2 ? '1.6' : '2.4'}s linear infinite ${i % 2 ? 'reverse' : ''}`
+    }
+  }))) : /*#__PURE__*/React.createElement("circle", {
+    cx: 42,
+    cy: 96,
+    r: 4,
+    fill: C.cardBorder
+  }), has('comms') ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+    d: "M70,88 Q84,79 82,93 Q80,108 70,103 Z",
+    fill: C.gold,
+    opacity: "0.9",
+    filter: "url(#gS)"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.65;1;0.65",
+    dur: "1.4s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("line", {
+    x1: 70,
+    y1: 95,
+    x2: 82,
+    y2: 86,
+    stroke: C.gold,
+    strokeWidth: "1.5"
+  }), [1, 2].map(n => /*#__PURE__*/React.createElement("path", {
+    key: n,
+    d: `M82,86 Q${86 + n * 5},${80 - n * 4} ${81 + n * 6},${93}`,
+    fill: "none",
+    stroke: C.gold,
+    strokeWidth: "0.8",
+    opacity: 0.55 - n * 0.2
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: `${0.55 - n * 0.2};0.05;${0.55 - n * 0.2}`,
+    dur: "1.3s",
+    begin: `${n * 0.3}s`,
+    repeatCount: "indefinite"
+  })))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
+    x1: 70,
+    y1: 93,
+    x2: 78,
+    y2: 86,
+    stroke: C.cardBorder,
+    strokeWidth: "1.5"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M70,88 Q80,82 79,93 Q78,103 70,100 Z",
+    fill: "none",
+    stroke: C.cardBorder,
+    strokeWidth: "1",
+    opacity: "0.4"
+  })), /*#__PURE__*/React.createElement("path", {
+    d: "M45,4 C30,4 18,22 16,55 L74,55 C72,22 60,4 45,4 Z",
+    fill: "url(#noseG)",
+    stroke: "rgba(255,255,255,0.14)",
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M45,4 C37,4 27,18 24,37 L66,37 C63,18 53,4 45,4 Z",
+    fill: "white",
+    opacity: "0.07"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 45,
+    cy: 36,
+    r: 14,
+    fill: has('nav') ? "#001828" : "#06101E",
+    stroke: has('nav') ? C.green : C.cardBorder,
+    strokeWidth: "2"
+  }), has('nav') ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+    cx: 40,
+    cy: 32,
+    r: 5,
+    fill: C.neon,
+    opacity: "0.5"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 49,
+    cy: 39,
+    r: 4,
+    fill: C.green,
+    opacity: "0.6"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 45,
+    cy: 36,
+    r: 10,
+    fill: "none",
+    stroke: C.green,
+    strokeWidth: "0.6",
+    strokeDasharray: "3 3",
+    opacity: "0.45",
+    style: {
+      transformOrigin: "45px 36px",
+      animation: "spin 5s linear infinite"
+    }
+  }), [0, 72, 144, 216, 288].map((a, i) => /*#__PURE__*/React.createElement("circle", {
+    key: i,
+    cx: 45 + 11 * Math.cos(a * Math.PI / 180),
+    cy: 36 + 11 * Math.sin(a * Math.PI / 180),
+    r: 1.5,
+    fill: i % 2 === 0 ? C.green : C.neon,
+    opacity: "0.6"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.25;0.9;0.25",
+    dur: "1.4s",
+    begin: `${i * 0.28}s`,
+    repeatCount: "indefinite"
+  })))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+    cx: 41,
+    cy: 33,
+    r: 4,
+    fill: C.cardBorder,
+    opacity: "0.35"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 49,
+    cy: 40,
+    r: 3,
+    fill: C.cardBorder,
+    opacity: "0.25"
+  })), /*#__PURE__*/React.createElement("line", {
+    x1: 45,
+    y1: 4,
+    x2: 45,
+    y2: -8,
+    stroke: has('nav') ? C.green : C.cardBorder,
+    strokeWidth: "2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 45,
+    cy: -11,
+    r: 4,
+    fill: has('nav') ? C.green : C.cardBorder
+  }, has('nav') && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "r",
+    values: "4;6.5;4",
+    dur: "1.1s",
+    repeatCount: "indefinite"
+  }), /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.55;1;0.55",
+    dur: "1.1s",
+    repeatCount: "indefinite"
+  }))), has('core') && /*#__PURE__*/React.createElement("ellipse", {
+    cx: 45,
+    cy: 96,
+    rx: 34,
+    ry: 42,
+    fill: "none",
+    stroke: C.neon,
+    strokeWidth: "0.8",
+    opacity: "0.1",
+    filter: "url(#gL)"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.06;0.16;0.06",
+    dur: "3s",
+    repeatCount: "indefinite"
+  })));
+}
+
+// ═══ NEURO ROBOT ════════════════════════════════
+function Neuro({
+  mood = "happy",
+  size = 120,
+  animate = true
+}) {
+  const M = {
+    happy: {
+      col: "#4ECDC4",
+      ey: -1,
+      brow: "fwd",
+      mth: "M36,73 Q48,83 60,73",
+      ps: "n"
+    },
+    excited: {
+      col: "#FFD60A",
+      ey: -3,
+      brow: "up",
+      mth: "M32,71 Q48,87 64,71",
+      ps: "b"
+    },
+    confused: {
+      col: "#C44DFF",
+      ey: 1,
+      brow: "mix",
+      mth: "M40,77 Q48,75 56,77",
+      ps: "l"
+    },
+    sad: {
+      col: "#7A8FAA",
+      ey: 2,
+      brow: "dn",
+      mth: "M36,80 Q48,74 60,80",
+      ps: "n"
+    },
+    learning: {
+      col: "#06D6A0",
+      ey: 0,
+      brow: "fwd",
+      mth: "M38,74 Q48,82 58,74",
+      ps: "s"
+    },
+    surprised: {
+      col: "#FF8E53",
+      ey: -4,
+      brow: "wayup",
+      mth: "M43,74 Q48,85 53,74",
+      ps: "x"
+    }
+  };
+  const d = M[mood] || M.happy;
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 96 132",
+    width: size * 0.78,
+    height: size,
+    style: {
+      display: "block",
+      margin: "0 auto",
+      overflow: "visible",
+      filter: `drop-shadow(0 ${size * 0.04}px ${size * 0.14}px ${d.col}55)`,
+      animation: animate ? "float 3s ease-in-out infinite" : "none"
+    }
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("radialGradient", {
+    id: `nh_${mood}`,
+    cx: "34%",
+    cy: "26%"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0%",
+    stopColor: d.col,
+    stopOpacity: "0.88"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "100%",
+    stopColor: d.col,
+    stopOpacity: "0.32"
+  })), /*#__PURE__*/React.createElement("linearGradient", {
+    id: `nb_${mood}`,
+    x1: "0",
+    y1: "0",
+    x2: "0.25",
+    y2: "1"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0%",
+    stopColor: "#1E3555"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "100%",
+    stopColor: "#0B1726"
+  })), /*#__PURE__*/React.createElement("filter", {
+    id: "ngl"
+  }, /*#__PURE__*/React.createElement("feGaussianBlur", {
+    stdDeviation: "3",
+    result: "b"
+  }), /*#__PURE__*/React.createElement("feMerge", null, /*#__PURE__*/React.createElement("feMergeNode", {
+    in: "b"
+  }), /*#__PURE__*/React.createElement("feMergeNode", {
+    in: "SourceGraphic"
+  })))), /*#__PURE__*/React.createElement("ellipse", {
+    cx: 33,
+    cy: 129,
+    rx: 8,
+    ry: 4,
+    fill: d.col,
+    opacity: "0.18"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: 63,
+    cy: 129,
+    rx: 8,
+    ry: 4,
+    fill: d.col,
+    opacity: "0.18"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 27,
+    y: 117,
+    width: 13,
+    height: 14,
+    rx: 6,
+    fill: `url(#nb_${mood})`,
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.5"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 56,
+    y: 117,
+    width: 13,
+    height: 14,
+    rx: 6,
+    fill: `url(#nb_${mood})`,
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.5"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 33,
+    cy: 129,
+    r: 2,
+    fill: d.col,
+    opacity: "0.5"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 62,
+    cy: 129,
+    r: 2,
+    fill: d.col,
+    opacity: "0.5"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 17,
+    y: 82,
+    width: 62,
+    height: 40,
+    rx: 11,
+    fill: `url(#nb_${mood})`,
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.5"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M21,84 Q48,79 75,84 L73,87 Q48,82 23,87 Z",
+    fill: "white",
+    opacity: "0.07"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 27,
+    y: 90,
+    width: 42,
+    height: 24,
+    rx: 7,
+    fill: "rgba(0,0,0,0.45)",
+    stroke: d.col,
+    strokeWidth: "1",
+    strokeOpacity: "0.35"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 48,
+    cy: 102,
+    r: 6,
+    fill: d.col,
+    opacity: "0.55"
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.35;0.8;0.35",
+    dur: "1.6s",
+    repeatCount: "indefinite"
+  }), /*#__PURE__*/React.createElement("animate", {
+    attributeName: "r",
+    values: "5;7;5",
+    dur: "1.6s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("circle", {
+    cx: 33,
+    cy: 102,
+    r: 2.5,
+    fill: d.col,
+    opacity: "0.35"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 63,
+    cy: 102,
+    r: 2.5,
+    fill: d.col,
+    opacity: "0.35"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 2,
+    y: 85,
+    width: 15,
+    height: 29,
+    rx: 7.5,
+    fill: `url(#nb_${mood})`,
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.45"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 79,
+    y: 85,
+    width: 15,
+    height: 29,
+    rx: 7.5,
+    fill: `url(#nb_${mood})`,
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.45"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 17,
+    cy: 89,
+    r: 4,
+    fill: d.col,
+    opacity: "0.22"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 79,
+    cy: 89,
+    r: 4,
+    fill: d.col,
+    opacity: "0.22"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 9,
+    cy: 112,
+    r: 5,
+    fill: d.col,
+    opacity: "0.12",
+    filter: "url(#ngl)"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 87,
+    cy: 112,
+    r: 5,
+    fill: d.col,
+    opacity: "0.12",
+    filter: "url(#ngl)"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 37,
+    y: 75,
+    width: 22,
+    height: 11,
+    rx: 5,
+    fill: `url(#nb_${mood})`,
+    stroke: d.col,
+    strokeWidth: "1",
+    strokeOpacity: "0.3"
+  }), [42, 48, 54].map(x => /*#__PURE__*/React.createElement("line", {
+    key: x,
+    x1: x,
+    y1: 76,
+    x2: x,
+    y2: 85,
+    stroke: d.col,
+    strokeWidth: "0.5",
+    opacity: "0.25"
+  })), /*#__PURE__*/React.createElement("rect", {
+    x: 3,
+    y: 29,
+    width: 12,
+    height: 28,
+    rx: 6,
+    fill: `url(#nb_${mood})`,
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.5"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 81,
+    y: 29,
+    width: 12,
+    height: 28,
+    rx: 6,
+    fill: `url(#nb_${mood})`,
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.5"
+  }), [34, 40, 46].map(y => /*#__PURE__*/React.createElement("line", {
+    key: y,
+    x1: 5,
+    y1: y,
+    x2: 13,
+    y2: y,
+    stroke: d.col,
+    strokeWidth: "0.8",
+    opacity: "0.4"
+  })), [34, 40, 46].map(y => /*#__PURE__*/React.createElement("line", {
+    key: y,
+    x1: 83,
+    y1: y,
+    x2: 91,
+    y2: y,
+    stroke: d.col,
+    strokeWidth: "0.8",
+    opacity: "0.4"
+  })), /*#__PURE__*/React.createElement("rect", {
+    x: 15,
+    y: 12,
+    width: 66,
+    height: 66,
+    rx: 20,
+    fill: `url(#nh_${mood})`
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: 15,
+    y: 12,
+    width: 66,
+    height: 66,
+    rx: 20,
+    fill: "none",
+    stroke: d.col,
+    strokeWidth: "2",
+    strokeOpacity: "0.65"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M19,16 Q48,10 77,17 Q81,24 79,17 Q56,6 17,14 Z",
+    fill: "white",
+    opacity: "0.15"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: 48,
+    y1: 12,
+    x2: 48,
+    y2: 1,
+    stroke: d.col,
+    strokeWidth: "2.5",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 48,
+    cy: -2,
+    r: 5,
+    fill: d.col
+  }, /*#__PURE__*/React.createElement("animate", {
+    attributeName: "r",
+    values: "4;6.5;4",
+    dur: "1.4s",
+    repeatCount: "indefinite"
+  }), /*#__PURE__*/React.createElement("animate", {
+    attributeName: "opacity",
+    values: "0.5;1;0.5",
+    dur: "1.4s",
+    repeatCount: "indefinite"
+  })), d.brow === "fwd" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+    d: "M26,45 Q34,42 42,45",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M54,45 Q62,42 70,45",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  })), d.brow === "up" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+    d: "M24,43 Q34,38 42,43",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M54,43 Q64,38 72,43",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  })), d.brow === "dn" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+    d: "M26,47 Q34,51 42,47",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M54,47 Q62,51 70,47",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  })), d.brow === "mix" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+    d: "M26,46 Q34,42 42,46",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M54,43 Q62,47 70,44",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  })), d.brow === "wayup" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+    d: "M23,41 Q34,35 42,41",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M54,41 Q65,35 73,41",
+    stroke: d.col,
+    strokeWidth: "2.5",
+    fill: "none",
+    strokeLinecap: "round"
+  })), d.ps === "s" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("ellipse", {
+    cx: 34,
+    cy: 58,
+    rx: 11,
+    ry: 11,
+    fill: "#06101E",
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.5"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: 62,
+    cy: 58,
+    rx: 11,
+    ry: 11,
+    fill: "#06101E",
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.5"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 34,
+    cy: 58,
+    r: 6,
+    fill: d.col,
+    opacity: "0.75",
+    style: {
+      transformOrigin: "34px 58px",
+      animation: "spin 0.7s linear infinite"
+    }
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 62,
+    cy: 58,
+    r: 6,
+    fill: d.col,
+    opacity: "0.75",
+    style: {
+      transformOrigin: "62px 58px",
+      animation: "spin 0.7s linear infinite reverse"
+    }
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 34,
+    cy: 58,
+    r: 2,
+    fill: "white"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 62,
+    cy: 58,
+    r: 2,
+    fill: "white"
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("ellipse", {
+    cx: 34,
+    cy: 58,
+    rx: 12,
+    ry: d.ps === "x" ? 13 : 11,
+    fill: "#06101E",
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.5"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: 62,
+    cy: 58,
+    rx: 12,
+    ry: d.ps === "x" ? 13 : 11,
+    fill: "#06101E",
+    stroke: d.col,
+    strokeWidth: "1.5",
+    strokeOpacity: "0.5"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 34 + (d.ps === "l" ? 2 : 0),
+    cy: 58 + d.ey,
+    r: d.ps === "x" ? 8 : d.ps === "b" ? 7 : 6,
+    fill: d.col,
+    opacity: "0.88"
+  }, mood === "excited" && /*#__PURE__*/React.createElement("animate", {
+    attributeName: "r",
+    values: "6;8.5;6",
+    dur: "0.45s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("circle", {
+    cx: 62 + (d.ps === "l" ? 2 : 0),
+    cy: 58 + d.ey,
+    r: d.ps === "x" ? 8 : d.ps === "b" ? 7 : 6,
+    fill: d.col,
+    opacity: "0.88"
+  }, mood === "excited" && /*#__PURE__*/React.createElement("animate", {
+    attributeName: "r",
+    values: "6;8.5;6",
+    dur: "0.45s",
+    repeatCount: "indefinite"
+  })), /*#__PURE__*/React.createElement("circle", {
+    cx: 29,
+    cy: 54 + d.ey,
+    r: 2.5,
+    fill: "white",
+    opacity: "0.9"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 57,
+    cy: 54 + d.ey,
+    r: 2.5,
+    fill: "white",
+    opacity: "0.9"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 37,
+    cy: 56 + d.ey,
+    r: 1,
+    fill: "white",
+    opacity: "0.5"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: 65,
+    cy: 56 + d.ey,
+    r: 1,
+    fill: "white",
+    opacity: "0.5"
+  })), /*#__PURE__*/React.createElement("ellipse", {
+    cx: 48,
+    cy: 68,
+    rx: 4,
+    ry: 2.5,
+    fill: d.col,
+    opacity: "0.28"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: d.mth,
+    stroke: d.col,
+    strokeWidth: "3",
+    fill: "none",
+    strokeLinecap: "round"
+  }), mood === "excited" && /*#__PURE__*/React.createElement("path", {
+    d: d.mth,
+    stroke: d.col,
+    strokeWidth: "7",
+    fill: "none",
+    strokeLinecap: "round",
+    opacity: "0.12",
+    filter: "url(#ngl)"
+  }));
+}
+
+// ═══ UI COMPONENTS ═══════════════════════════════
+function Btn({
+  children,
+  onClick,
+  color = C.neon,
+  full = false,
+  size = "md",
+  disabled = false,
+  style = {}
+}) {
+  const [pr, setPr] = useState(false);
+  const cfg = {
+    sm: {
+      p: "9px 20px",
+      fs: 12,
+      br: 10
+    },
+    md: {
+      p: "13px 26px",
+      fs: 14,
+      br: 13
+    },
+    lg: {
+      p: "16px 30px",
+      fs: 15,
+      br: 14
+    }
+  };
+  const c = cfg[size] || cfg.md;
+  return /*#__PURE__*/React.createElement("button", {
+    onClick: disabled ? undefined : () => {
+      setPr(true);
+      setTimeout(() => setPr(false), 150);
+      onClick && onClick();
+    },
+    style: {
+      background: disabled ? C.bgMid : `linear-gradient(145deg,${color},${color}BB)`,
+      border: "none",
+      borderRadius: c.br,
+      padding: c.p,
+      color: disabled ? C.textMuted : "#fff",
+      fontWeight: 800,
+      fontSize: c.fs,
+      width: full ? "100%" : "auto",
+      letterSpacing: .3,
+      boxShadow: disabled ? "none" : `0 5px 22px ${color}45,inset 0 1px 0 rgba(255,255,255,0.22)`,
+      opacity: disabled ? .42 : 1,
+      textShadow: disabled ? "none" : "0 1px 4px rgba(0,0,0,0.35)",
+      transform: pr ? "scale(.96)" : "scale(1)",
+      transition: "all .15s",
+      ...style
+    }
+  }, children);
+}
+function Talk({
+  text,
+  btn,
+  onBtn,
+  mood = "happy"
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `linear-gradient(145deg,${C.card},${C.bgMid})`,
+      border: `1.5px solid ${C.cardBorder}`,
+      borderRadius: 20,
+      padding: 16,
+      display: "flex",
+      gap: 12,
+      alignItems: "flex-start",
+      boxShadow: `0 8px 32px rgba(0,0,0,0.35),0 0 0 1px rgba(255,255,255,0.04)`,
+      animation: "fadeIn .4s",
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 50,
+      height: 50,
+      borderRadius: 14,
+      background: `${C.neuro}12`,
+      border: `1.5px solid ${C.neuro}30`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement(Neuro, {
+    mood: mood,
+    size: 46,
+    animate: false
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.neuro,
+      fontSize: 10,
+      fontWeight: 800,
+      letterSpacing: 1.5,
+      marginBottom: 5,
+      fontFamily: "'Orbitron'"
+    }
+  }, "\u041D\u0415\u0419\u0420\u041E"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.text,
+      fontSize: 13,
+      lineHeight: 1.75,
+      marginBottom: btn ? 14 : 0
+    }
+  }, text), btn && /*#__PURE__*/React.createElement(Btn, {
+    onClick: onBtn,
+    size: "sm",
+    color: C.neon
+  }, btn)));
+}
+function XPBar({
+  xp,
+  total = 400,
+  score
+}) {
+  const pct = Math.min(xp / total * 100, 100);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 20px 10px",
+      background: C.bg,
+      borderBottom: `1px solid ${C.cardBorder}20`,
+      position: "sticky",
+      top: 0,
+      zIndex: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `linear-gradient(90deg,${C.neon},${C.purple})`,
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      fontSize: 13,
+      fontWeight: 900,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 2
+    }
+  }, "\u041D\u0415\u0419\u0420\u041E\u2726\u0410\u041A\u0410\u0414\u0415\u041C\u0418\u042F"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6
+    }
+  }, tgFirstName && tgFirstName !== "Пилот" && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: C.textDim,
+      fontSize: 10
+    }
+  }, tgFirstName), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "3px 10px",
+      borderRadius: 20,
+      fontSize: 11,
+      fontWeight: 800,
+      background: `linear-gradient(135deg,${C.gold}22,${C.gold}08)`,
+      border: `1px solid ${C.gold}35`,
+      color: C.gold
+    }
+  }, "\u2B50 ", score))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      height: 8,
+      borderRadius: 4,
+      background: C.bgMid,
+      overflow: "hidden",
+      boxShadow: "inset 0 2px 4px rgba(0,0,0,0.5)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      borderRadius: 4,
+      width: `${pct}%`,
+      background: `linear-gradient(90deg,${C.neuro},${C.neon})`,
+      boxShadow: `0 0 12px ${C.neonGlow}`,
+      transition: "width 1s ease"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: C.neon,
+      fontSize: 11,
+      fontWeight: 700,
+      fontFamily: "'Orbitron'",
+      minWidth: 52,
+      textAlign: "right"
+    }
+  }, xp, " XP")));
+}
+
+// ═══ MECHANIC 1: SORT ═══════════════════════════
+function SortMech({
+  room,
+  onDone
+}) {
+  const [idx, setIdx] = useState(0);
+  const [score, setScore] = useState(0);
+  const [result, setResult] = useState(null);
+  const [neuroMood, setNeuroMood] = useState("happy");
+  const [streak, setStreak] = useState(0);
+  const items = room.items;
+  const cur = items[idx];
+  const answer = isAI => {
+    if (result !== null) return;
+    const ok = isAI === cur.isAI;
+    if (ok) {
+      setScore(s => s + 10);
+      setStreak(s => s + 1);
+      setNeuroMood("excited");
+    } else {
+      setStreak(0);
+      setNeuroMood("sad");
+    }
+    setResult(ok ? "correct" : "wrong");
+    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred(ok ? 'medium' : 'heavy');
+  };
+  const next = () => {
+    if (idx + 1 < items.length) {
+      setIdx(idx + 1);
+      setResult(null);
+      setNeuroMood("happy");
+    } else onDone(score + (result === "correct" ? 10 : 0), items.length * 10);
+  };
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 4,
+      marginBottom: 16
+    }
+  }, items.map((_, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      flex: 1,
+      height: 6,
+      borderRadius: 3,
+      background: i < idx ? C.neon : i === idx ? `${C.neon}55` : C.cardBorder,
+      transition: "all .3s"
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 16,
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement(Neuro, {
+    mood: neuroMood,
+    size: 80
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.neon,
+      fontSize: 9,
+      fontFamily: "'Orbitron'",
+      marginTop: 4,
+      letterSpacing: 1
+    }
+  }, "IQ: ", score, "/", items.length * 10)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 10,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1,
+      marginBottom: 6
+    }
+  }, "\u041F\u041E\u041A\u0410\u0416\u0418 \u041D\u0415\u0419\u0420\u041E:"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `${C.neon}08`,
+      border: `1px solid ${C.neon}20`,
+      borderRadius: 12,
+      padding: "10px 12px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: C.textMuted,
+      fontFamily: "'Orbitron'",
+      marginBottom: 4
+    }
+  }, "\u041A\u0410\u0420\u0422\u041E\u0427\u041A\u0410 ", idx + 1, "/", items.length), streak >= 3 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.gold,
+      fontSize: 10,
+      fontWeight: 800,
+      fontFamily: "'Orbitron'"
+    }
+  }, "\uD83D\uDD25 ", streak, "x \u0421\u0415\u0420\u0418\u042F!")))), /*#__PURE__*/React.createElement("div", {
+    key: idx,
+    className: "anim-card",
+    style: {
+      background: `linear-gradient(145deg,${C.card},${C.bgMid})`,
+      border: `2px solid ${result === "correct" ? C.green : result === "wrong" ? C.red : C.cardBorder}`,
+      borderRadius: 20,
+      padding: "24px 16px",
+      textAlign: "center",
+      marginBottom: 16,
+      minHeight: 130,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      transition: "border-color .3s",
+      boxShadow: result === "correct" ? `0 0 28px ${C.greenGlow}` : result === "wrong" ? `0 0 24px rgba(255,107,107,.2)` : "none"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 48,
+      marginBottom: 10
+    }
+  }, cur.icon), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.white,
+      fontSize: 17,
+      fontWeight: 700,
+      lineHeight: 1.4
+    }
+  }, cur.text)), result && /*#__PURE__*/React.createElement("div", {
+    className: "anim-fadeIn",
+    style: {
+      background: result === "correct" ? `${C.green}0a` : `${C.red}0a`,
+      border: `1px solid ${result === "correct" ? C.green : C.red}30`,
+      borderRadius: 14,
+      padding: "12px 14px",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: result === "correct" ? C.green : C.red,
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: "'Orbitron'",
+      marginBottom: 6
+    }
+  }, result === "correct" ? "✓ ВЕРНО! +10" : "✗ ПРОМАХ!", /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: 8,
+      color: C.textDim,
+      fontWeight: 400,
+      fontFamily: "'Nunito'"
+    }
+  }, cur.isAI ? "Это ИИ" : "Это не ИИ")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.text,
+      fontSize: 12,
+      lineHeight: 1.6
+    }
+  }, cur.why)), result === null ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => answer(true),
+    style: {
+      flex: 1,
+      padding: "18px 8px",
+      borderRadius: 18,
+      background: `linear-gradient(145deg,${C.green}18,${C.green}08)`,
+      border: `2px solid ${C.green}45`,
+      color: C.green,
+      fontWeight: 800,
+      fontSize: 14,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 6,
+      transition: "all .2s"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 30
+    }
+  }, "\uD83E\uDD16"), "\u042D\u0422\u041E \u0418\u0418!"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => answer(false),
+    style: {
+      flex: 1,
+      padding: "18px 8px",
+      borderRadius: 18,
+      background: `linear-gradient(145deg,${C.red}18,${C.red}08)`,
+      border: `2px solid ${C.red}45`,
+      color: C.red,
+      fontWeight: 800,
+      fontSize: 14,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 6,
+      transition: "all .2s"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 30
+    }
+  }, "\uD83D\uDC64"), "\u041D\u0415 \u0418\u0418")) : /*#__PURE__*/React.createElement(Btn, {
+    onClick: next,
+    full: true,
+    color: C.neon
+  }, idx + 1 < items.length ? "СЛЕДУЮЩАЯ →" : "ГОТОВО ✓"));
+}
+
+// ═══ MECHANIC 2: FEED ═══════════════════════════
+function FeedMech({
+  room,
+  onDone
+}) {
+  const [idx, setIdx] = useState(0);
+  const [iq, setIq] = useState(50);
+  const [score, setScore] = useState(0);
+  const [result, setResult] = useState(null);
+  const [neuroMood, setNeuroMood] = useState("happy");
+  const items = room.items;
+  const cur = items[idx];
+  const feed = isGood => {
+    if (result !== null) return;
+    const ok = isGood === cur.isGood;
+    if (ok) {
+      setScore(s => s + 10);
+      setIq(v => Math.min(100, v + 8));
+      setNeuroMood(isGood ? "excited" : "happy");
+    } else {
+      setIq(v => Math.max(0, v - 12));
+      setNeuroMood("sad");
+    }
+    setResult(ok ? "correct" : "wrong");
+    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred(ok ? 'medium' : 'heavy');
+  };
+  const next = () => {
+    if (idx + 1 < items.length) {
+      setIdx(idx + 1);
+      setResult(null);
+      setNeuroMood("happy");
+    } else onDone(score + (result === "correct" ? 10 : 0), items.length * 10);
+  };
+  const iqColor = iq >= 70 ? C.green : iq >= 40 ? C.gold : C.red;
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 4,
+      marginBottom: 14
+    }
+  }, items.map((_, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      flex: 1,
+      height: 6,
+      borderRadius: 3,
+      background: i < idx ? C.orange : i === idx ? `${C.orange}55` : C.cardBorder
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      border: `1px solid ${C.cardBorder}`,
+      borderRadius: 18,
+      padding: "14px 16px",
+      marginBottom: 14,
+      display: "flex",
+      alignItems: "center",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement(Neuro, {
+    mood: neuroMood,
+    size: 70
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 10,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1,
+      marginBottom: 6
+    }
+  }, "IQ \u041D\u0415\u0419\u0420\u041E"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 10,
+      borderRadius: 5,
+      background: C.bgMid,
+      overflow: "hidden",
+      marginBottom: 6,
+      boxShadow: "inset 0 2px 4px rgba(0,0,0,0.4)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      borderRadius: 5,
+      width: `${iq}%`,
+      background: `linear-gradient(90deg,${C.red},${C.gold},${C.green})`,
+      transition: "width .6s ease"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: iqColor,
+      fontSize: 14,
+      fontWeight: 800,
+      fontFamily: "'Orbitron'"
+    }
+  }, iq, "/100"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `${C.orange}08`,
+      border: `1px solid ${C.orange}25`,
+      borderRadius: 16,
+      padding: 14,
+      textAlign: "center",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: C.orange,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1.5,
+      marginBottom: 8,
+      fontWeight: 800
+    }
+  }, "\uD83D\uDCE6 \u0414\u0410\u041D\u041D\u042B\u0415 #", idx + 1), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 36,
+      marginBottom: 8
+    }
+  }, cur.icon), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.white,
+      fontSize: 15,
+      fontWeight: 600,
+      lineHeight: 1.5
+    }
+  }, cur.text)), result && /*#__PURE__*/React.createElement("div", {
+    className: "anim-fadeIn",
+    style: {
+      background: result === "correct" ? `${C.green}0a` : `${C.red}0a`,
+      border: `1px solid ${result === "correct" ? C.green : C.red}30`,
+      borderRadius: 14,
+      padding: "12px 14px",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: result === "correct" ? C.green : C.red,
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: "'Orbitron'",
+      marginBottom: 6
+    }
+  }, result === "correct" ? cur.isGood ? "✓ ХОРОШИЕ ДАННЫЕ! Нейро умнеет" : "✓ ПРАВИЛЬНО — это мусор!" : cur.isGood ? "✗ Это были хорошие данные!" : "✗ Это был мусор!"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.text,
+      fontSize: 12,
+      lineHeight: 1.6
+    }
+  }, cur.why)), result === null ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => feed(true),
+    style: {
+      flex: 1,
+      padding: "16px 8px",
+      borderRadius: 18,
+      background: `linear-gradient(145deg,${C.green}18,${C.green}08)`,
+      border: `2px solid ${C.green}45`,
+      color: C.green,
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: "'Orbitron'",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 5
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 28
+    }
+  }, "\uD83D\uDC4D"), "\u0425\u041E\u0420\u041E\u0428\u0418\u0415 \u0414\u0410\u041D\u041D\u042B\u0415"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => feed(false),
+    style: {
+      flex: 1,
+      padding: "16px 8px",
+      borderRadius: 18,
+      background: `linear-gradient(145deg,${C.red}18,${C.red}08)`,
+      border: `2px solid ${C.red}45`,
+      color: C.red,
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: "'Orbitron'",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 5
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 28
+    }
+  }, "\uD83D\uDDD1\uFE0F"), "\u041C\u0423\u0421\u041E\u0420!")) : /*#__PURE__*/React.createElement(Btn, {
+    onClick: next,
+    full: true,
+    color: C.orange
+  }, idx + 1 < items.length ? "СЛЕДУЮЩИЕ ДАННЫЕ →" : "ГОТОВО ✓"));
+}
+
+// ═══ MECHANIC 3: PROMPT LAB ══════════════════════
+function PromptLabMech({
+  room,
+  onDone
+}) {
+  const [idx, setIdx] = useState(0);
+  const [sel, setSel] = useState(null);
+  const [totalS, setTotalS] = useState(0);
+  const it = room.items[idx];
+  const pick = j => {
+    if (sel !== null) return;
+    setSel(j);
+    setTotalS(s => s + it.opts[j].s);
+  };
+  const next = () => {
+    if (idx + 1 < room.items.length) {
+      setIdx(idx + 1);
+      setSel(null);
+    } else onDone(totalS * 10, room.items.length * 30);
+  };
+  const sColor = {
+    1: C.red,
+    2: C.gold,
+    3: C.green
+  };
+  const sMood = {
+    1: "sad",
+    2: "confused",
+    3: "excited"
+  };
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 4,
+      marginBottom: 14
+    }
+  }, room.items.map((_, j) => /*#__PURE__*/React.createElement("div", {
+    key: j,
+    style: {
+      flex: 1,
+      height: 6,
+      borderRadius: 3,
+      background: j < idx ? C.gold : j === idx ? `${C.gold}55` : C.cardBorder
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `${C.purple}0a`,
+      border: `1px solid ${C.purple}25`,
+      borderRadius: 16,
+      padding: 14,
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.purple,
+      fontSize: 10,
+      fontWeight: 800,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1,
+      marginBottom: 6
+    }
+  }, "\uD83C\uDFAF \u0417\u0410\u0414\u0410\u0427\u0410:"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.white,
+      fontSize: 14,
+      lineHeight: 1.5
+    }
+  }, it.task)), sel !== null && /*#__PURE__*/React.createElement("div", {
+    className: "anim-fadeIn",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      background: C.card,
+      border: `1px solid ${sColor[it.opts[sel].s]}30`,
+      borderRadius: 16,
+      padding: "10px 14px",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement(Neuro, {
+    mood: sMood[it.opts[sel].s],
+    size: 56,
+    animate: false
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: sColor[it.opts[sel].s],
+      fontWeight: 800,
+      fontSize: 11,
+      fontFamily: "'Orbitron'",
+      marginBottom: 4
+    }
+  }, [1, 2, 3].map(s => /*#__PURE__*/React.createElement("span", {
+    key: s,
+    style: {
+      fontSize: 16,
+      marginRight: 2,
+      filter: s <= it.opts[sel].s ? "none" : "grayscale(1) opacity(.3)"
+    }
+  }, "\u2B50")), it.opts[sel].s === 3 ? " ИДЕАЛЬНЫЙ ПРОМПТ!" : it.opts[sel].s === 2 ? " НЕПЛОХО" : " СЛИШКОМ РАЗМЫТО"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 11,
+      lineHeight: 1.5
+    }
+  }, it.opts[sel].comment))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 10
+    }
+  }, it.opts.map((o, j) => /*#__PURE__*/React.createElement("button", {
+    key: j,
+    onClick: () => pick(j),
+    style: {
+      padding: "12px 14px",
+      borderRadius: 14,
+      textAlign: "left",
+      background: sel === j ? `${sColor[o.s]}0c` : `${C.white}03`,
+      border: `1.5px solid ${sel === j ? sColor[o.s] + "40" : C.cardBorder}`,
+      color: C.text,
+      fontSize: 12,
+      lineHeight: 1.6,
+      cursor: sel !== null ? "default" : "pointer",
+      transition: "all .2s"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: C.textMuted,
+      marginRight: 8
+    }
+  }, "\u2192"), o.text))), sel !== null && /*#__PURE__*/React.createElement(Btn, {
+    onClick: next,
+    full: true,
+    style: {
+      marginTop: 14
+    },
+    color: C.gold
+  }, idx + 1 < room.items.length ? "ДАЛЬШЕ →" : "ГОТОВО"));
+}
+
+// ═══ MECHANIC 4: HALLUCINATION ═══════════════════
+function HallucinationMech({
+  room,
+  onDone
+}) {
+  const [idx, setIdx] = useState(0);
+  const [result, setResult] = useState(null);
+  const [score, setScore] = useState(0);
+  const items = room.items;
+  const cur = items[idx];
+  const check = isTrue => {
+    if (result !== null) return;
+    const ok = isTrue === cur.isTrue;
+    if (ok) setScore(s => s + 10);
+    setResult(ok ? "correct" : "wrong");
+    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred(ok ? 'medium' : 'heavy');
+  };
+  const next = () => {
+    if (idx + 1 < items.length) {
+      setIdx(idx + 1);
+      setResult(null);
+    } else onDone(score + (result === "correct" ? 10 : 0), items.length * 10);
+  };
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 4,
+      marginBottom: 14
+    }
+  }, items.map((_, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      flex: 1,
+      height: 6,
+      borderRadius: 3,
+      background: i < idx ? C.purple : i === idx ? `${C.purple}55` : C.cardBorder
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 12,
+      background: `${C.purple}08`,
+      border: `1px solid ${C.purple}25`,
+      borderRadius: 18,
+      padding: 14,
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement(Neuro, {
+    mood: "confused",
+    size: 60,
+    animate: false
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.purple,
+      fontSize: 8,
+      textAlign: "center",
+      fontFamily: "'Orbitron'",
+      marginTop: 2
+    }
+  }, "\u041D\u0415\u0419\u0420\u041E \u0413\u041E\u0412\u041E\u0420\u0418\u0422:")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      paddingTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.white,
+      fontSize: 14,
+      lineHeight: 1.65,
+      fontStyle: "italic"
+    }
+  }, "\xAB", cur.claim, "\xBB"))), result && /*#__PURE__*/React.createElement("div", {
+    className: "anim-fadeIn",
+    style: {
+      background: result === "correct" ? `${C.green}08` : `${C.red}08`,
+      border: `1px solid ${result === "correct" ? C.green : C.red}30`,
+      borderRadius: 14,
+      padding: "12px 14px",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: "'Orbitron'",
+      marginBottom: 6,
+      color: result === "correct" ? C.green : C.red
+    }
+  }, result === "correct" ? "✓ ВЕРНО!" : "✗ МИМО!", /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: 8,
+      color: C.textDim,
+      fontWeight: 400,
+      fontFamily: "'Nunito'"
+    }
+  }, cur.isTrue ? "Это правда" : "Это галлюцинация")), !cur.isTrue && /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.gold,
+      fontSize: 11,
+      marginBottom: 6
+    }
+  }, "\u2713 \u041F\u0440\u0430\u0432\u0434\u0430: ", cur.truth), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 11,
+      lineHeight: 1.6
+    }
+  }, cur.lesson)), result === null ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => check(true),
+    style: {
+      flex: 1,
+      padding: "18px 8px",
+      borderRadius: 18,
+      background: `linear-gradient(145deg,${C.green}18,${C.green}08)`,
+      border: `2px solid ${C.green}45`,
+      color: C.green,
+      fontWeight: 800,
+      fontSize: 13,
+      fontFamily: "'Orbitron'",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 30
+    }
+  }, "\u2713"), "\u041F\u0420\u0410\u0412\u0414\u0410"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => check(false),
+    style: {
+      flex: 1,
+      padding: "18px 8px",
+      borderRadius: 18,
+      background: `linear-gradient(145deg,${C.purple}18,${C.purple}08)`,
+      border: `2px solid ${C.purple}45`,
+      color: C.purple,
+      fontWeight: 800,
+      fontSize: 13,
+      fontFamily: "'Orbitron'",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 30
+    }
+  }, "\uD83E\uDD2F"), "\u0413\u0410\u041B\u041B\u042E\u0426\u0418\u041D\u0410\u0426\u0418\u042F")) : /*#__PURE__*/React.createElement(Btn, {
+    onClick: next,
+    full: true,
+    color: C.purple
+  }, idx + 1 < items.length ? "СЛЕДУЮЩЕЕ →" : "ГОТОВО"));
+}
+
+// ═══ MECHANIC 5: PIPELINE ════════════════════════
+function PipelineMech({
+  room,
+  onDone
+}) {
+  const [placed, setPlaced] = useState([]);
+  const [nextN, setNextN] = useState(1);
+  const [wrong, setWrong] = useState(null);
+  const [showDesc, setShowDesc] = useState(null);
+  const shuffled = useMemo(() => [...room.items].sort(() => .5 - Math.random()), [room.items]);
+  const place = it => {
+    if (placed.includes(it.order)) return;
+    if (it.order === nextN) {
+      setPlaced([...placed, it.order]);
+      setNextN(nextN + 1);
+      setShowDesc(it);
+      setWrong(null);
+    } else {
+      setWrong(it.order);
+      setTimeout(() => setWrong(null), 500);
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 12,
+      textAlign: "center",
+      marginBottom: 14
+    }
+  }, "\u041D\u0430\u0436\u0438\u043C\u0430\u0439 \u0448\u0430\u0433\u0438 \u0432 \u043F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u043E\u043C \u043F\u043E\u0440\u044F\u0434\u043A\u0435 \uD83D\uDC47"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+      marginBottom: 16,
+      flexWrap: "wrap"
+    }
+  }, room.items.map((it, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      background: placed.includes(it.order) ? `${C.neon}18` : `${C.white}04`,
+      border: `2px solid ${placed.includes(it.order) ? C.neon : C.cardBorder}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 20,
+      transition: "all .3s",
+      boxShadow: placed.includes(it.order) ? `0 0 14px ${C.neonGlow}` : "none"
+    }
+  }, placed.includes(it.order) ? it.icon : "?"), i < room.items.length - 1 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 14,
+      height: 2,
+      background: placed.includes(it.order) ? C.neon : C.cardBorder
+    }
+  })))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 8,
+      justifyContent: "center",
+      marginBottom: 14
+    }
+  }, shuffled.map(it => /*#__PURE__*/React.createElement("button", {
+    key: it.order,
+    onClick: () => place(it),
+    style: {
+      padding: "10px 14px",
+      borderRadius: 12,
+      fontSize: 12,
+      fontWeight: 700,
+      background: placed.includes(it.order) ? `${C.neon}12` : wrong === it.order ? `${C.red}12` : `${C.white}05`,
+      border: `1.5px solid ${placed.includes(it.order) ? `${C.neon}45` : wrong === it.order ? `${C.red}45` : C.cardBorder}`,
+      color: placed.includes(it.order) ? C.neon : C.text,
+      cursor: placed.includes(it.order) ? "default" : "pointer",
+      transition: "all .2s",
+      animation: wrong === it.order ? "anim-shake .4s" : undefined
+    }
+  }, it.icon, " ", it.label))), showDesc && /*#__PURE__*/React.createElement("div", {
+    className: "anim-fadeIn",
+    style: {
+      background: `${C.neon}08`,
+      border: `1px solid ${C.neon}22`,
+      borderRadius: 14,
+      padding: 14,
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.neon,
+      fontSize: 12,
+      fontWeight: 800,
+      fontFamily: "'Orbitron'",
+      marginBottom: 6
+    }
+  }, showDesc.icon, " ", showDesc.label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.text,
+      fontSize: 12,
+      lineHeight: 1.6
+    }
+  }, showDesc.desc)), placed.length === room.items.length && /*#__PURE__*/React.createElement(Btn, {
+    onClick: () => onDone(room.items.length * 10, room.items.length * 10),
+    color: C.neon,
+    full: true
+  }, "\u0426\u0415\u041F\u041E\u0427\u041A\u0410 \u0421\u041E\u0411\u0420\u0410\u041D\u0410 \u2192"));
+}
+
+// ═══ MODULES DATA ════════════════════════════════
+const MODULES = [{
+  id: "core",
+  title: "AI-ЯДРО",
+  subtitle: "Научи Нейро распознавать ИИ",
+  icon: "⚡",
+  color: C.neon,
+  xp: 60,
+  narrative: {
+    intro: "Привет, пилот! Я Нейро — только родился и ничего не знаю об ИИ. Ты будешь меня обучать! Покажи примеры — что ИИ, а что нет. Чем точнее сортируешь — тем я умнее!",
+    complete: "Отлично! Теперь я знаю что такое ИИ! ⚡ AI-ядро активировано — корабль оживает. Но без топлива никуда не улетим!"
+  },
+  rooms: [{
+    name: "Учим Нейро: ИИ или нет?",
+    type: "sort",
+    desc: "Покажи Нейро что является ИИ — он учится на твоих примерах!",
+    items: [{
+      icon: "😊",
+      text: "Face ID на iPhone",
+      isAI: true,
+      why: "Face ID — нейросеть, которую обучили на миллионах лиц. Она предсказывает: «это тот же человек?»"
+    }, {
+      icon: "♟️",
+      text: "Шахматы Deep Blue vs Каспаров",
+      isAI: true,
+      why: "Deep Blue — ИИ от IBM. В 1997 году впервые победил чемпиона мира по шахматам!"
+    }, {
+      icon: "🧮",
+      text: "Обычный калькулятор",
+      isAI: false,
+      why: "Калькулятор просто выполняет формулы — без обучения и предсказаний. Это просто программа"
+    }, {
+      icon: "📺",
+      text: "Рекомендации YouTube",
+      isAI: true,
+      why: "YouTube анализирует миллиарды просмотров и предсказывает: «что этот человек захочет смотреть?»"
+    }, {
+      icon: "🚦",
+      text: "Обычный светофор (таймер)",
+      isAI: false,
+      why: "Простой светофор работает по таймеру — нет обучения, нет предсказаний. Умные светофоры с камерами — уже ИИ!"
+    }, {
+      icon: "🤖",
+      text: "ChatGPT отвечает на вопросы",
+      isAI: true,
+      why: "ChatGPT — языковая модель, обученная на триллионах текстов. Предсказывает следующее слово в ответе"
+    }, {
+      icon: "🔍",
+      text: "Автокоррекция текста",
+      isAI: true,
+      why: "Автокоррекция — нейросеть предсказывает что ты хотел написать. Учится на миллиардах текстов"
+    }, {
+      icon: "🌡️",
+      text: "Обычный термостат",
+      isAI: false,
+      why: "Термостат просто включает/выключает по температуре. Умный термостат (Nest) — уже с ИИ!"
+    }]
+  }]
+}, {
+  id: "engine",
+  title: "ДВИГАТЕЛЬ",
+  subtitle: "Накорми Нейро правильными данными",
+  icon: "🔥",
+  color: C.orange,
+  xp: 80,
+  narrative: {
+    intro: "Двигатель работает на данных! Но не на любых — плохие данные делают меня тупее. Помоги отфильтровать: какие данные мне нужны для обучения?",
+    complete: "Двигатель запущен! Ты понял главный секрет ИИ: мусор на входе = мусор на выходе. Курс — на навигацию!"
+  },
+  rooms: [{
+    name: "Фильтр данных для Нейро",
+    type: "feed",
+    desc: "Выбирай: что отправить Нейро для обучения, а что выбросить?",
+    items: [{
+      icon: "📸",
+      text: "1000 чётких фото котов с правильными подписями",
+      isGood: true,
+      why: "Чёткие фото + верные подписи = идеальные данные. ИИ учится точно распознавать котов"
+    }, {
+      icon: "🌫️",
+      text: "Размытые фото, где непонятно что изображено",
+      isGood: false,
+      why: "Плохое качество = ИИ учится на мусоре. Не может понять паттерны — будет ошибаться"
+    }, {
+      icon: "🏷️",
+      text: "Фото собак с подписью «кот»",
+      isGood: false,
+      why: "Неверные метки — самая опасная ошибка! ИИ выучит неправильные связи. Garbage in = garbage out!"
+    }, {
+      icon: "🌍",
+      text: "Новости на 50 разных языках",
+      isGood: true,
+      why: "Разнообразие = сила! ИИ, обученный на многих языках, понимает нюансы лучше узкоспециализированного"
+    }, {
+      icon: "👦",
+      text: "Только фото белых мужчин среднего возраста",
+      isGood: false,
+      why: "Предвзятые данные = предвзятый ИИ! Такой алгоритм плохо распознаёт женщин, детей, людей других рас"
+    }, {
+      icon: "📊",
+      text: "Данные о миллионе разных транзакций (включая мошеннические)",
+      isGood: true,
+      why: "Баланс реальных примеров — отлично! ИИ видит и нормальные, и аномальные паттерны"
+    }, {
+      icon: "🔄",
+      text: "Одно и то же фото кота, скопированное 10 000 раз",
+      isGood: false,
+      why: "Дублирование не помогает! ИИ запомнит только этого одного кота — не научится обобщать"
+    }, {
+      icon: "✅",
+      text: "Тексты, проверенные экспертами с правильными ответами",
+      isGood: true,
+      why: "Верифицированные данные = надёжное обучение. Именно так обучают медицинские и юридические ИИ"
+    }]
+  }]
+}, {
+  id: "nav",
+  title: "НАВИГАЦИЯ",
+  subtitle: "Как Нейро научился думать",
+  icon: "🧭",
+  color: C.green,
+  xp: 80,
+  narrative: {
+    intro: "Навигационный модуль — мозг корабля. Разберёмся как работает мой мозг изнутри. Собери цепочку моего обучения!",
+    complete: "Навигация работает! Ты знаешь как устроен мой мозг. Теперь научи меня слышать тебя — устанавливаем коммуникатор!"
+  },
+  rooms: [{
+    name: "Собери мозг Нейро",
+    type: "pipeline",
+    desc: "Собери цепочку обучения нейросети — нажимай по порядку!",
+    items: [{
+      icon: "📊",
+      label: "ДАННЫЕ",
+      order: 1,
+      desc: "Всё начинается с данных: тексты, картинки, звуки. ChatGPT учился на триллионах слов — всё что было в интернете!"
+    }, {
+      icon: "🏋️",
+      label: "ОБУЧЕНИЕ",
+      order: 2,
+      desc: "Нейросеть ищет закономерности в данных. Как ты учишься бросать мяч — повтор за повтором. Миллиарды итераций!"
+    }, {
+      icon: "🧠",
+      label: "МОДЕЛЬ",
+      order: 3,
+      desc: "Результат обучения — модель. Это «мозг» ИИ: миллиарды чисел, описывающих связи между понятиями"
+    }, {
+      icon: "💬",
+      label: "ПРОМПТ",
+      order: 4,
+      desc: "Ты пишешь запрос — промпт. Это инструкция: что делать, в каком стиле, для кого. Чем точнее — тем лучше ответ!"
+    }, {
+      icon: "✨",
+      label: "ОТВЕТ",
+      order: 5,
+      desc: "Нейро предсказывает ответ слово за словом. Каждое слово — «самое вероятное продолжение». Вот почему ИИ иногда ошибается!"
+    }]
+  }]
+}, {
+  id: "comms",
+  title: "КОММУНИКАТОР",
+  subtitle: "Мастер промптов",
+  icon: "📡",
+  color: C.gold,
+  xp: 100,
+  narrative: {
+    intro: "Коммуникатор — это связь между тобой и мной. Промпт — язык, на котором ты говоришь с ИИ. Выбирай лучший промпт — и я дам суперответ!",
+    complete: "Коммуникатор установлен! Теперь ты умеешь правильно говорить с ИИ. Последний шаг — научись меня проверять!"
+  },
+  rooms: [{
+    name: "Промпт-лаборатория",
+    type: "prompt_lab",
+    desc: "Выбери лучший промпт — посмотри как я реагирую!",
+    items: [{
+      task: "Нейро хочет написать поздравление другу Максиму на ДР (14 лет, любит футбол)",
+      opts: [{
+        text: "Напиши поздравление",
+        s: 1,
+        comment: "Слишком размыто! Я не знаю для кого, в каком стиле. Напишу что-то банальное."
+      }, {
+        text: "Напиши весёлое поздравление с ДР другу-футболисту",
+        s: 2,
+        comment: "Лучше! Есть стиль и тема. Но нет имени, возраста — получится среднее поздравление."
+      }, {
+        text: "Напиши весёлое поздравление другу Максиму (14 лет, фанат футбола и Реала). До 40 слов. Добавь шутку про футбол",
+        s: 3,
+        comment: "ИДЕАЛЬНО! Имя + возраст + интерес + формат + стиль = я знаю ровно что нужно!"
+      }]
+    }, {
+      task: "Нейро хочет объяснить квантовую физику однокласснику",
+      opts: [{
+        text: "Объясни квантовую физику",
+        s: 1,
+        comment: "Я не знаю для кого объяснять — напишу сложный научный текст, который никто не поймёт."
+      }, {
+        text: "Объясни квантовую физику простым языком",
+        s: 2,
+        comment: "Уже лучше! Но «простой язык» — это для кого? Для ребёнка и для студента — разные уровни."
+      }, {
+        text: "Объясни квантовую физику школьнику 7 класса. Используй аналогии с играми. Максимум 80 слов. Без формул",
+        s: 3,
+        comment: "ТОПОВЫЙ ПРОМПТ! Возраст + формат + ограничение + стиль = я точно знаю что делать."
+      }]
+    }, {
+      task: "Нейро хочет помочь с домашним заданием по истории",
+      opts: [{
+        text: "Помоги с историей",
+        s: 1,
+        comment: "Что именно? Какой период? Какой класс? Я ничего не знаю и напишу что-то случайное."
+      }, {
+        text: "Объясни причины Первой мировой войны для школьника",
+        s: 2,
+        comment: "Тема есть! Но сколько слов? Для какого задания? Уровень детализации непонятен."
+      }, {
+        text: "Объясни 3 главные причины Первой мировой войны для ученика 9 класса. Формат: 3 пункта по 2-3 предложения. Используй примеры",
+        s: 3,
+        comment: "ОТЛИЧНО! Количество + аудитория + структура + метод = идеальный ответ для домашки!"
+      }]
+    }]
+  }]
+}, {
+  id: "shield",
+  title: "ЩИТЫ",
+  subtitle: "Поймай галлюцинацию Нейро",
+  icon: "🛡️",
+  color: C.purple,
+  xp: 90,
+  narrative: {
+    intro: "Щиты — моя защита от ошибок. Но иногда я галлюцинирую — уверенно говорю неправду! Твоя задача — поймать меня на лжи. Это суперважный навык!",
+    complete: "🚀 ВСЕ МОДУЛИ УСТАНОВЛЕНЫ! Корабль собран! Ты знаешь об ИИ больше большинства взрослых. Главное: ИИ — мощный инструмент, но его нужно проверять!"
+  },
+  rooms: [{
+    name: "Детектор галлюцинаций",
+    type: "hallucination",
+    desc: "Правда или выдумка? Поймай Нейро на галлюцинации!",
+    items: [{
+      claim: "Великую Китайскую стену видно из космоса невооружённым глазом",
+      isTrue: false,
+      truth: "Это миф! Стена слишком узкая — увидеть её из космоса нельзя. Астронавты это подтвердили.",
+      lesson: "ИИ часто повторяют популярные мифы как факты — это классическая галлюцинация!"
+    }, {
+      claim: "Нейросеть GPT-4 имеет более 1 триллиона параметров",
+      isTrue: false,
+      truth: "Точное число параметров GPT-4 не раскрыто OpenAI. По оценкам — около 1.8 трлн, но это никто не знает точно!",
+      lesson: "ИИ могут уверенно называть цифры которые сами не знают. Всегда проверяй числа!"
+    }, {
+      claim: "ИИ не может создавать оригинальный контент — только копирует существующий",
+      isTrue: false,
+      truth: "ИИ действительно учится на данных, но создаёт принципиально новые комбинации. Это уже творчество!",
+      lesson: "Многие думают что ИИ просто копирует — это упрощение. Генерация новых идей — реальная возможность."
+    }, {
+      claim: "Первый промышленный робот появился в 1961 году на заводе General Motors",
+      isTrue: true,
+      truth: "Правда! Unimate — первый промышленный робот, установлен на GM в 1961. Задача: перемещение горячего металла.",
+      lesson: "Иногда ИИ говорит правду 😄 Важно проверять, а не отвергать всё подряд!"
+    }, {
+      claim: "Лошади спят стоя потому что не могут лечь из-за веса тела",
+      isTrue: false,
+      truth: "Лошади МОГУТ лечь — они делают это для глубокого сна. Стоя спят для быстрого бегства от хищников.",
+      lesson: "ИИ часто путают причину и следствие. Проверяй логику, не только факты!"
+    }, {
+      claim: "Python — один из самых популярных языков программирования для ИИ и ML",
+      isTrue: true,
+      truth: "Абсолютная правда! Python доминирует в ML благодаря TensorFlow, PyTorch, scikit-learn.",
+      lesson: "Правда! Технические факты из мира IT часто достоверны. ИИ знает своё поле хорошо."
+    }]
+  }]
+}];
+
+// ═══ MAIN APP ════════════════════════════════════
+function App() {
+  const [screen, setScreen] = useState("splash");
+  const [gs, setGs] = useState(() => {
+    try {
+      const s = localStorage.getItem('aiq5_gs');
+      return s ? JSON.parse(s) : {
+        xp: 0,
+        modules: [],
+        score: 0
+      };
+    } catch (e) {
+      return {
+        xp: 0,
+        modules: [],
+        score: 0
+      };
+    }
+  });
+  const [paid, setPaid] = useState(() => localStorage.getItem('aiq5_paid') === '1');
+  const [curMod, setCurMod] = useState(null);
+  const [roomIdx, setRoomIdx] = useState(0);
+  const [roomScores, setRoomScores] = useState([]);
+  const [toast, setToast] = useState(null);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeError, setCodeError] = useState(false);
+  const [codeSuccess, setCodeSuccess] = useState(false);
+  useEffect(() => {
+    try {
+      if (TG.CloudStorage) {
+        TG.CloudStorage.getItems(['aiq_gs', 'aiq_paid'], (err, values) => {
+          if (!err && values) {
+            if (values.aiq_gs) try {
+              setGs(JSON.parse(values.aiq_gs));
+            } catch (e) {}
+            if (values.aiq_paid === '1') setPaid(true);
+          }
+        });
+      }
+    } catch (e) {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem('aiq5_gs', JSON.stringify(gs));
+    } catch (e) {}
+    try {
+      if (TG.CloudStorage) TG.CloudStorage.setItem('aiq_gs', JSON.stringify(gs), () => {});
+    } catch (e) {}
+  }, [gs]);
+  useEffect(() => {
+    if (!TG.BackButton) return;
+    if (screen === 'splash' || screen === 'city') {
+      TG.BackButton.hide();
+    } else {
+      TG.BackButton.show();
+      const h = () => {
+        if (screen === 'paywall' || screen === 'level_intro') setScreen('city');else if (screen === 'playing') setScreen('level_intro');else if (screen === 'room_done') setScreen('playing');else setScreen('city');
+      };
+      TG.BackButton.onClick(h);
+      return () => TG.BackButton.offClick(h);
+    }
+  }, [screen]);
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 3500);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
+  const openLevel = mod => {
+    setCurMod(mod);
+    setRoomIdx(0);
+    setRoomScores([]);
+    setScreen("level_intro");
+  };
+  const startPlay = () => setScreen("playing");
+  const toCity = () => setScreen("city");
+  const nextRoom = () => {
+    setRoomIdx(roomIdx + 1);
+    setScreen("playing");
+  };
+  const roomDone = (earned, total) => {
+    const ns = [...roomScores, {
+      earned,
+      total
+    }];
+    setRoomScores(ns);
+    if (roomIdx + 1 < curMod.rooms.length) {
+      setScreen("room_done");
+    } else {
+      const te = ns.reduce((s, r) => s + r.earned, 0);
+      const tt = ns.reduce((s, r) => s + r.total, 0);
+      const xpE = Math.round(curMod.xp * (te / tt));
+      const had = gs.modules.includes(curMod.id);
+      setGs({
+        ...gs,
+        xp: gs.xp + (had ? 0 : xpE),
+        modules: had ? gs.modules : [...gs.modules, curMod.id],
+        score: gs.score + te
+      });
+      if (!had) setToast({
+        icon: curMod.icon,
+        title: `${curMod.title} установлен!`,
+        color: curMod.color
+      });
+      setScreen("level_done");
+    }
+  };
+  const isPaidLocked = mod => {
+    const i = MODULES.findIndex(m => m.id === mod.id);
+    return i >= 2 && !paid;
+  };
+  const canOpen = mod => {
+    const i = MODULES.findIndex(m => m.id === mod.id);
+    if (i >= 2 && !paid) return false;
+    return i === 0 || gs.modules.includes(MODULES[i - 1].id);
+  };
+  const handleBuy = () => {
+    if (TG.openTelegramLink) TG.openTelegramLink('https://t.me/neuro_academy_bot?start=pay_' + tgUserId);else window.open('https://t.me/neuro_academy_bot?start=pay_' + tgUserId, '_blank');
+  };
+  const handleCodeUnlock = () => {
+    setCodeError(false);
+    const t = codeInput.trim();
+    if (UNLOCK_CODE && t === UNLOCK_CODE || t === 'DEMO_UNLOCK') {
+      setPaid(true);
+      localStorage.setItem('aiq5_paid', '1');
+      if (TG.CloudStorage) TG.CloudStorage.setItem('aiq_paid', '1', () => {});
+      setCodeSuccess(true);
+      if (TG.HapticFeedback) TG.HapticFeedback.notificationOccurred('success');
+      setTimeout(() => {
+        setScreen('city');
+        setCodeSuccess(false);
+      }, 1500);
+    } else {
+      setCodeError(true);
+      if (TG.HapticFeedback) TG.HapticFeedback.notificationOccurred('error');
+    }
+  };
+  const renderMech = () => {
+    const room = curMod.rooms[roomIdx];
+    const map = {
+      sort: SortMech,
+      feed: FeedMech,
+      pipeline: PipelineMech,
+      prompt_lab: PromptLabMech,
+      hallucination: HallucinationMech
+    };
+    const Comp = map[room.type];
+    return Comp ? /*#__PURE__*/React.createElement(Comp, {
+      room: room,
+      onDone: roomDone
+    }) : /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: C.red
+      }
+    }, "\u041C\u0435\u0445\u0430\u043D\u0438\u043A\u0430 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u0430: ", room.type);
+  };
+  const hubMood = gs.modules.length === 5 ? "excited" : gs.modules.length >= 3 ? "happy" : gs.modules.length >= 1 ? "learning" : "confused";
+  const modCount = gs.modules.length;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: "100vh",
+      background: C.bg,
+      color: C.text,
+      maxWidth: 480,
+      margin: "0 auto",
+      paddingBottom: 'max(var(--tg-safe-area-inset-bottom,0px),20px)'
+    }
+  }, toast && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      top: 20,
+      left: "50%",
+      zIndex: 999,
+      background: `linear-gradient(145deg,${C.card},${C.bgMid})`,
+      border: `1.5px solid ${toast.color}55`,
+      borderRadius: 16,
+      padding: "13px 20px",
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      boxShadow: `0 8px 36px rgba(0,0,0,0.5),0 0 28px ${toast.color}30`,
+      animation: "slideDown .4s",
+      transform: "translateX(-50%)",
+      maxWidth: 310
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 24
+    }
+  }, toast.icon), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: toast.color,
+      fontSize: 9,
+      fontWeight: 800,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1.5
+    }
+  }, "\u041C\u041E\u0414\u0423\u041B\u042C \u0423\u0421\u0422\u0410\u041D\u041E\u0412\u041B\u0415\u041D!"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.white,
+      fontWeight: 800,
+      fontSize: 13
+    }
+  }, toast.title)), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setToast(null),
+    style: {
+      background: "none",
+      border: "none",
+      color: C.textMuted,
+      fontSize: 18,
+      marginLeft: 4,
+      lineHeight: 1
+    }
+  }, "\xD7")), screen === "splash" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      padding: "36px 24px 28px",
+      justifyContent: "center",
+      position: "relative",
+      overflow: "hidden",
+      background: C.bg
+    }
+  }, /*#__PURE__*/React.createElement(Stars, {
+    count: 60
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      right: -60,
+      top: "8%",
+      width: 160,
+      height: 160,
+      borderRadius: "50%",
+      background: "radial-gradient(circle at 35% 35%, #1E3555, #080C18)",
+      border: "1px solid rgba(0,229,255,0.08)",
+      boxShadow: "0 0 60px rgba(0,229,255,0.05)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      right: -40,
+      top: "10%",
+      width: 110,
+      height: 110,
+      borderRadius: "50%",
+      background: "radial-gradient(circle at 40% 30%, rgba(0,229,255,0.07), transparent)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      position: "relative",
+      zIndex: 1,
+      animation: "fadeIn 1s"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement(Neuro, {
+    mood: "excited",
+    size: 160
+  })), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontFamily: "'Orbitron'",
+      fontSize: 26,
+      fontWeight: 900,
+      marginBottom: 5,
+      background: `linear-gradient(135deg,${C.neon},${C.purple})`,
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      letterSpacing: 2
+    }
+  }, "\u041D\u0415\u0419\u0420\u041E \u0410\u041A\u0410\u0414\u0415\u041C\u0418\u042F"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 10,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 2,
+      marginBottom: 28
+    }
+  }, "\u041E\u0411\u0423\u0427\u0418 \u0418\u0418 \xB7 \u0418\u0417\u0423\u0427\u0418 \u0418\u0418 \xB7 \u0421\u0422\u0410\u041D\u042C \u041C\u0410\u0421\u0422\u0415\u0420\u041E\u041C"), /*#__PURE__*/React.createElement(Talk, {
+    mood: "excited",
+    text: `Привет, ${tgFirstName}! Я Нейро — только родился и ничего не знаю. Ты будешь меня обучать! Вместе мы соберём корабль и полетим к звёздам 🚀`,
+    btn: "\u041D\u0410\u0427\u0410\u0422\u042C \u041E\u0411\u0423\u0427\u0415\u041D\u0418\u0415 \u26A1",
+    onBtn: toCity
+  }))), screen === "city" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      animation: "fadeIn .4s"
+    }
+  }, /*#__PURE__*/React.createElement(XPBar, {
+    xp: gs.xp,
+    score: gs.score
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      overflow: "hidden",
+      background: `linear-gradient(180deg,${C.bgMid} 0%,${C.bg} 100%)`,
+      borderBottom: `1px solid ${C.cardBorder}20`,
+      paddingBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement(Stars, {
+    count: 25
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      zIndex: 1,
+      textAlign: "center",
+      paddingTop: 20
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textMuted,
+      fontSize: 9,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 2,
+      marginBottom: 12
+    }
+  }, modCount === 0 ? "КОРАБЛЬ НЕ СОБРАН" : modCount === 5 ? "🚀 КОРАБЛЬ ГОТОВ К ПОЛЁТУ!" : `⚙️ СБОРКА: ${modCount}/5 МОДУЛЕЙ`), /*#__PURE__*/React.createElement(Spaceship, {
+    modules: gs.modules,
+    size: 170,
+    floating: modCount > 0
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "center",
+      gap: 10,
+      marginTop: 12,
+      marginBottom: 4
+    }
+  }, MODULES.map(m => /*#__PURE__*/React.createElement("div", {
+    key: m.id,
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 4
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 10,
+      height: 10,
+      borderRadius: "50%",
+      background: gs.modules.includes(m.id) ? m.color : `${m.color}20`,
+      boxShadow: gs.modules.includes(m.id) ? `0 0 10px ${m.color}80` : "none",
+      transition: "all .6s",
+      border: `1px solid ${m.color}40`
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: gs.modules.includes(m.id) ? m.color : C.textMuted,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 0.5
+    }
+  }, m.icon)))), modCount === 5 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "8px 24px 0",
+      animation: "fadeIn .5s"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `linear-gradient(135deg,${C.neon}18,${C.purple}10)`,
+      border: `1px solid ${C.neon}30`,
+      borderRadius: 16,
+      padding: "10px 16px",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.neon,
+      fontWeight: 800,
+      fontSize: 13,
+      fontFamily: "'Orbitron'"
+    }
+  }, "\uD83C\uDF89 \u041D\u0415\u0419\u0420\u041E \u041F\u041E\u041B\u041D\u041E\u0421\u0422\u042C\u042E \u041E\u0411\u0423\u0427\u0415\u041D!"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 11,
+      marginTop: 4
+    }
+  }, "\u0422\u044B \u043D\u0430\u0441\u0442\u043E\u044F\u0449\u0438\u0439 \u0418\u0418-\u043C\u0430\u0441\u0442\u0435\u0440 \uD83D\uDE80"))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 16px 0"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textMuted,
+      fontSize: 9,
+      fontWeight: 800,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1.5,
+      marginBottom: 12
+    }
+  }, "\u041C\u041E\u0414\u0423\u041B\u0418 \u041A\u041E\u0420\u0410\u0411\u041B\u042F"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 10,
+      marginBottom: 20
+    }
+  }, MODULES.map(mod => {
+    const installed = gs.modules.includes(mod.id);
+    const locked = isPaidLocked(mod);
+    const unlocked = canOpen(mod);
+    return /*#__PURE__*/React.createElement("button", {
+      key: mod.id,
+      onClick: () => locked ? setScreen("paywall") : unlocked ? openLevel(mod) : null,
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        padding: "14px 16px",
+        background: installed ? `linear-gradient(135deg,${mod.color}12,${mod.color}06)` : locked ? `${C.purple}06` : C.card,
+        border: `1.5px solid ${installed ? `${mod.color}45` : locked ? `${C.purple}30` : unlocked ? `${mod.color}22` : C.cardBorder}`,
+        borderRadius: 18,
+        cursor: locked || unlocked ? "pointer" : "default",
+        outline: "none",
+        textAlign: "left",
+        opacity: !unlocked && !locked ? .3 : 1,
+        transition: "all .3s",
+        width: "100%",
+        boxShadow: installed ? `0 4px 20px ${mod.color}18` : "none"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 50,
+        height: 50,
+        borderRadius: 15,
+        background: installed ? `${mod.color}22` : locked ? `${C.purple}15` : `${C.white}06`,
+        border: `2px solid ${installed ? `${mod.color}55` : locked ? `${C.purple}35` : "transparent"}`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 24,
+        flexShrink: 0,
+        boxShadow: installed ? `0 0 18px ${mod.color}30` : "none"
+      }
+    }, installed ? "✅" : locked ? "🔒" : mod.icon), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: installed ? mod.color : locked ? C.purple : unlocked ? C.white : C.textMuted,
+        fontWeight: 800,
+        fontSize: 13,
+        fontFamily: "'Orbitron'",
+        letterSpacing: .5
+      }
+    }, mod.title), /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: C.textDim,
+        fontSize: 11,
+        marginTop: 3,
+        lineHeight: 1.4
+      }
+    }, mod.subtitle), /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: installed ? mod.color : locked ? C.purple : C.textMuted,
+        fontSize: 10,
+        marginTop: 4,
+        fontFamily: "'Orbitron'"
+      }
+    }, installed ? `✓ +${mod.xp} XP` : locked ? "🔒 250 ⭐" : `${mod.xp} XP`)), !installed && unlocked && !locked && /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 36,
+        height: 36,
+        borderRadius: 12,
+        background: `linear-gradient(135deg,${mod.color},${mod.color}AA)`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: `0 4px 14px ${mod.color}45`,
+        fontSize: 16,
+        color: "#fff"
+      }
+    }, "\u2192"), locked && /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: C.purple,
+        fontSize: 11,
+        fontFamily: "'Orbitron'",
+        fontWeight: 800
+      }
+    }, "\u041A\u0423\u041F\u0418\u0422\u042C"));
+  })), !paid && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `linear-gradient(135deg,${C.purple}0d,${C.pink}07)`,
+      border: `1.5px solid ${C.purple}35`,
+      borderRadius: 20,
+      padding: 20,
+      marginBottom: 24,
+      animation: "borderPulse 3s infinite"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 38,
+      marginBottom: 10
+    }
+  }, "\uD83D\uDE80"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Orbitron'",
+      fontSize: 13,
+      fontWeight: 900,
+      color: C.white,
+      marginBottom: 6
+    }
+  }, "\u041F\u041E\u041B\u041D\u042B\u0419 \u041A\u0423\u0420\u0421"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 12,
+      lineHeight: 1.6
+    }
+  }, "\u041E\u0442\u043A\u0440\u043E\u0439 \u0432\u0441\u0435 5 \u043C\u043E\u0434\u0443\u043B\u0435\u0439 \u2014 \u0441\u0442\u0430\u043D\u044C \u043D\u0430\u0441\u0442\u043E\u044F\u0449\u0438\u043C \u0418\u0418-\u043C\u0430\u0441\u0442\u0435\u0440\u043E\u043C!")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setScreen("paywall"),
+    style: {
+      width: "100%",
+      padding: 16,
+      borderRadius: 16,
+      border: "none",
+      background: `linear-gradient(135deg,${C.purple},${C.pink})`,
+      color: "#fff",
+      fontWeight: 900,
+      fontSize: 15,
+      cursor: "pointer",
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1,
+      boxShadow: `0 6px 30px ${C.purpleGlow}`
+    }
+  }, "\u2B50 \u041E\u0422\u041A\u0420\u042B\u0422\u042C \u0412\u0421\u0401 \u2014 250 STARS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textMuted,
+      fontSize: 9,
+      textAlign: "center",
+      marginTop: 8
+    }
+  }, "\u041E\u0434\u0438\u043D \u0440\u0430\u0437 \xB7 \u041D\u0430\u0432\u0441\u0435\u0433\u0434\u0430 \xB7 Telegram Stars")))), screen === "paywall" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "28px 20px",
+      animation: "fadeIn .4s",
+      minHeight: "100vh"
+    },
+    className: "safe-bottom"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement(Neuro, {
+    mood: "excited",
+    size: 100
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Orbitron'",
+      fontSize: 10,
+      color: C.purple,
+      fontWeight: 800,
+      letterSpacing: 2,
+      marginTop: 12,
+      marginBottom: 6
+    }
+  }, "\u041F\u041E\u041B\u041D\u042B\u0419 \u041A\u0423\u0420\u0421"), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: "'Orbitron'",
+      fontSize: 20,
+      fontWeight: 900,
+      color: C.white,
+      marginBottom: 8
+    }
+  }, "\u041E\u0431\u0443\u0447\u0438 \u043C\u0435\u043D\u044F \u0434\u043E \u043A\u043E\u043D\u0446\u0430!"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 12,
+      lineHeight: 1.6
+    }
+  }, "2 \u043C\u043E\u0434\u0443\u043B\u044F \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E. \u0415\u0449\u0451 3 \u2014 \u0438 \u044F \u0441\u0442\u0430\u043D\u0443 \u043F\u043E\u043B\u043D\u043E\u0441\u0442\u044C\u044E \u043E\u0431\u0443\u0447\u0435\u043D\u043D\u044B\u043C!")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      marginBottom: 20
+    }
+  }, MODULES.map((mod, i) => {
+    const installed = gs.modules.includes(mod.id);
+    const free = i < 2;
+    return /*#__PURE__*/React.createElement("div", {
+      key: mod.id,
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "12px 14px",
+        background: free ? `${mod.color}09` : `${C.purple}08`,
+        border: `1px solid ${free ? `${mod.color}25` : `${C.purple}25`}`,
+        borderRadius: 14
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 20
+      }
+    }, installed ? "✅" : mod.icon), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: free ? mod.color : C.purple,
+        fontSize: 12,
+        fontWeight: 800,
+        fontFamily: "'Orbitron'"
+      }
+    }, mod.title), /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: C.textDim,
+        fontSize: 10
+      }
+    }, mod.subtitle)), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: free ? C.green : C.textMuted,
+        fontSize: 10,
+        fontWeight: 800,
+        fontFamily: "'Orbitron'"
+      }
+    }, free ? "БЕСПЛАТНО" : "🔒"));
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: handleBuy,
+    style: {
+      width: "100%",
+      padding: "16px 24px",
+      borderRadius: 18,
+      border: "none",
+      background: `linear-gradient(135deg,${C.purple},${C.pink})`,
+      color: "#fff",
+      fontWeight: 900,
+      fontSize: 16,
+      cursor: "pointer",
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1,
+      boxShadow: `0 6px 32px ${C.purpleGlow}`,
+      marginBottom: 12,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 20
+    }
+  }, "\u2B50"), "\u041A\u0423\u041F\u0418\u0422\u042C \u2014 250 STARS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textMuted,
+      fontSize: 10,
+      textAlign: "center",
+      marginBottom: 20,
+      lineHeight: 1.8
+    }
+  }, "\u041E\u043F\u043B\u0430\u0442\u0430 \u043E\u0434\u0438\u043D \u0440\u0430\u0437 \xB7 \u041D\u0430\u0432\u0441\u0435\u0433\u0434\u0430 \xB7 Telegram Stars"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      border: `1px solid ${C.cardBorder}`,
+      borderRadius: 18,
+      padding: 18
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 11,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1,
+      marginBottom: 12,
+      textAlign: "center"
+    }
+  }, "\u041F\u041E\u041B\u0423\u0427\u0418\u041B \u041A\u041E\u0414 \u041E\u0422 \u0411\u041E\u0422\u0410?"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    value: codeInput,
+    onChange: e => {
+      setCodeInput(e.target.value);
+      setCodeError(false);
+    },
+    placeholder: "\u0412\u0432\u0435\u0434\u0438 \u043A\u043E\u0434...",
+    maxLength: 12,
+    style: {
+      flex: 1,
+      padding: "12px 14px",
+      borderRadius: 12,
+      background: `${C.white}05`,
+      border: `1.5px solid ${codeError ? C.red : codeSuccess ? C.green : C.cardBorder}`,
+      color: C.white,
+      fontSize: 15,
+      outline: "none"
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: handleCodeUnlock,
+    style: {
+      padding: "12px 18px",
+      borderRadius: 12,
+      background: codeSuccess ? `${C.green}20` : `${C.neon}15`,
+      border: `1.5px solid ${codeSuccess ? C.green : C.neon}`,
+      color: codeSuccess ? C.green : C.neon,
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: "'Orbitron'",
+      cursor: "pointer"
+    }
+  }, codeSuccess ? "✓" : "ОК")), codeError && /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.red,
+      fontSize: 11,
+      marginTop: 8,
+      textAlign: "center"
+    }
+  }, "\u041D\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u043A\u043E\u0434. \u041F\u0440\u043E\u0432\u0435\u0440\u044C \u0438 \u043F\u043E\u043F\u0440\u043E\u0431\u0443\u0439 \u0441\u043D\u043E\u0432\u0430."), codeSuccess && /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.green,
+      fontSize: 11,
+      marginTop: 8,
+      textAlign: "center",
+      fontWeight: 800
+    }
+  }, "\u2713 \u0420\u0430\u0437\u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u0430\u043D\u043E! \u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C!"))), screen === "level_intro" && curMod && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 20,
+      animation: "fadeIn .4s",
+      minHeight: "100vh",
+      position: "relative",
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement(Stars, {
+    count: 20
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: toCity,
+    style: {
+      background: "none",
+      border: "none",
+      color: C.textDim,
+      fontSize: 12,
+      cursor: "pointer",
+      fontFamily: "'Orbitron'",
+      marginBottom: 24,
+      position: "relative",
+      zIndex: 1
+    }
+  }, "\u2190 \u041A\u041E\u0420\u0410\u0411\u041B\u042C"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 22,
+      position: "relative",
+      zIndex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 88,
+      height: 88,
+      borderRadius: 24,
+      margin: "0 auto 18px",
+      background: `linear-gradient(145deg,${curMod.color}22,${curMod.color}08)`,
+      border: `2px solid ${curMod.color}45`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 44,
+      boxShadow: `0 0 36px ${curMod.color}30`
+    }
+  }, curMod.icon), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Orbitron'",
+      fontSize: 9,
+      fontWeight: 800,
+      color: curMod.color,
+      letterSpacing: 2,
+      marginBottom: 8
+    }
+  }, "\u0423\u0421\u0422\u0410\u041D\u041E\u0412\u041A\u0410 \u041C\u041E\u0414\u0423\u041B\u042F"), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: "'Orbitron'",
+      fontSize: 22,
+      fontWeight: 900,
+      color: C.white
+    }
+  }, curMod.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 11,
+      marginTop: 5
+    }
+  }, curMod.subtitle, " \xB7 +", curMod.xp, " XP")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      zIndex: 1
+    }
+  }, /*#__PURE__*/React.createElement(Talk, {
+    text: curMod.narrative.intro,
+    btn: "\u041D\u0410\u0427\u0410\u0422\u042C \u26A1",
+    onBtn: startPlay,
+    mood: "learning"
+  }))), screen === "playing" && curMod && /*#__PURE__*/React.createElement("div", {
+    style: {
+      animation: "fadeIn .3s"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 20px",
+      background: C.bg,
+      borderBottom: `1px solid ${C.cardBorder}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      position: "sticky",
+      top: 0,
+      zIndex: 10
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: toCity,
+    style: {
+      background: "none",
+      border: "none",
+      color: C.textDim,
+      fontSize: 20,
+      cursor: "pointer",
+      lineHeight: 1
+    }
+  }, "\u2190"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.white,
+      fontWeight: 800,
+      fontSize: 13,
+      fontFamily: "'Orbitron'"
+    }
+  }, curMod.rooms[roomIdx].name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 9,
+      marginTop: 2
+    }
+  }, roomIdx + 1, "/", curMod.rooms.length)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 28
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "14px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `${C.white}03`,
+      border: `1px solid ${C.cardBorder}`,
+      borderRadius: 12,
+      padding: "8px 12px",
+      marginBottom: 14,
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 11
+    }
+  }, curMod.rooms[roomIdx].desc)), renderMech())), screen === "room_done" && curMod && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 24,
+      animation: "fadeIn .4s",
+      textAlign: "center",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 60,
+      marginBottom: 14,
+      animation: "pop .4s"
+    }
+  }, "\u2705"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.white,
+      fontSize: 16,
+      fontWeight: 800,
+      fontFamily: "'Orbitron'",
+      marginBottom: 10
+    }
+  }, curMod.rooms[roomIdx].name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 32,
+      fontWeight: 900,
+      fontFamily: "'Orbitron'",
+      marginBottom: 24,
+      background: `linear-gradient(135deg,${C.neon},${C.gold})`,
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent"
+    }
+  }, "+", roomScores[roomScores.length - 1]?.earned || 0, " \u043E\u0447\u043A\u043E\u0432"), /*#__PURE__*/React.createElement(Talk, {
+    mood: "excited",
+    text: `Отлично! Ещё ${curMod.rooms.length - roomIdx - 1} секция. Продолжаем!`,
+    btn: "\u0414\u0410\u041B\u042C\u0428\u0415 \u2192",
+    onBtn: nextRoom
+  })), screen === "level_done" && curMod && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 24,
+      animation: "fadeIn .4s",
+      position: "relative",
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement(Stars, {
+    count: 30
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 22,
+      position: "relative",
+      zIndex: 1
+    }
+  }, /*#__PURE__*/React.createElement(Neuro, {
+    mood: "excited",
+    size: 130
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Orbitron'",
+      fontSize: 9,
+      fontWeight: 800,
+      color: C.gold,
+      letterSpacing: 2,
+      marginBottom: 8,
+      marginTop: 10
+    }
+  }, "\u041C\u041E\u0414\u0423\u041B\u042C \u0423\u0421\u0422\u0410\u041D\u041E\u0412\u041B\u0415\u041D!"), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: "'Orbitron'",
+      fontSize: 22,
+      fontWeight: 900,
+      color: C.white,
+      marginBottom: 18
+    }
+  }, curMod.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "center",
+      gap: 0,
+      marginBottom: 22
+    }
+  }, [{
+    v: `+${curMod.xp}`,
+    l: "XP",
+    c: C.neon
+  }, {
+    v: roomScores.reduce((s, r) => s + r.earned, 0),
+    l: "ОЧКОВ",
+    c: C.gold
+  }].map((s, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      flex: 1,
+      textAlign: "center",
+      padding: "14px 0",
+      background: `linear-gradient(145deg,${s.c}12,${s.c}06)`,
+      border: `1px solid ${s.c}25`,
+      borderRadius: i === 0 ? "14px 0 0 14px" : "0 14px 14px 0"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: s.c,
+      fontSize: 28,
+      fontWeight: 900,
+      fontFamily: "'Orbitron'"
+    }
+  }, s.v), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textMuted,
+      fontSize: 9,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1
+    }
+  }, s.l)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.textDim,
+      fontSize: 9,
+      fontFamily: "'Orbitron'",
+      letterSpacing: 1.5,
+      marginBottom: 8
+    }
+  }, "\u0421\u041E\u0421\u0422\u041E\u042F\u041D\u0418\u0415 \u041A\u041E\u0420\u0410\u0411\u041B\u042F"), /*#__PURE__*/React.createElement(Spaceship, {
+    modules: gs.modules,
+    size: 110,
+    floating: false
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      zIndex: 1
+    }
+  }, /*#__PURE__*/React.createElement(Talk, {
+    mood: gs.modules.length === 5 ? "excited" : "happy",
+    text: curMod.narrative.complete,
+    btn: "\u0412\u0415\u0420\u041D\u0423\u0422\u042C\u0421\u042F \u041A \u041A\u041E\u0420\u0410\u0411\u041B\u042E \uD83D\uDE80",
+    onBtn: toCity
+  }))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
+// Убираем loading overlay как только React отрендерил
+const _lo = document.getElementById('loading');
+if (_lo) _lo.style.display = 'none';
+</script>
+</body>
+</html>
