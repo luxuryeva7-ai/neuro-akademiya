@@ -2110,246 +2110,234 @@ function PipelineMech({
 }
 
 // ═══ MODULES DATA ════════════════════════════════
-// ═══ MISSION MECH — PATTERN GAME ═══════════════════
+// ═══ MISSION MECH — PUZZLE: СОБЕРИ ИИ ═══════════════════
 
-const PATTERNS = [
+const ROCKET_PARTS = [
   {
-    label: '🟢 Разминка',
-    skill: 'ChatGPT предсказывает следующее слово точно так же',
-    seq: ['🍎','🍊','🍎','🍊'],
-    ans: '🍎',
-    opts: ['🍎','🍋','🍇','🍊'],
-    hint: 'Найди закономерность как нейросеть',
-    fact: 'ChatGPT читал весь интернет — и теперь угадывает следующее слово по паттернам. Ты только что сделал то же самое!'
+    id: 'data',
+    emoji: '📊',
+    name: 'ДАННЫЕ',
+    color: '#06d6a0',
+    slot: 'data',
+    what: 'Топливо для ИИ',
+    fact: 'ChatGPT учился на 570 ГБ текста — это как прочитать 1 миллион книг. Без данных ИИ — просто пустая коробка.',
+    rocketPart: 'Бак с топливом'
   },
   {
-    label: '🟢 Три цвета',
-    skill: 'Распознавание цикличных паттернов — основа ИИ',
-    seq: ['🔴','🔵','🟡','🔴'],
-    ans: '🔵',
-    opts: ['🔴','🔵','🟡','🟢'],
-    hint: 'Найди цикл из трёх элементов',
-    fact: 'Именно так Siri находит паттерны в твоём голосе — и понимает когда ты задаёшь вопрос!'
+    id: 'algo',
+    emoji: '⚡',
+    name: 'АЛГОРИТМ',
+    color: '#ffd166',
+    slot: 'algo',
+    what: 'Правила как думает ИИ',
+    fact: 'Нейросеть — это миллиарды простых правил "если-то". Каждый нейрон решает одну крошечную задачу, вместе — они умнее человека.',
+    rocketPart: 'Двигатель'
   },
   {
-    label: '🟡 Луна растёт',
-    skill: 'Прогноз временных рядов — ИИ предсказывает будущее',
-    seq: ['🌑','🌒','🌓','🌔'],
-    ans: '🌕',
-    opts: ['🌕','🌑','🌛','🌙'],
-    hint: 'Каждый шаг прибавляет — что дальше?',
-    fact: 'ИИ предсказывает погоду точно так же — смотрит на цепочку данных за часы и находит куда движется!'
+    id: 'model',
+    emoji: '🧠',
+    name: 'МОДЕЛЬ',
+    color: '#a855f7',
+    slot: 'model',
+    what: 'Мозг ИИ — все знания внутри',
+    fact: 'GPT-4 весит 1.8 триллиона параметров. Это как 1.8 триллиона регуляторов громкости — каждый настроен идеально после обучения.',
+    rocketPart: 'Бортовой компьютер'
   },
   {
-    label: '🟡 Времена года',
-    skill: 'Цикличные паттерны — ИИ видит повторы в данных',
-    seq: ['🌸','☀️','🍂','❄️'],
-    ans: '🌸',
-    opts: ['🌸','🌺','🌻','☁️'],
-    hint: 'Цикл из 4 элементов — снова с начала',
-    fact: 'ИИ Яндекс.Погоды нашёл такие циклы за 50 лет наблюдений. Теперь точность прогноза — 95% на 3 дня вперёд!'
+    id: 'server',
+    emoji: '🖥️',
+    name: 'СЕРВЕР',
+    color: '#ef476f',
+    slot: 'server',
+    what: 'Компьютер где живёт ИИ',
+    fact: 'ChatGPT работает на 10 000+ мощных видеокарт. Один запрос к нему стоит примерно $0.01 — миллионы запросов в секунду!',
+    rocketPart: 'Реактор'
   },
   {
-    label: '🟡 Жизнь курочки',
-    skill: 'Биологические циклы — ИИ находит их в ДНК',
-    seq: ['🥚','🐣','🐥','🐔'],
-    ans: '🥚',
-    opts: ['🥚','🐣','🦅','🐓'],
-    hint: 'Конец цикла — возвращаемся в начало',
-    fact: 'ИИ AlphaFold нашёл такие паттерны в белках — это помогло создать лекарства от болезней быстрее в 100 раз!'
+    id: 'api',
+    emoji: '🔗',
+    name: 'API',
+    color: '#118ab2',
+    slot: 'api',
+    what: 'Связь ИИ с миром',
+    fact: 'API — это как розетка: любое приложение может "воткнуться" и использовать ИИ. Именно так Siri, Google Maps и тысячи приложений получают умные ответы.',
+    rocketPart: 'Система связи'
   },
   {
-    label: '🟡 Светофор',
-    skill: 'Паттерны в правилах — ИИ автоматизирует системы',
-    seq: ['🔴','🟡','🟢','🟡'],
-    ans: '🔴',
-    opts: ['🔴','🟢','🟡','⚫'],
-    hint: 'Не просто чередование — найди точный порядок!',
-    fact: 'Умные светофоры в Москве: ИИ смотрит на пробки в реальном времени и сам меняет время каждого сигнала!'
-  },
-  {
-    label: '🔴 Взрослеем',
-    skill: 'Прогрессия данных — ИИ предсказывает изменения',
-    seq: ['👶','🧒','👦','👨'],
-    ans: '👴',
-    opts: ['👴','👶','🧒','🧑'],
-    hint: 'Каждый шаг — следующий этап жизни',
-    fact: 'ИИ умеет предсказывать как ты будешь выглядеть через 30 лет — он нашёл такие паттерны в тысячах фотографий!'
-  },
-  {
-    label: '🔴 Космос',
-    skill: 'Сложные последовательности — высший уровень ИИ',
-    seq: ['🌍','🚀','💫','⭐'],
-    ans: '🌌',
-    opts: ['🌌','🪐','☄️','💫'],
-    hint: 'Путешествие от Земли в глубокий космос...',
-    fact: 'NASA использует ИИ чтобы находить планеты — ИИ видит паттерны в свете звёзд которые человек пропустил бы!'
+    id: 'ui',
+    emoji: '👁️',
+    name: 'ИНТЕРФЕЙС',
+    color: '#ff6b35',
+    slot: 'ui',
+    what: 'То что видит пользователь',
+    fact: 'Первый интерфейс ChatGPT создали за 2 недели. До этого ИИ умел всё то же самое — но никто об этом не знал. Хороший интерфейс = миллион пользователей.',
+    rocketPart: 'Кабина пилота'
   }
 ];
 
-const MISSION_FACTS = [
-  '🧠 ИИ учится находя паттерны — точно как ты сейчас',
-  '🌍 ИИ уже предсказывает погоду, пробки и болезни',
-  '🚀 NASA, Яндекс, Spotify — везде внутри ИИ'
-];
-
-function PatternStage({ onDone }) {
-  const [round, setRound] = React.useState(0);
-  const [selected, setSelected] = React.useState(null);
-  const [score, setScore] = React.useState(0);
+function PuzzleMech({ onDone }) {
+  const [step, setStep] = React.useState(0);       // текущая деталь
+  const [installed, setInstalled] = React.useState([]); // установленные id
   const [showFact, setShowFact] = React.useState(false);
+  const [launching, setLaunching] = React.useState(false);
 
-  var p = PATTERNS[round];
+  var part = ROCKET_PARTS[step];
+  var allDone = installed.length === ROCKET_PARTS.length;
 
-  var choose = function(opt) {
-    if (selected !== null) return;
-    var correct = opt === p.ans;
-    var newScore = score + (correct ? 1 : 0);
-    setSelected(opt);
-    setScore(newScore);
+  var install = function() {
+    if (showFact) return;
     setShowFact(true);
+    setInstalled(function(prev) { return prev.concat([part.id]); });
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback)
-      window.Telegram.WebApp.HapticFeedback.impactOccurred(correct ? 'medium' : 'heavy');
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
   };
 
   var goNext = function() {
     setShowFact(false);
-    setSelected(null);
-    if (round + 1 < PATTERNS.length) {
-      setRound(function(r) { return r + 1; });
+    if (step + 1 < ROCKET_PARTS.length) {
+      setStep(function(s) { return s + 1; });
     } else {
-      onDone(score);
+      setLaunching(true);
+      setTimeout(function() { onDone(10); }, 4000);
     }
   };
 
-  var progressColor = round < 3 ? C.green : round < 6 ? C.gold : C.red;
+  // Финальный экран — запуск
+  if (launching) {
+    return React.createElement('div', { style: { textAlign: 'center', animation: 'fadeIn 0.5s' } },
+      React.createElement('div', { style: { fontSize: 90, animation: 'rocketFloat 0.8s ease-in-out infinite', marginBottom: 12 } }, '🚀'),
+      React.createElement('div', { style: { fontSize: 20, fontWeight: 900, color: C.gold, fontFamily: "'Orbitron'", marginBottom: 8 } }, 'ЗАПУСК!'),
+      React.createElement('div', { style: { fontSize: 14, color: C.textDim, lineHeight: 1.7, marginBottom: 20 } },
+        'Ты собрал полноценный ИИ из 6 частей.\nТеперь ты знаешь как это работает изнутри!'
+      ),
+      React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' } },
+        ROCKET_PARTS.map(function(p) {
+          return React.createElement('div', { key: p.id, style: {
+            background: p.color + '22', border: '1px solid ' + p.color + '60',
+            borderRadius: 12, padding: '6px 12px', fontSize: 13, color: p.color, fontWeight: 700
+          } }, p.emoji + ' ' + p.name);
+        })
+      )
+    );
+  }
 
   return React.createElement('div', null,
-    // Header
-    React.createElement('div', { style: { textAlign: 'center', marginBottom: 12 } },
+    // Заголовок
+    React.createElement('div', { style: { textAlign: 'center', marginBottom: 14 } },
       React.createElement('div', { style: {
         fontSize: 11, color: C.neon, letterSpacing: 1.5,
-        fontFamily: "'Orbitron'", fontWeight: 800, marginBottom: 4
-      } }, 'НАЙДИ ПАТТЕРН'),
-      React.createElement('div', { style: {
-        display: 'inline-block',
-        background: progressColor + '20',
-        border: '1px solid ' + progressColor + '50',
-        borderRadius: 20, padding: '3px 12px',
-        fontSize: 12, color: progressColor, fontWeight: 700
-      } }, p.label + '  ' + (round + 1) + ' / ' + PATTERNS.length),
-      React.createElement('div', { style: {
-        fontSize: 11, color: C.textDim, marginTop: 8,
-        background: C.bgMid, borderRadius: 10, padding: '5px 12px',
-        display: 'inline-block'
-      } }, '🤖 ' + p.skill)
-    ),
-    // Progress bar
-    React.createElement('div', { style: {
-      display: 'flex', gap: 4, marginBottom: 18
-    } },
-      PATTERNS.map(function(_, i) {
-        return React.createElement('div', { key: i, style: {
-          flex: 1, height: 5, borderRadius: 3,
-          background: i < round ? C.neon : i === round ? C.neon + 'aa' : C.cardBorder,
-          transition: 'all 0.4s'
-        } });
-      })
-    ),
-    // Sequence card
-    React.createElement('div', { style: {
-      background: C.card, border: '1px solid ' + C.cardBorder,
-      borderRadius: 22, padding: '20px 14px', marginBottom: 14, textAlign: 'center'
-    } },
-      React.createElement('div', { style: {
-        fontSize: 10, color: C.textDim, letterSpacing: 1.5, marginBottom: 4
-      } }, 'ПОСЛЕДОВАТЕЛЬНОСТЬ'),
-      React.createElement('div', { style: {
-        fontSize: 11, color: C.gold, marginBottom: 14, fontStyle: 'italic'
-      } }, p.hint),
-      React.createElement('div', { style: {
-        display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', flexWrap: 'nowrap'
-      } },
-        p.seq.map(function(s, i) {
-          return React.createElement('div', { key: i, style: {
-            fontSize: 32, background: C.bgMid, borderRadius: 12,
-            width: 48, height: 48, display: 'flex',
-            alignItems: 'center', justifyContent: 'center'
-          } }, s);
-        }),
-        React.createElement('div', { style: {
-          fontSize: 18, color: C.textDim, margin: '0 2px'
-        } }, '→'),
-        React.createElement('div', { style: {
-          width: 48, height: 48, borderRadius: 12, fontSize: 28,
-          background: selected
-            ? (selected === p.ans ? C.green + '25' : C.red + '20')
-            : 'transparent',
-          border: '2px dashed ' + (selected
-            ? (selected === p.ans ? C.green : C.red)
-            : C.neon + '60'),
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.25s', fontWeight: 700
-        } }, selected
-          ? React.createElement('span', null, selected)
-          : React.createElement('span', { style: { color: C.neon, fontSize: 20 } }, '?')
-        )
+        fontFamily: "'Orbitron'", fontWeight: 800, marginBottom: 6
+      } }, 'СОБЕРИ СВОЙ ИИ'),
+      React.createElement('div', { style: { fontSize: 12, color: C.textDim } },
+        'Деталь ' + (step + 1) + ' из ' + ROCKET_PARTS.length + ' — установи и узнай что это'
       )
     ),
-    // Options 2x2 grid
+
+    // Ракета — визуальный прогресс
     React.createElement('div', { style: {
-      display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14
+      background: C.card, border: '1px solid ' + C.cardBorder,
+      borderRadius: 20, padding: '16px 12px', marginBottom: 16
     } },
-      p.opts.map(function(opt, i) {
-        var isSelected = selected === opt;
-        var isCorrect = opt === p.ans;
-        var showCorrect = isCorrect && selected !== null && !isSelected;
-        return React.createElement('button', {
-          key: i,
-          onClick: function() { choose(opt); },
-          disabled: selected !== null,
-          style: {
-            padding: '20px 8px', borderRadius: 18, fontSize: 36,
-            cursor: selected ? 'default' : 'pointer',
-            border: '2px solid',
-            borderColor: isSelected
-              ? (isCorrect ? C.green : C.red)
-              : showCorrect ? C.green + '80' : C.cardBorder,
-            background: isSelected
-              ? (isCorrect ? C.green + '22' : C.red + '18')
-              : showCorrect ? C.green + '10' : C.card,
-            transition: 'all 0.2s',
-            transform: isSelected ? 'scale(1.08)' : 'scale(1)',
-            boxShadow: isSelected && isCorrect ? '0 0 16px ' + C.green + '40' : 'none'
-          }
-        }, opt);
-      })
+      React.createElement('div', { style: {
+        fontSize: 10, color: C.textDim, letterSpacing: 1, marginBottom: 10, textAlign: 'center'
+      } }, 'ТВОЯ РАКЕТА'),
+      // Части ракеты в ряд
+      React.createElement('div', { style: {
+        display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap'
+      } },
+        ROCKET_PARTS.map(function(p) {
+          var isInstalled = installed.includes(p.id);
+          var isCurrent = p.id === part.id && !showFact;
+          return React.createElement('div', { key: p.id, style: {
+            width: 44, height: 44, borderRadius: 12, fontSize: 20,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: isInstalled ? p.color + '30' : C.bgMid,
+            border: '2px solid ' + (isInstalled ? p.color : isCurrent ? C.neon : C.cardBorder),
+            transition: 'all 0.4s',
+            boxShadow: isInstalled ? '0 0 12px ' + p.color + '40' : isCurrent ? '0 0 10px ' + C.neon + '50' : 'none',
+            animation: isInstalled && installed[installed.length-1] === p.id ? 'pop 0.4s ease-out' : 'none'
+          } }, isInstalled ? p.emoji : (isCurrent ? '❓' : '○'));
+        })
+      ),
+      // Прогресс-бар
+      React.createElement('div', { style: {
+        height: 4, borderRadius: 4, background: C.cardBorder, marginTop: 12, overflow: 'hidden'
+      } },
+        React.createElement('div', { style: {
+          height: '100%', borderRadius: 4,
+          width: (installed.length / ROCKET_PARTS.length * 100) + '%',
+          background: 'linear-gradient(90deg,' + C.neon + ',' + C.gold + ')',
+          transition: 'width 0.5s ease'
+        } })
+      )
     ),
-    // Fact popup
+
+    // Карточка текущей детали
+    !showFact && React.createElement('div', { style: {
+      background: part.color + '12',
+      border: '2px solid ' + part.color + '50',
+      borderRadius: 22, padding: '24px 20px',
+      textAlign: 'center', marginBottom: 16,
+      animation: 'cardIn 0.3s ease-out'
+    } },
+      React.createElement('div', { style: { fontSize: 60, marginBottom: 10 } }, part.emoji),
+      React.createElement('div', { style: {
+        fontSize: 18, fontWeight: 900, color: part.color,
+        fontFamily: "'Orbitron'", marginBottom: 6
+      } }, part.name),
+      React.createElement('div', { style: { fontSize: 14, color: C.textDim, marginBottom: 4 } }, part.what),
+      React.createElement('div', { style: {
+        fontSize: 11, color: part.color + 'aa', fontStyle: 'italic'
+      } }, '🚀 Это ' + part.rocketPart + ' твоей ракеты'),
+      React.createElement('button', {
+        onClick: install,
+        style: {
+          marginTop: 16, width: '100%', padding: '14px',
+          borderRadius: 14, fontSize: 14, fontWeight: 800,
+          background: 'linear-gradient(135deg,' + part.color + ',' + part.color + 'aa)',
+          color: '#000', border: 'none', cursor: 'pointer',
+          boxShadow: '0 4px 16px ' + part.color + '40'
+        }
+      }, '⚡ УСТАНОВИТЬ В РАКЕТУ')
+    ),
+
+    // Факт после установки
     showFact && React.createElement('div', { style: {
-      background: (selected === p.ans ? C.green : C.red) + '12',
-      border: '1px solid ' + (selected === p.ans ? C.green : C.red) + '45',
-      borderRadius: 16, padding: '14px 16px',
+      background: part.color + '12',
+      border: '1px solid ' + part.color + '50',
+      borderRadius: 16, padding: '16px',
       animation: 'fadeIn 0.3s ease-out'
     } },
       React.createElement('div', { style: {
-        fontSize: 14, fontWeight: 800,
-        color: selected === p.ans ? C.green : C.red,
-        marginBottom: 6
-      } }, selected === p.ans ? '🎯 Правильно!' : '❌ Не то! Правильный: ' + p.ans),
+        display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10
+      } },
+        React.createElement('div', { style: { fontSize: 32 } }, part.emoji),
+        React.createElement('div', null,
+          React.createElement('div', { style: { fontSize: 15, fontWeight: 900, color: part.color } },
+            part.name + ' установлен! ✅'
+          ),
+          React.createElement('div', { style: { fontSize: 11, color: C.textDim } },
+            '🚀 ' + part.rocketPart + ' готов'
+          )
+        )
+      ),
       React.createElement('div', { style: {
         fontSize: 13, color: C.text, lineHeight: 1.7, marginBottom: 14
-      } }, '💡 ' + p.fact),
+      } }, '💡 ' + part.fact),
       React.createElement('button', {
         onClick: goNext,
         style: {
-          width: '100%', padding: '12px', borderRadius: 12,
+          width: '100%', padding: '13px', borderRadius: 12,
           fontSize: 14, fontWeight: 800,
-          background: 'linear-gradient(135deg,' + (selected === p.ans ? C.green : C.neon) + ',' + (selected === p.ans ? C.neon : C.purple) + ')',
-          color: '#000', border: 'none', cursor: 'pointer',
-          letterSpacing: 1
+          background: step + 1 < ROCKET_PARTS.length
+            ? 'linear-gradient(135deg,' + C.neon + ',' + C.purple + ')'
+            : 'linear-gradient(135deg,' + C.gold + ',' + C.neon + ')',
+          color: '#000', border: 'none', cursor: 'pointer'
         }
-      }, round + 1 < PATTERNS.length ? 'ДАЛЬШЕ →' : 'ЗАВЕРШИТЬ ✓')
+      }, step + 1 < ROCKET_PARTS.length
+        ? 'СЛЕДУЮЩАЯ ДЕТАЛЬ →'
+        : '🚀 ЗАПУСТИТЬ РАКЕТУ!'
+      )
     )
   );
 }
@@ -2358,67 +2346,8 @@ function MissionMech({
   room,
   onDone
 }) {
-  const [stage, setStage] = React.useState(0); // 0=game, 1=results
-  const [finalScore, setFinalScore] = React.useState(0);
-
-  var handleDone = function(score) {
-    setFinalScore(score);
-    setStage(1);
-    setTimeout(function() { onDone(10); }, 6000);
-  };
-
-  if (stage === 1) {
-    var pct = Math.round(finalScore / PATTERNS.length * 100);
-    var medal = finalScore >= 7 ? '🥇' : finalScore >= 5 ? '🥈' : '🥉';
-    var msg = finalScore >= 7 ? 'Ты настоящий ИИ-детектив!' : finalScore >= 5 ? 'Отличный результат!' : 'Хорошее начало!';
-    return React.createElement('div', { style: { textAlign: 'center', animation: 'fadeIn 0.5s ease-out' } },
-      React.createElement('div', { style: {
-        fontSize: 80, marginBottom: 6,
-        animation: 'rocketFloat 2s ease-in-out infinite'
-      } }, medal),
-      React.createElement('div', { style: {
-        fontSize: 21, fontWeight: 900, color: C.gold,
-        marginBottom: 4, fontFamily: "'Orbitron'"
-      } }, 'МИССИЯ ВЫПОЛНЕНА!'),
-      React.createElement('div', { style: {
-        fontSize: 14, color: C.textDim, marginBottom: 6
-      } }, msg),
-      React.createElement('div', { style: {
-        display: 'inline-flex', alignItems: 'center', gap: 10,
-        background: C.gold + '18', border: '1px solid ' + C.gold + '40',
-        borderRadius: 24, padding: '8px 20px', marginBottom: 22
-      } },
-        React.createElement('span', { style: { fontSize: 22, fontWeight: 900, color: C.gold } },
-          finalScore + ' / ' + PATTERNS.length),
-        React.createElement('div', { style: {
-          width: 100, height: 8, borderRadius: 4, background: C.bgMid, overflow: 'hidden'
-        } },
-          React.createElement('div', { style: {
-            height: '100%', borderRadius: 4,
-            width: pct + '%',
-            background: 'linear-gradient(90deg,' + C.neon + ',' + C.gold + ')',
-            transition: 'width 1.5s ease'
-          } })
-        )
-      ),
-      React.createElement('div', { style: {
-        fontSize: 11, color: C.neon, fontFamily: "'Orbitron'",
-        letterSpacing: 1.5, marginBottom: 12
-      } }, '🧠 ТЫ УЗНАЛ:'),
-      MISSION_FACTS.map(function(fact, i) {
-        return React.createElement('div', { key: i, style: {
-          background: C.card,
-          border: '1px solid ' + C.neon + '22',
-          borderRadius: 14, padding: '12px 16px', marginBottom: 8,
-          fontSize: 13, color: C.text, textAlign: 'left', lineHeight: 1.65
-        } }, fact);
-      }),
-      React.createElement('div', { style: { fontSize: 34, marginTop: 14, letterSpacing: 4 } }, '⭐⭐⭐')
-    );
-  }
-
   return React.createElement('div', { style: { animation: 'cardIn 0.3s ease-out' } },
-    React.createElement(PatternStage, { onDone: handleDone })
+    React.createElement(PuzzleMech, { onDone: onDone })
   );
 }
 
