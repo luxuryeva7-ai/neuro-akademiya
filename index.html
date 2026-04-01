@@ -2110,7 +2110,7 @@ function PipelineMech({
 }
 
 // ═══ MODULES DATA ════════════════════════════════
-// ═══ MISSION MECH — PIPE PUZZLE ═══════════════════
+// ═══ MISSION MECH — PIPE PUZZLE 3×4 ═══════════════
 // connections per type per rotation: 0=N 1=E 2=S 3=W
 const PIPE_CONNS = {
   straight: [[1,3],[0,2],[1,3],[0,2]],
@@ -2118,202 +2118,216 @@ const PIPE_CONNS = {
   tee:      [[0,1,3],[0,1,2],[1,2,3],[0,2,3]]
 };
 
-// path:  START(left of r1c0) → (1,0)[W+N] → (0,0)[S+E] → (0,1)[W+E] → (0,2)[W+S] → (1,2)[N+E] → END
-// (1,1) is a filler tee that blocks wrong paths
+// 3 rows x 4 cols
+// path: ЗАПРОС(W of r2c0)→(2,0)→(1,0)→(0,0)→(0,1)→(0,2)→(0,3)→(1,3)→(2,3)→ОТВЕТ(E)
+// fixed=true: (2,0) и (2,3) — зафиксированы, не крутятся
 const INIT_CELLS = [
-  {r:0,c:0,type:'corner',   rot:3, solRot:1, info:{name:'⚡ АЛГОРИТМ', color:'#ffd166', fact:'Нейросеть — миллиарды правил "если-то". Вместе они умнее человека!'}},
-  {r:0,c:1,type:'straight', rot:1, solRot:0, info:{name:'🧠 МОДЕЛЬ',   color:'#a855f7', fact:'GPT-4 имеет 1.8 триллиона настроек — и все выучены на данных!'}},
-  {r:0,c:2,type:'corner',   rot:0, solRot:2, info:{name:'🖥️ СЕРВЕР',   color:'#ef476f', fact:'ChatGPT работает на 10 000+ видеокарт. Один ответ стоит $0.01!'}},
-  {r:1,c:0,type:'corner',   rot:1, solRot:3, info:{name:'📊 ДАННЫЕ',   color:'#06d6a0', fact:'ChatGPT учился на 570 ГБ текста — это миллион книг!'}},
-  {r:1,c:1,type:'tee',      rot:2, solRot:2, info:null},
-  {r:1,c:2,type:'corner',   rot:2, solRot:0, info:{name:'🔗 API',      color:'#118ab2', fact:'API — розетка для ИИ. Так Siri и тысячи приложений получают умные ответы!'}},
+  {r:2,c:0,type:'corner',   rot:3,solRot:3,fixed:true,  info:{name:'📥 ЗАПРОС',        color:'#06d6a0', fact:'Всё начинается с запроса — текст, который ты вводишь. Это «вход» в нейросеть!'}},
+  {r:1,c:0,type:'straight', rot:0,solRot:1,fixed:false, info:{name:'⚡ ПРЕДОБРАБОТКА', color:'#ffd166', fact:'ИИ не читает слова — он переводит их в числа. «Привет» = вектор из 768 чисел!'}},
+  {r:0,c:0,type:'corner',   rot:3,solRot:1,fixed:false, info:{name:'🔢 ТОКЕНИЗАЦИЯ',   color:'#a855f7', fact:'GPT делит текст на токены — кусочки слов. «непредсказуемый» = 4 токена!'}},
+  {r:0,c:1,type:'straight', rot:1,solRot:0,fixed:false, info:{name:'🧮 ВЫЧИСЛЕНИЯ',    color:'#ef476f', fact:'Внутри GPT-4 — триллионы умножений матриц каждый раз когда ты пишешь сообщение!'}},
+  {r:0,c:2,type:'straight', rot:1,solRot:0,fixed:false, info:{name:'🧠 НЕЙРОСЕТЬ',     color:'#ff6b35', fact:'100 миллиардов нейронов — каждый решает задачу «да/нет». Вместе — думают!'}},
+  {r:0,c:3,type:'corner',   rot:1,solRot:2,fixed:false, info:{name:'📈 ВЕСА МОДЕЛИ',   color:'#118ab2', fact:'Веса — это «память» ИИ. 1.8 триллиона чисел, каждое выучено на миллиардах примеров!'}},
+  {r:1,c:3,type:'straight', rot:0,solRot:1,fixed:false, info:{name:'🔄 ГЕНЕРАЦИЯ',     color:'#e040fb', fact:'ИИ выбирает каждое слово по очереди, предсказывая: что вероятнее всего будет дальше?'}},
+  {r:2,c:3,type:'corner',   rot:2,solRot:0,fixed:true,  info:{name:'💬 ОТВЕТ ИИ',      color:'#ffd166', fact:'Готово! Запрос прошёл через всю нейросеть и превратился в осмысленный ответ. Так работает ChatGPT!'}},
+  {r:1,c:1,type:'tee',    rot:1,solRot:1,fixed:false,info:null},
+  {r:1,c:2,type:'corner', rot:0,solRot:0,fixed:false,info:null},
+  {r:2,c:1,type:'corner', rot:2,solRot:2,fixed:false,info:null},
+  {r:2,c:2,type:'tee',   rot:3,solRot:3,fixed:false,info:null},
 ];
 
 const PIPE_DIR = {0:[40,0],1:[80,40],2:[40,80],3:[0,40]};
 
 function getConns(type, rot) { return PIPE_CONNS[type][rot % 4]; }
 
-function checkPath(cells) {
-  var getCell = function(r,c) { return cells.find(function(x){return x.r===r && x.c===c;}); };
+// from = direction of travel to reach cell (E=1 means moved East)
+// face entered = opposite(from)
+function floodFill(cells, startR, startC, travelDir) {
+  var opp = {0:2,1:3,2:0,3:1};
+  var getCell = function(r,c){return cells.find(function(x){return x.r===r&&x.c===c;});};
   var visited = {};
-  var queue = [{r:1,c:0,from:3}];
-  while (queue.length > 0) {
-    var cur = queue.shift();
-    var key = cur.r+','+cur.c;
-    if (visited[key]) continue;
-    var cell = getCell(cur.r, cur.c);
-    if (!cell) continue;
-    var conns = getConns(cell.type, cell.rot);
-    var incoming = {0:2,1:3,2:0,3:1}[cur.from];
-    if (!conns.includes(incoming)) continue;
-    visited[key] = true;
-    conns.forEach(function(dir) {
-      if (dir === incoming) return;
-      var nr = cur.r + (dir===0?-1:dir===2?1:0);
-      var nc = cur.c + (dir===1?1:dir===3?-1:0);
-      if (!visited[nr+','+nc]) queue.push({r:nr,c:nc,from:dir});
+  var queue = [{r:startR,c:startC,from:travelDir}];
+  while(queue.length>0){
+    var cur=queue.shift();
+    var key=cur.r+','+cur.c;
+    if(visited[key]) continue;
+    var cell=getCell(cur.r,cur.c);
+    if(!cell) continue;
+    var conns=getConns(cell.type,cell.rot);
+    var incoming=opp[cur.from];
+    if(!conns.includes(incoming)) continue;
+    visited[key]=true;
+    conns.forEach(function(dir){
+      if(dir===incoming) return;
+      var nr=cur.r+(dir===0?-1:dir===2?1:0);
+      var nc=cur.c+(dir===1?1:dir===3?-1:0);
+      if(nr>=0&&nr<3&&nc>=0&&nc<4&&!visited[nr+','+nc])
+        queue.push({r:nr,c:nc,from:dir});
     });
   }
-  if (!visited['1,0'] || !visited['1,2']) return false;
-  var endCell = getCell(1,2);
-  return getConns(endCell.type, endCell.rot).includes(1);
+  return visited;
 }
 
-function PipeCell({ cell, isLit, isRotating, onClick }) {
-  var conns = getConns(cell.type, cell.rot);
-  var color = isLit ? '#06d6a0' : '#ffffff33';
-  var glow = isLit ? '0 0 12px #06d6a040' : 'none';
-  return React.createElement('div', {
-    onClick: onClick,
-    style: {
-      width: 76, height: 76, borderRadius: 14, cursor: 'pointer',
-      background: isLit ? '#06d6a010' : '#ffffff08',
-      border: '1.5px solid ' + (isLit ? '#06d6a040' : '#ffffff18'),
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      boxShadow: glow, transition: 'all 0.3s',
-      transform: isRotating ? 'scale(0.88) rotate(90deg)' : 'scale(1) rotate(0deg)',
+function checkPath(cells) {
+  var visited=floodFill(cells,2,0,1);
+  if(!visited['2,0']||!visited['2,3']) return false;
+  var endCell=cells.find(function(x){return x.r===2&&x.c===3;});
+  return getConns(endCell.type,endCell.rot).includes(1);
+}
+
+function PipeCell({ cell, isLit, isFixed, isRotating, onClick }) {
+  var conns=getConns(cell.type,cell.rot);
+  var color=isLit?'#06d6a0':(isFixed?'#ffffff88':'#ffffff30');
+  var bg=isLit?'#06d6a018':(isFixed?'#ffffff10':'#ffffff06');
+  var borderC=isLit?'#06d6a055':(isFixed?'#ffffff35':'#ffffff15');
+  var glow=isLit?'0 0 18px #06d6a055':'none';
+  return React.createElement('div',{
+    onClick:isFixed?null:onClick,
+    style:{
+      width:68,height:68,borderRadius:12,cursor:isFixed?'default':'pointer',
+      background:bg,border:'1.5px solid '+borderC,
+      display:'flex',alignItems:'center',justifyContent:'center',
+      boxShadow:glow,transition:'all 0.3s',position:'relative',
+      transform:isRotating?'scale(0.82) rotate(90deg)':'scale(1) rotate(0deg)'
     }
   },
-    React.createElement('svg', {viewBox:'0 0 80 80', width:70, height:70},
-      React.createElement('circle', {cx:40,cy:40,r:7,fill:color,opacity:isLit?1:0.5}),
-      conns.map(function(dir,i) {
-        var ep = PIPE_DIR[dir];
-        return React.createElement('line', {
-          key:i, x1:40,y1:40, x2:ep[0],y2:ep[1],
-          stroke:color, strokeWidth: isLit?8:5,
-          strokeLinecap:'round', opacity: isLit?1:0.6
+    React.createElement('svg',{viewBox:'0 0 80 80',width:60,height:60},
+      conns.map(function(dir,i){
+        var ep=PIPE_DIR[dir];
+        return React.createElement('line',{
+          key:i,x1:40,y1:40,x2:ep[0],y2:ep[1],
+          stroke:color,strokeWidth:isLit?10:isFixed?7:5,
+          strokeLinecap:'round',opacity:isLit?1:0.7
         });
       }),
-      isLit && React.createElement('circle', {cx:40,cy:40,r:7,fill:'#06d6a0',opacity:0.4})
-    )
+      React.createElement('circle',{cx:40,cy:40,r:isLit?10:8,fill:color,opacity:isLit?1:0.75}),
+      isLit&&React.createElement('circle',{cx:40,cy:40,r:16,fill:'#06d6a0',opacity:0.15})
+    ),
+    isFixed&&React.createElement('div',{style:{
+      position:'absolute',bottom:2,right:4,
+      fontSize:8,color:isLit?'#06d6a0':'#ffffff50',
+      fontFamily:"'Orbitron'",fontWeight:800
+    }},isLit?'✓':'■')
   );
 }
 
 function PipePuzzle({ onDone }) {
-  const [cells, setCells] = React.useState(INIT_CELLS.map(function(c){return Object.assign({},c);}));
-  const [litCells, setLitCells] = React.useState({});
-  const [rotating, setRotating] = React.useState(null);
-  const [solved, setSolved] = React.useState(false);
-  const [showFacts, setShowFacts] = React.useState(false);
+  const [cells,setCells]=React.useState(INIT_CELLS.map(function(c){return Object.assign({},c);}));
+  const [litCells,setLitCells]=React.useState({});
+  const [rotating,setRotating]=React.useState(null);
+  const [solved,setSolved]=React.useState(false);
+  const [showFacts,setShowFacts]=React.useState(false);
 
-  React.useEffect(function() {
-    var getCell = function(r,c){return cells.find(function(x){return x.r===r&&x.c===c;});};
-    var newLit = {};
-    var queue = [{r:1,c:0,from:3}];
-    while(queue.length>0){
-      var cur=queue.shift();
-      var key=cur.r+','+cur.c;
-      if(newLit[key]) continue;
-      var cell=getCell(cur.r,cur.c);
-      if(!cell) continue;
-      var conns=getConns(cell.type,cell.rot);
-      var incoming={0:2,1:3,2:0,3:1}[cur.from];
-      if(!conns.includes(incoming)) continue;
-      newLit[key]=true;
-      conns.forEach(function(dir){
-        if(dir===incoming) return;
-        var nr=cur.r+(dir===0?-1:dir===2?1:0);
-        var nc=cur.c+(dir===1?1:dir===3?-1:0);
-        if(!newLit[nr+','+nc]) queue.push({r:nr,c:nc,from:dir});
-      });
-    }
+  React.useEffect(function(){
+    var newLit=floodFill(cells,2,0,1);
     setLitCells(newLit);
-    if(checkPath(cells) && !solved){
+    if(checkPath(cells)&&!solved){
       setSolved(true);
       if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback)
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      setTimeout(function(){setShowFacts(true);},600);
-      setTimeout(function(){onDone(10);},7000);
+      setTimeout(function(){setShowFacts(true);},700);
+      setTimeout(function(){onDone(10);},9000);
     }
-  }, [cells]);
+  },[cells]);
 
-  var rotate = function(r,c){
-    if(solved) return;
+  var rotate=function(r,c){
+    var cell=cells.find(function(x){return x.r===r&&x.c===c;});
+    if(solved||(cell&&cell.fixed)) return;
     var key=r+','+c;
     setRotating(key);
     if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback)
       window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-    setTimeout(function(){setRotating(null);},200);
+    setTimeout(function(){setRotating(null);},220);
     setCells(function(prev){return prev.map(function(cell){
-      return cell.r===r&&cell.c===c ? Object.assign({},cell,{rot:(cell.rot+1)%4}) : cell;
+      return cell.r===r&&cell.c===c?Object.assign({},cell,{rot:(cell.rot+1)%4}):cell;
     });});
   };
 
-  var pathCells = INIT_CELLS.filter(function(c){return c.info;});
+  var pathCells=INIT_CELLS.filter(function(c){return c.info;});
+  var litCount=pathCells.filter(function(c){return !!litCells[c.r+','+c.c];}).length;
 
-  return React.createElement('div', null,
-    React.createElement('div', {style:{textAlign:'center',marginBottom:12}},
-      React.createElement('div', {style:{
-        fontSize:11,color:C.neon,letterSpacing:1.5,fontFamily:"'Orbitron'",fontWeight:800,marginBottom:4
-      }}, 'СОБЕРИ ПУТЬ ДЛЯ ИИ'),
-      React.createElement('div', {style:{fontSize:12,color:C.textDim,marginBottom:8}},
-        'Вращай детали — соедини путь от данных до запуска'),
-      React.createElement('div', {style:{display:'flex',gap:4,justifyContent:'center'}},
+  return React.createElement('div',null,
+    React.createElement('div',{style:{textAlign:'center',marginBottom:10}},
+      React.createElement('div',{style:{
+        fontSize:11,color:C.neon,letterSpacing:1.5,fontFamily:"'Orbitron'",fontWeight:800,marginBottom:3
+      }},'ПРОЛОЖИ ПУТЬ НЕЙРОСЕТИ'),
+      React.createElement('div',{style:{fontSize:12,color:C.textDim,marginBottom:8}},
+        'Вращай трубки — соедини запрос с ответом ИИ'),
+      React.createElement('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center'}},
+        React.createElement('div',{style:{fontSize:10,color:C.textDim,marginRight:4}},litCount+'/'+pathCells.length),
         pathCells.map(function(c,i){
-          var isLit = !!litCells[c.r+','+c.c];
-          return React.createElement('div', {key:i, style:{
-            width:12,height:12,borderRadius:'50%',
-            background: isLit ? C.neon : C.cardBorder,
+          var isLit=!!litCells[c.r+','+c.c];
+          return React.createElement('div',{key:i,style:{
+            width:10,height:10,borderRadius:'50%',
+            background:isLit?C.neon:C.cardBorder,
             transition:'all 0.3s',
-            boxShadow: isLit ? '0 0 8px '+C.neon : 'none'
+            boxShadow:isLit?'0 0 6px '+C.neon:'none'
           }});
         })
       )
     ),
-    React.createElement('div', {style:{
-      background:C.card,border:'1px solid '+(solved?C.neon+'50':C.cardBorder),
-      borderRadius:20,padding:14,marginBottom:14,
-      boxShadow: solved?'0 0 24px '+C.neon+'30':'none',
-      transition:'all 0.5s'
+    React.createElement('div',{style:{
+      background:C.card,
+      border:'1px solid '+(solved?'#06d6a060':C.cardBorder),
+      borderRadius:18,padding:'12px 8px',marginBottom:10,
+      boxShadow:solved?'0 0 28px #06d6a030':'none',transition:'all 0.6s'
     }},
-      React.createElement('div', {style:{display:'flex',alignItems:'center',marginBottom:8}},
-        React.createElement('div', {style:{
-          fontSize:10,color:'#06d6a0',fontFamily:"'Orbitron'",fontWeight:800,
-          background:'#06d6a015',border:'1px solid #06d6a040',
-          borderRadius:8,padding:'3px 8px',marginRight:8
-        }}, '▶ СТАРТ'),
-        React.createElement('div', {style:{flex:1,height:2,background:'#06d6a020',borderRadius:2}})
+      React.createElement('div',{style:{display:'flex',alignItems:'center',marginBottom:8,gap:6}},
+        React.createElement('div',{style:{
+          fontSize:9,color:'#06d6a0',fontFamily:"'Orbitron'",fontWeight:800,
+          background:'#06d6a015',border:'1px solid #06d6a050',
+          borderRadius:6,padding:'3px 8px',whiteSpace:'nowrap'
+        }},'📥 ЗАПРОС →'),
+        React.createElement('div',{style:{flex:1,height:1.5,background:'#06d6a025',borderRadius:2}})
       ),
-      React.createElement('div', {style:{display:'grid',gridTemplateColumns:'repeat(3,76px)',gap:6,justifyContent:'center'}},
-        [0,1].map(function(r){
-          return [0,1,2].map(function(c){
-            var cell = cells.find(function(x){return x.r===r&&x.c===c;});
-            if(!cell) return null;
-            var key = r+','+c;
-            return React.createElement(PipeCell, {
-              key:key, cell:cell,
-              isLit:!!litCells[key],
-              isRotating:rotating===key,
-              onClick:function(){rotate(r,c);}
-            });
-          });
-        })
+      React.createElement('div',{style:{
+        display:'grid',gridTemplateColumns:'repeat(4,68px)',
+        gap:5,justifyContent:'center'
+      }},
+        (function(){
+          var items=[];
+          for(var r=0;r<3;r++){
+            for(var cc=0;cc<4;cc++){
+              var cell=cells.find(function(x){return x.r===r&&x.c===cc;});
+              if(!cell){items.push(React.createElement('div',{key:r+','+cc,style:{width:68,height:68}}));continue;}
+              var key=r+','+cc;
+              items.push(React.createElement(PipeCell,{
+                key:key,cell:cell,
+                isLit:!!litCells[key],
+                isFixed:!!cell.fixed,
+                isRotating:rotating===key,
+                onClick:(function(rr,rc){return function(){rotate(rr,rc);};})(r,cc)
+              }));
+            }
+          }
+          return items;
+        })()
       ),
-      React.createElement('div', {style:{display:'flex',alignItems:'center',marginTop:8}},
-        React.createElement('div', {style:{flex:1,height:2,background:'#118ab220',borderRadius:2}}),
-        React.createElement('div', {style:{
-          fontSize:10,color:'#118ab2',fontFamily:"'Orbitron'",fontWeight:800,
-          background:'#118ab215',border:'1px solid #118ab240',
-          borderRadius:8,padding:'3px 8px',marginLeft:8
-        }}, solved?'✅ ЗАПУЩЕН!':'■ ФИНИШ')
+      React.createElement('div',{style:{display:'flex',alignItems:'center',marginTop:8,gap:6}},
+        React.createElement('div',{style:{flex:1,height:1.5,background:'#ffd16620',borderRadius:2}}),
+        React.createElement('div',{style:{
+          fontSize:9,color:'#ffd166',fontFamily:"'Orbitron'",fontWeight:800,
+          background:'#ffd16615',border:'1px solid #ffd16650',
+          borderRadius:6,padding:'3px 8px',whiteSpace:'nowrap'
+        }},solved?'✅ ОТВЕТ ПОЛУЧЕН':'→ ОТВЕТ ИИ')
       )
     ),
-    !solved && React.createElement('div', {style:{
-      textAlign:'center',fontSize:11,color:C.textDim,marginBottom:8
-    }}, '👆 Тапни деталь — она повернётся на 90°'),
-    showFacts && React.createElement('div', {style:{animation:'fadeIn 0.5s'}},
-      React.createElement('div', {style:{
+    !solved&&React.createElement('div',{style:{textAlign:'center',fontSize:11,color:C.textDim}},
+      '👆 Тапни трубку — повернётся на 90°. Зафиксированные ■ не крутятся.'
+    ),
+    showFacts&&React.createElement('div',{style:{marginTop:10,animation:'fadeIn 0.5s'}},
+      React.createElement('div',{style:{
         fontSize:11,color:C.neon,fontFamily:"'Orbitron'",letterSpacing:1,
-        textAlign:'center',marginBottom:10,fontWeight:800
-      }}, '🚀 ПУТЬ СОБРАН — ИИ ЗАПУЩЕН!'),
-      pathCells.filter(function(c){return c.info;}).map(function(c,i){
-        return React.createElement('div', {key:i, style:{
-          background:c.info.color+'10',border:'1px solid '+c.info.color+'35',
-          borderRadius:12,padding:'10px 14px',marginBottom:6,
-          fontSize:12,color:C.text,lineHeight:1.6,
-          animation:'fadeIn 0.4s '+((i*0.15)+'s')+' both'
+        textAlign:'center',marginBottom:8,fontWeight:800
+      }},'🧠 ВОТ КАК РАБОТАЕТ НЕЙРОСЕТЬ:'),
+      pathCells.map(function(c,i){
+        return React.createElement('div',{key:i,style:{
+          background:c.info.color+'12',border:'1px solid '+c.info.color+'40',
+          borderRadius:10,padding:'8px 12px',marginBottom:5,
+          fontSize:11.5,color:C.text,lineHeight:1.6,
+          animation:'fadeIn 0.4s '+((i*0.12)+'s')+' both'
         }},
-          React.createElement('span',{style:{fontWeight:800,color:c.info.color}}, c.info.name+' '),
+          React.createElement('span',{style:{fontWeight:800,color:c.info.color}},c.info.name+' '),
           '— '+c.info.fact
         );
       })
@@ -2321,241 +2335,12 @@ function PipePuzzle({ onDone }) {
   );
 }
 
-const ROCKET_PARTS = [
-  {
-    id: 'data',
-    emoji: '📊',
-    name: 'ДАННЫЕ',
-    color: '#06d6a0',
-    slot: 'data',
-    what: 'Топливо для ИИ',
-    fact: 'ChatGPT учился на 570 ГБ текста — это как прочитать 1 миллион книг. Без данных ИИ — просто пустая коробка.',
-    rocketPart: 'Бак с топливом'
-  },
-  {
-    id: 'algo',
-    emoji: '⚡',
-    name: 'АЛГОРИТМ',
-    color: '#ffd166',
-    slot: 'algo',
-    what: 'Правила как думает ИИ',
-    fact: 'Нейросеть — это миллиарды простых правил "если-то". Каждый нейрон решает одну крошечную задачу, вместе — они умнее человека.',
-    rocketPart: 'Двигатель'
-  },
-  {
-    id: 'model',
-    emoji: '🧠',
-    name: 'МОДЕЛЬ',
-    color: '#a855f7',
-    slot: 'model',
-    what: 'Мозг ИИ — все знания внутри',
-    fact: 'GPT-4 весит 1.8 триллиона параметров. Это как 1.8 триллиона регуляторов громкости — каждый настроен идеально после обучения.',
-    rocketPart: 'Бортовой компьютер'
-  },
-  {
-    id: 'server',
-    emoji: '🖥️',
-    name: 'СЕРВЕР',
-    color: '#ef476f',
-    slot: 'server',
-    what: 'Компьютер где живёт ИИ',
-    fact: 'ChatGPT работает на 10 000+ мощных видеокарт. Один запрос к нему стоит примерно $0.01 — миллионы запросов в секунду!',
-    rocketPart: 'Реактор'
-  },
-  {
-    id: 'api',
-    emoji: '🔗',
-    name: 'API',
-    color: '#118ab2',
-    slot: 'api',
-    what: 'Связь ИИ с миром',
-    fact: 'API — это как розетка: любое приложение может "воткнуться" и использовать ИИ. Именно так Siri, Google Maps и тысячи приложений получают умные ответы.',
-    rocketPart: 'Система связи'
-  },
-  {
-    id: 'ui',
-    emoji: '👁️',
-    name: 'ИНТЕРФЕЙС',
-    color: '#ff6b35',
-    slot: 'ui',
-    what: 'То что видит пользователь',
-    fact: 'Первый интерфейс ChatGPT создали за 2 недели. До этого ИИ умел всё то же самое — но никто об этом не знал. Хороший интерфейс = миллион пользователей.',
-    rocketPart: 'Кабина пилота'
-  }
-];
-
-function PuzzleMech({ onDone }) {
-  const [step, setStep] = React.useState(0);       // текущая деталь
-  const [installed, setInstalled] = React.useState([]); // установленные id
-  const [showFact, setShowFact] = React.useState(false);
-  const [launching, setLaunching] = React.useState(false);
-
-  var part = ROCKET_PARTS[step];
-  var allDone = installed.length === ROCKET_PARTS.length;
-
-  var install = function() {
-    if (showFact) return;
-    setShowFact(true);
-    setInstalled(function(prev) { return prev.concat([part.id]); });
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback)
-      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-  };
-
-  var goNext = function() {
-    setShowFact(false);
-    if (step + 1 < ROCKET_PARTS.length) {
-      setStep(function(s) { return s + 1; });
-    } else {
-      setLaunching(true);
-      setTimeout(function() { onDone(10); }, 4000);
-    }
-  };
-
-  // Финальный экран — запуск
-  if (launching) {
-    return React.createElement('div', { style: { textAlign: 'center', animation: 'fadeIn 0.5s' } },
-      React.createElement('div', { style: { fontSize: 90, animation: 'rocketFloat 0.8s ease-in-out infinite', marginBottom: 12 } }, '🚀'),
-      React.createElement('div', { style: { fontSize: 20, fontWeight: 900, color: C.gold, fontFamily: "'Orbitron'", marginBottom: 8 } }, 'ЗАПУСК!'),
-      React.createElement('div', { style: { fontSize: 14, color: C.textDim, lineHeight: 1.7, marginBottom: 20 } },
-        'Ты собрал полноценный ИИ из 6 частей.\nТеперь ты знаешь как это работает изнутри!'
-      ),
-      React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' } },
-        ROCKET_PARTS.map(function(p) {
-          return React.createElement('div', { key: p.id, style: {
-            background: p.color + '22', border: '1px solid ' + p.color + '60',
-            borderRadius: 12, padding: '6px 12px', fontSize: 13, color: p.color, fontWeight: 700
-          } }, p.emoji + ' ' + p.name);
-        })
-      )
-    );
-  }
-
-  return React.createElement('div', null,
-    // Заголовок
-    React.createElement('div', { style: { textAlign: 'center', marginBottom: 14 } },
-      React.createElement('div', { style: {
-        fontSize: 11, color: C.neon, letterSpacing: 1.5,
-        fontFamily: "'Orbitron'", fontWeight: 800, marginBottom: 6
-      } }, 'СОБЕРИ СВОЙ ИИ'),
-      React.createElement('div', { style: { fontSize: 12, color: C.textDim } },
-        'Деталь ' + (step + 1) + ' из ' + ROCKET_PARTS.length + ' — установи и узнай что это'
-      )
-    ),
-
-    // Ракета — визуальный прогресс
-    React.createElement('div', { style: {
-      background: C.card, border: '1px solid ' + C.cardBorder,
-      borderRadius: 20, padding: '16px 12px', marginBottom: 16
-    } },
-      React.createElement('div', { style: {
-        fontSize: 10, color: C.textDim, letterSpacing: 1, marginBottom: 10, textAlign: 'center'
-      } }, 'ТВОЯ РАКЕТА'),
-      // Части ракеты в ряд
-      React.createElement('div', { style: {
-        display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap'
-      } },
-        ROCKET_PARTS.map(function(p) {
-          var isInstalled = installed.includes(p.id);
-          var isCurrent = p.id === part.id && !showFact;
-          return React.createElement('div', { key: p.id, style: {
-            width: 44, height: 44, borderRadius: 12, fontSize: 20,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: isInstalled ? p.color + '30' : C.bgMid,
-            border: '2px solid ' + (isInstalled ? p.color : isCurrent ? C.neon : C.cardBorder),
-            transition: 'all 0.4s',
-            boxShadow: isInstalled ? '0 0 12px ' + p.color + '40' : isCurrent ? '0 0 10px ' + C.neon + '50' : 'none',
-            animation: isInstalled && installed[installed.length-1] === p.id ? 'pop 0.4s ease-out' : 'none'
-          } }, isInstalled ? p.emoji : (isCurrent ? '❓' : '○'));
-        })
-      ),
-      // Прогресс-бар
-      React.createElement('div', { style: {
-        height: 4, borderRadius: 4, background: C.cardBorder, marginTop: 12, overflow: 'hidden'
-      } },
-        React.createElement('div', { style: {
-          height: '100%', borderRadius: 4,
-          width: (installed.length / ROCKET_PARTS.length * 100) + '%',
-          background: 'linear-gradient(90deg,' + C.neon + ',' + C.gold + ')',
-          transition: 'width 0.5s ease'
-        } })
-      )
-    ),
-
-    // Карточка текущей детали
-    !showFact && React.createElement('div', { style: {
-      background: part.color + '12',
-      border: '2px solid ' + part.color + '50',
-      borderRadius: 22, padding: '24px 20px',
-      textAlign: 'center', marginBottom: 16,
-      animation: 'cardIn 0.3s ease-out'
-    } },
-      React.createElement('div', { style: { fontSize: 60, marginBottom: 10 } }, part.emoji),
-      React.createElement('div', { style: {
-        fontSize: 18, fontWeight: 900, color: part.color,
-        fontFamily: "'Orbitron'", marginBottom: 6
-      } }, part.name),
-      React.createElement('div', { style: { fontSize: 14, color: C.textDim, marginBottom: 4 } }, part.what),
-      React.createElement('div', { style: {
-        fontSize: 11, color: part.color + 'aa', fontStyle: 'italic'
-      } }, '🚀 Это ' + part.rocketPart + ' твоей ракеты'),
-      React.createElement('button', {
-        onClick: install,
-        style: {
-          marginTop: 16, width: '100%', padding: '14px',
-          borderRadius: 14, fontSize: 14, fontWeight: 800,
-          background: 'linear-gradient(135deg,' + part.color + ',' + part.color + 'aa)',
-          color: '#000', border: 'none', cursor: 'pointer',
-          boxShadow: '0 4px 16px ' + part.color + '40'
-        }
-      }, '⚡ УСТАНОВИТЬ В РАКЕТУ')
-    ),
-
-    // Факт после установки
-    showFact && React.createElement('div', { style: {
-      background: part.color + '12',
-      border: '1px solid ' + part.color + '50',
-      borderRadius: 16, padding: '16px',
-      animation: 'fadeIn 0.3s ease-out'
-    } },
-      React.createElement('div', { style: {
-        display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10
-      } },
-        React.createElement('div', { style: { fontSize: 32 } }, part.emoji),
-        React.createElement('div', null,
-          React.createElement('div', { style: { fontSize: 15, fontWeight: 900, color: part.color } },
-            part.name + ' установлен! ✅'
-          ),
-          React.createElement('div', { style: { fontSize: 11, color: C.textDim } },
-            '🚀 ' + part.rocketPart + ' готов'
-          )
-        )
-      ),
-      React.createElement('div', { style: {
-        fontSize: 13, color: C.text, lineHeight: 1.7, marginBottom: 14
-      } }, '💡 ' + part.fact),
-      React.createElement('button', {
-        onClick: goNext,
-        style: {
-          width: '100%', padding: '13px', borderRadius: 12,
-          fontSize: 14, fontWeight: 800,
-          background: step + 1 < ROCKET_PARTS.length
-            ? 'linear-gradient(135deg,' + C.neon + ',' + C.purple + ')'
-            : 'linear-gradient(135deg,' + C.gold + ',' + C.neon + ')',
-          color: '#000', border: 'none', cursor: 'pointer'
-        }
-      }, step + 1 < ROCKET_PARTS.length
-        ? 'СЛЕДУЮЩАЯ ДЕТАЛЬ →'
-        : '🚀 ЗАПУСТИТЬ РАКЕТУ!'
-      )
-    )
-  );
-}
-
 function MissionMech({ room, onDone }) {
-  return React.createElement('div', {style:{animation:'cardIn 0.3s ease-out'}},
-    React.createElement(PipePuzzle, {onDone:onDone})
+  return React.createElement('div',{style:{animation:'cardIn 0.3s ease-out'}},
+    React.createElement(PipePuzzle,{onDone:onDone})
   );
 }
+
 
 
 const MODULES = [{
