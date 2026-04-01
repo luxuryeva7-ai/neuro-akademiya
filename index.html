@@ -1543,202 +1543,147 @@ function FeedMech({
 }) {
   const [idx, setIdx] = useState(0);
   const [iq, setIq] = useState(50);
+  const [swipeDir, setSwipeDir] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [touchStartX, setTouchStartX] = useState(null);
   const [score, setScore] = useState(0);
-  const [result, setResult] = useState(null);
-  const [neuroMood, setNeuroMood] = useState("happy");
   const items = room.items;
   const cur = items[idx];
-  const feed = isGood => {
-    if (result !== null) return;
+
+  const doSwipe = isGood => {
+    if (swipeDir) return;
     const ok = isGood === cur.isGood;
-    if (ok) {
-      setScore(s => s + 10);
-      setIq(v => Math.min(100, v + 8));
-      setNeuroMood(isGood ? "excited" : "happy");
-    } else {
-      setIq(v => Math.max(0, v - 12));
-      setNeuroMood("sad");
-    }
-    setResult(ok ? "correct" : "wrong");
-    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred(ok ? 'medium' : 'heavy');
+    const newIq = ok ? Math.min(100, iq + 10) : Math.max(0, iq - 15);
+    const newScore = score + (ok ? 10 : 0);
+    setSwipeDir(isGood ? 'right' : 'left');
+    setFeedback(ok ? 'correct' : 'wrong');
+    setIq(newIq);
+    setScore(newScore);
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback)
+      window.Telegram.WebApp.HapticFeedback.impactOccurred(ok ? 'medium' : 'heavy');
+    setTimeout(() => {
+      setSwipeDir(null);
+      setFeedback(null);
+      if (idx + 1 < items.length) {
+        setIdx(i => i + 1);
+      } else {
+        onDone(newScore, items.length * 10);
+      }
+    }, 480);
   };
-  const next = () => {
-    if (idx + 1 < items.length) {
-      setIdx(idx + 1);
-      setResult(null);
-      setNeuroMood("happy");
-    } else onDone(score + (result === "correct" ? 10 : 0), items.length * 10);
+
+  const handleTouchStart = e => setTouchStartX(e.touches[0].clientX);
+  const handleTouchEnd = e => {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) doSwipe(dx > 0);
+    setTouchStartX(null);
   };
+
   const iqColor = iq >= 70 ? C.green : iq >= 40 ? C.gold : C.red;
-  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 4,
-      marginBottom: 14
-    }
-  }, items.map((_, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    style: {
-      flex: 1,
-      height: 6,
-      borderRadius: 3,
-      background: i < idx ? C.orange : i === idx ? `${C.orange}55` : C.cardBorder
-    }
-  }))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: C.card,
-      border: `1px solid ${C.cardBorder}`,
-      borderRadius: 18,
-      padding: "14px 16px",
-      marginBottom: 14,
-      display: "flex",
-      alignItems: "center",
-      gap: 14
-    }
-  }, /*#__PURE__*/React.createElement(Neuro, {
-    mood: neuroMood,
-    size: 70
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      color: C.textDim,
-      fontSize: 10,
-      fontFamily: "'Orbitron'",
-      letterSpacing: 1,
-      marginBottom: 6
-    }
-  }, "IQ \u041D\u0415\u0419\u0420\u041E"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 10,
-      borderRadius: 5,
-      background: C.bgMid,
-      overflow: "hidden",
-      marginBottom: 6,
-      boxShadow: "inset 0 2px 4px rgba(0,0,0,0.4)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: "100%",
-      borderRadius: 5,
-      width: `${iq}%`,
-      background: `linear-gradient(90deg,${C.red},${C.gold},${C.green})`,
-      transition: "width .6s ease"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      color: iqColor,
-      fontSize: 14,
-      fontWeight: 800,
-      fontFamily: "'Orbitron'"
-    }
-  }, iq, "/100"))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: `${C.orange}08`,
-      border: `1px solid ${C.orange}25`,
-      borderRadius: 16,
-      padding: 14,
-      textAlign: "center",
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: C.orange,
-      fontFamily: "'Orbitron'",
-      letterSpacing: 1.5,
-      marginBottom: 8,
-      fontWeight: 800
-    }
-  }, "\uD83D\uDCE6 \u0414\u0410\u041D\u041D\u042B\u0415 #", idx + 1), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 36,
-      marginBottom: 8
-    }
-  }, cur.icon), /*#__PURE__*/React.createElement("div", {
-    style: {
-      color: C.white,
-      fontSize: 15,
-      fontWeight: 600,
-      lineHeight: 1.5
-    }
-  }, cur.text)), result && /*#__PURE__*/React.createElement("div", {
-    className: "anim-fadeIn",
-    style: {
-      background: result === "correct" ? `${C.green}0a` : `${C.red}0a`,
-      border: `1px solid ${result === "correct" ? C.green : C.red}30`,
-      borderRadius: 14,
-      padding: "12px 14px",
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      color: result === "correct" ? C.green : C.red,
-      fontWeight: 800,
-      fontSize: 12,
-      fontFamily: "'Orbitron'",
-      marginBottom: 6
-    }
-  }, result === "correct" ? cur.isGood ? "✓ ХОРОШИЕ ДАННЫЕ! Нейро умнеет" : "✓ ПРАВИЛЬНО — это мусор!" : cur.isGood ? "✗ Это были хорошие данные!" : "✗ Это был мусор!"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      color: C.text,
-      fontSize: 12,
-      lineHeight: 1.6
-    }
-  }, cur.why)), result === null ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 12
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => feed(true),
-    style: {
-      flex: 1,
-      padding: "16px 8px",
-      borderRadius: 18,
-      background: `linear-gradient(145deg,${C.green}18,${C.green}08)`,
-      border: `2px solid ${C.green}45`,
-      color: C.green,
-      fontWeight: 800,
-      fontSize: 12,
-      fontFamily: "'Orbitron'",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: 5
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 28
-    }
-  }, "\uD83D\uDC4D"), "\u0425\u041E\u0420\u041E\u0428\u0418\u0415 \u0414\u0410\u041D\u041D\u042B\u0415"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => feed(false),
-    style: {
-      flex: 1,
-      padding: "16px 8px",
-      borderRadius: 18,
-      background: `linear-gradient(145deg,${C.red}18,${C.red}08)`,
-      border: `2px solid ${C.red}45`,
-      color: C.red,
-      fontWeight: 800,
-      fontSize: 12,
-      fontFamily: "'Orbitron'",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: 5
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 28
-    }
-  }, "\uD83D\uDDD1\uFE0F"), "\u041C\u0423\u0421\u041E\u0420!")) : /*#__PURE__*/React.createElement(Btn, {
-    onClick: next,
-    full: true,
-    color: C.orange
-  }, idx + 1 < items.length ? "СЛЕДУЮЩИЕ ДАННЫЕ →" : "ГОТОВО ✓"));
+
+  return React.createElement('div', null,
+    // Progress dots
+    React.createElement('div', { style: { display: 'flex', gap: 4, marginBottom: 12 } },
+      items.map((_, i) => React.createElement('div', { key: i, style: {
+        flex: 1, height: 6, borderRadius: 3,
+        background: i < idx ? C.orange : i === idx ? C.orange + '88' : C.cardBorder
+      }}))
+    ),
+    // IQ bar
+    React.createElement('div', { style: {
+      background: C.card, border: '1px solid ' + C.cardBorder,
+      borderRadius: 14, padding: '10px 14px', marginBottom: 14,
+      display: 'flex', alignItems: 'center', gap: 12
+    }},
+      React.createElement('div', { style: { fontSize: 11, color: C.textDim, fontFamily: "'Orbitron'", letterSpacing: 1, whiteSpace: 'nowrap' } }, 'IQ НЕЙРО'),
+      React.createElement('div', { style: { flex: 1, height: 10, borderRadius: 5, background: C.bgMid, overflow: 'hidden' }},
+        React.createElement('div', { style: {
+          height: '100%', borderRadius: 5, width: iq + '%',
+          background: 'linear-gradient(90deg,' + C.red + ',' + C.gold + ',' + C.green + ')',
+          transition: 'width 0.5s ease'
+        }})
+      ),
+      React.createElement('div', { style: { color: iqColor, fontSize: 13, fontWeight: 800, fontFamily: "'Orbitron'", whiteSpace: 'nowrap' } }, iq + '/100')
+    ),
+    // Swipe card
+    React.createElement('div', {
+      style: {
+        transform: swipeDir === 'right' ? 'translateX(130%) rotate(18deg)'
+                 : swipeDir === 'left'  ? 'translateX(-130%) rotate(-18deg)'
+                 : 'translateX(0) rotate(0)',
+        opacity: swipeDir ? 0 : 1,
+        transition: swipeDir ? 'transform 0.45s ease-in, opacity 0.45s' : 'transform 0.15s',
+        background: feedback === 'correct' ? C.green + '15'
+                   : feedback === 'wrong'  ? C.red + '12'
+                   : C.card,
+        border: '2px solid ' + (feedback === 'correct' ? C.green
+                               : feedback === 'wrong'  ? C.red
+                               : C.cardBorder),
+        borderRadius: 22,
+        padding: '24px 20px',
+        marginBottom: 16,
+        textAlign: 'center',
+        userSelect: 'none',
+        touchAction: 'pan-y'
+      },
+      onTouchStart: handleTouchStart,
+      onTouchEnd: handleTouchEnd
+    },
+      React.createElement('div', { style: { fontSize: 10, color: C.orange, fontFamily: "'Orbitron'", letterSpacing: 1.5, marginBottom: 8, fontWeight: 800 } },
+        '\uD83D\uDCE6 ДАННЫЕ #' + (idx + 1)
+      ),
+      React.createElement('div', { style: { fontSize: 44, marginBottom: 10 } }, cur.icon),
+      React.createElement('div', { style: { fontSize: 16, fontWeight: 700, color: C.text, lineHeight: 1.5 } }, cur.text),
+      feedback && React.createElement('div', { style: { fontSize: 26, marginTop: 8 } }, feedback === 'correct' ? '✅' : '❌')
+    ),
+    // Hint
+    React.createElement('div', { style: { textAlign: 'center', color: C.textDim, fontSize: 11, marginBottom: 14, letterSpacing: 0.5 } },
+      '\u2190 МУСОР  |  ХОРОШИЕ ДАННЫЕ \u2192'
+    ),
+    // Buttons
+    React.createElement('div', { style: { display: 'flex', gap: 12 } },
+      React.createElement('button', {
+        onClick: () => doSwipe(false),
+        disabled: !!swipeDir,
+        style: {
+          flex: 1, padding: '16px 8px', borderRadius: 18, fontSize: 13, fontWeight: 800,
+          background: 'rgba(255,68,100,0.12)', border: '2px solid ' + C.red,
+          color: C.red, cursor: 'pointer', display: 'flex',
+          flexDirection: 'column', alignItems: 'center', gap: 4,
+          opacity: swipeDir ? 0.4 : 1
+        }
+      },
+        React.createElement('span', { style: { fontSize: 28 } }, '\uD83D\uDDD1\uFE0F'),
+        'МУСОР'
+      ),
+      React.createElement('button', {
+        onClick: () => doSwipe(true),
+        disabled: !!swipeDir,
+        style: {
+          flex: 1, padding: '16px 8px', borderRadius: 18, fontSize: 13, fontWeight: 800,
+          background: 'rgba(6,214,160,0.12)', border: '2px solid ' + C.green,
+          color: C.green, cursor: 'pointer', display: 'flex',
+          flexDirection: 'column', alignItems: 'center', gap: 4,
+          opacity: swipeDir ? 0.4 : 1
+        }
+      },
+        React.createElement('span', { style: { fontSize: 28 } }, '\uD83D\uDC4D'),
+        'ХОРОШО'
+      )
+    ),
+    // Feedback explanation
+    feedback && React.createElement('div', { className: 'anim-fadeIn', style: {
+      background: feedback === 'correct' ? C.green + '0a' : C.red + '0a',
+      border: '1px solid ' + (feedback === 'correct' ? C.green + '30' : C.red + '30'),
+      borderRadius: 14, padding: '10px 14px', marginTop: 12,
+      color: feedback === 'correct' ? C.green : C.red,
+      fontSize: 12, fontWeight: 700, lineHeight: 1.6
+    }}, feedback === 'correct'
+        ? (cur.isGood ? '✓ Отлично! Нейро умнеет 🧠' : '✓ Правильно — это мусор!')
+        : (cur.isGood ? '✗ Это были хорошие данные!' : '✗ Это был мусор!')
+    )
+  );
 }
 
 // ═══ MECHANIC 3: PROMPT LAB ══════════════════════
@@ -2622,7 +2567,7 @@ function MissionStage3({
     }
   }, '⚡ ОБУЧИТЬ НЕЙРО!') : React.createElement('div', {
     style: {
-      fontSize: 48,
+      fontSize: 88,
       animation: 'rocketFloat 1s ease-in-out infinite'
     }
   }, '🚀'));
@@ -3404,8 +3349,8 @@ function App() {
         alignItems: "center",
         gap: 14,
         padding: "14px 16px",
-        background: installed ? `linear-gradient(135deg,${mod.color}12,${mod.color}06)` : locked ? `${C.purple}06` : C.card,
-        border: `1.5px solid ${installed ? `${mod.color}45` : locked ? `${C.purple}30` : unlocked ? `${mod.color}22` : C.cardBorder}`,
+        background: installed ? `linear-gradient(135deg,${mod.color}12,${mod.color}06)` : locked ? `${C.purple}06` : unlocked ? `linear-gradient(135deg,${mod.color}18,${mod.color}0a)` : C.card,
+        border: `1.5px solid ${installed ? `${mod.color}45` : locked ? `${C.purple}30` : unlocked ? `${mod.color}70` : C.cardBorder}`,
         borderRadius: 18,
         cursor: locked || unlocked ? "pointer" : "default",
         outline: "none",
@@ -3413,7 +3358,7 @@ function App() {
         opacity: !unlocked && !locked ? .3 : 1,
         transition: "all .3s",
         width: "100%",
-        boxShadow: installed ? `0 4px 20px ${mod.color}18` : "none"
+        boxShadow: installed ? `0 4px 20px ${mod.color}40` : unlocked ? `0 4px 16px ${mod.color}25` : "none"
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3436,7 +3381,7 @@ function App() {
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        color: installed ? mod.color : locked ? C.purple : unlocked ? C.white : C.textMuted,
+        color: installed ? mod.color : locked ? C.purple : unlocked ? mod.color : C.textMuted,
         fontWeight: 800,
         fontSize: 13,
         fontFamily: "'Orbitron'",
