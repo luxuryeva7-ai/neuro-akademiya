@@ -2110,7 +2110,216 @@ function PipelineMech({
 }
 
 // ═══ MODULES DATA ════════════════════════════════
-// ═══ MISSION MECH — PUZZLE: СОБЕРИ ИИ ═══════════════════
+// ═══ MISSION MECH — PIPE PUZZLE ═══════════════════
+// connections per type per rotation: 0=N 1=E 2=S 3=W
+const PIPE_CONNS = {
+  straight: [[1,3],[0,2],[1,3],[0,2]],
+  corner:   [[0,1],[1,2],[2,3],[3,0]],
+  tee:      [[0,1,3],[0,1,2],[1,2,3],[0,2,3]]
+};
+
+// path:  START(left of r1c0) → (1,0)[W+N] → (0,0)[S+E] → (0,1)[W+E] → (0,2)[W+S] → (1,2)[N+E] → END
+// (1,1) is a filler tee that blocks wrong paths
+const INIT_CELLS = [
+  {r:0,c:0,type:'corner',   rot:3, solRot:1, info:{name:'⚡ АЛГОРИТМ', color:'#ffd166', fact:'Нейросеть — миллиарды правил "если-то". Вместе они умнее человека!'}},
+  {r:0,c:1,type:'straight', rot:1, solRot:0, info:{name:'🧠 МОДЕЛЬ',   color:'#a855f7', fact:'GPT-4 имеет 1.8 триллиона настроек — и все выучены на данных!'}},
+  {r:0,c:2,type:'corner',   rot:0, solRot:2, info:{name:'🖥️ СЕРВЕР',   color:'#ef476f', fact:'ChatGPT работает на 10 000+ видеокарт. Один ответ стоит $0.01!'}},
+  {r:1,c:0,type:'corner',   rot:1, solRot:3, info:{name:'📊 ДАННЫЕ',   color:'#06d6a0', fact:'ChatGPT учился на 570 ГБ текста — это миллион книг!'}},
+  {r:1,c:1,type:'tee',      rot:2, solRot:2, info:null},
+  {r:1,c:2,type:'corner',   rot:2, solRot:0, info:{name:'🔗 API',      color:'#118ab2', fact:'API — розетка для ИИ. Так Siri и тысячи приложений получают умные ответы!'}},
+];
+
+const PIPE_DIR = {0:[40,0],1:[80,40],2:[40,80],3:[0,40]};
+
+function getConns(type, rot) { return PIPE_CONNS[type][rot % 4]; }
+
+function checkPath(cells) {
+  var getCell = function(r,c) { return cells.find(function(x){return x.r===r && x.c===c;}); };
+  var visited = {};
+  var queue = [{r:1,c:0,from:3}];
+  while (queue.length > 0) {
+    var cur = queue.shift();
+    var key = cur.r+','+cur.c;
+    if (visited[key]) continue;
+    var cell = getCell(cur.r, cur.c);
+    if (!cell) continue;
+    var conns = getConns(cell.type, cell.rot);
+    var incoming = {0:2,1:3,2:0,3:1}[cur.from];
+    if (!conns.includes(incoming)) continue;
+    visited[key] = true;
+    conns.forEach(function(dir) {
+      if (dir === incoming) return;
+      var nr = cur.r + (dir===0?-1:dir===2?1:0);
+      var nc = cur.c + (dir===1?1:dir===3?-1:0);
+      if (!visited[nr+','+nc]) queue.push({r:nr,c:nc,from:dir});
+    });
+  }
+  if (!visited['1,0'] || !visited['1,2']) return false;
+  var endCell = getCell(1,2);
+  return getConns(endCell.type, endCell.rot).includes(1);
+}
+
+function PipeCell({ cell, isLit, isRotating, onClick }) {
+  var conns = getConns(cell.type, cell.rot);
+  var color = isLit ? '#06d6a0' : '#ffffff33';
+  var glow = isLit ? '0 0 12px #06d6a040' : 'none';
+  return React.createElement('div', {
+    onClick: onClick,
+    style: {
+      width: 76, height: 76, borderRadius: 14, cursor: 'pointer',
+      background: isLit ? '#06d6a010' : '#ffffff08',
+      border: '1.5px solid ' + (isLit ? '#06d6a040' : '#ffffff18'),
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: glow, transition: 'all 0.3s',
+      transform: isRotating ? 'scale(0.88) rotate(90deg)' : 'scale(1) rotate(0deg)',
+    }
+  },
+    React.createElement('svg', {viewBox:'0 0 80 80', width:70, height:70},
+      React.createElement('circle', {cx:40,cy:40,r:7,fill:color,opacity:isLit?1:0.5}),
+      conns.map(function(dir,i) {
+        var ep = PIPE_DIR[dir];
+        return React.createElement('line', {
+          key:i, x1:40,y1:40, x2:ep[0],y2:ep[1],
+          stroke:color, strokeWidth: isLit?8:5,
+          strokeLinecap:'round', opacity: isLit?1:0.6
+        });
+      }),
+      isLit && React.createElement('circle', {cx:40,cy:40,r:7,fill:'#06d6a0',opacity:0.4})
+    )
+  );
+}
+
+function PipePuzzle({ onDone }) {
+  const [cells, setCells] = React.useState(INIT_CELLS.map(function(c){return Object.assign({},c);}));
+  const [litCells, setLitCells] = React.useState({});
+  const [rotating, setRotating] = React.useState(null);
+  const [solved, setSolved] = React.useState(false);
+  const [showFacts, setShowFacts] = React.useState(false);
+
+  React.useEffect(function() {
+    var getCell = function(r,c){return cells.find(function(x){return x.r===r&&x.c===c;});};
+    var newLit = {};
+    var queue = [{r:1,c:0,from:3}];
+    while(queue.length>0){
+      var cur=queue.shift();
+      var key=cur.r+','+cur.c;
+      if(newLit[key]) continue;
+      var cell=getCell(cur.r,cur.c);
+      if(!cell) continue;
+      var conns=getConns(cell.type,cell.rot);
+      var incoming={0:2,1:3,2:0,3:1}[cur.from];
+      if(!conns.includes(incoming)) continue;
+      newLit[key]=true;
+      conns.forEach(function(dir){
+        if(dir===incoming) return;
+        var nr=cur.r+(dir===0?-1:dir===2?1:0);
+        var nc=cur.c+(dir===1?1:dir===3?-1:0);
+        if(!newLit[nr+','+nc]) queue.push({r:nr,c:nc,from:dir});
+      });
+    }
+    setLitCells(newLit);
+    if(checkPath(cells) && !solved){
+      setSolved(true);
+      if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback)
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      setTimeout(function(){setShowFacts(true);},600);
+      setTimeout(function(){onDone(10);},7000);
+    }
+  }, [cells]);
+
+  var rotate = function(r,c){
+    if(solved) return;
+    var key=r+','+c;
+    setRotating(key);
+    if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback)
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    setTimeout(function(){setRotating(null);},200);
+    setCells(function(prev){return prev.map(function(cell){
+      return cell.r===r&&cell.c===c ? Object.assign({},cell,{rot:(cell.rot+1)%4}) : cell;
+    });});
+  };
+
+  var pathCells = INIT_CELLS.filter(function(c){return c.info;});
+
+  return React.createElement('div', null,
+    React.createElement('div', {style:{textAlign:'center',marginBottom:12}},
+      React.createElement('div', {style:{
+        fontSize:11,color:C.neon,letterSpacing:1.5,fontFamily:"'Orbitron'",fontWeight:800,marginBottom:4
+      }}, 'СОБЕРИ ПУТЬ ДЛЯ ИИ'),
+      React.createElement('div', {style:{fontSize:12,color:C.textDim,marginBottom:8}},
+        'Вращай детали — соедини путь от данных до запуска'),
+      React.createElement('div', {style:{display:'flex',gap:4,justifyContent:'center'}},
+        pathCells.map(function(c,i){
+          var isLit = !!litCells[c.r+','+c.c];
+          return React.createElement('div', {key:i, style:{
+            width:12,height:12,borderRadius:'50%',
+            background: isLit ? C.neon : C.cardBorder,
+            transition:'all 0.3s',
+            boxShadow: isLit ? '0 0 8px '+C.neon : 'none'
+          }});
+        })
+      )
+    ),
+    React.createElement('div', {style:{
+      background:C.card,border:'1px solid '+(solved?C.neon+'50':C.cardBorder),
+      borderRadius:20,padding:14,marginBottom:14,
+      boxShadow: solved?'0 0 24px '+C.neon+'30':'none',
+      transition:'all 0.5s'
+    }},
+      React.createElement('div', {style:{display:'flex',alignItems:'center',marginBottom:8}},
+        React.createElement('div', {style:{
+          fontSize:10,color:'#06d6a0',fontFamily:"'Orbitron'",fontWeight:800,
+          background:'#06d6a015',border:'1px solid #06d6a040',
+          borderRadius:8,padding:'3px 8px',marginRight:8
+        }}, '▶ СТАРТ'),
+        React.createElement('div', {style:{flex:1,height:2,background:'#06d6a020',borderRadius:2}})
+      ),
+      React.createElement('div', {style:{display:'grid',gridTemplateColumns:'repeat(3,76px)',gap:6,justifyContent:'center'}},
+        [0,1].map(function(r){
+          return [0,1,2].map(function(c){
+            var cell = cells.find(function(x){return x.r===r&&x.c===c;});
+            if(!cell) return null;
+            var key = r+','+c;
+            return React.createElement(PipeCell, {
+              key:key, cell:cell,
+              isLit:!!litCells[key],
+              isRotating:rotating===key,
+              onClick:function(){rotate(r,c);}
+            });
+          });
+        })
+      ),
+      React.createElement('div', {style:{display:'flex',alignItems:'center',marginTop:8}},
+        React.createElement('div', {style:{flex:1,height:2,background:'#118ab220',borderRadius:2}}),
+        React.createElement('div', {style:{
+          fontSize:10,color:'#118ab2',fontFamily:"'Orbitron'",fontWeight:800,
+          background:'#118ab215',border:'1px solid #118ab240',
+          borderRadius:8,padding:'3px 8px',marginLeft:8
+        }}, solved?'✅ ЗАПУЩЕН!':'■ ФИНИШ')
+      )
+    ),
+    !solved && React.createElement('div', {style:{
+      textAlign:'center',fontSize:11,color:C.textDim,marginBottom:8
+    }}, '👆 Тапни деталь — она повернётся на 90°'),
+    showFacts && React.createElement('div', {style:{animation:'fadeIn 0.5s'}},
+      React.createElement('div', {style:{
+        fontSize:11,color:C.neon,fontFamily:"'Orbitron'",letterSpacing:1,
+        textAlign:'center',marginBottom:10,fontWeight:800
+      }}, '🚀 ПУТЬ СОБРАН — ИИ ЗАПУЩЕН!'),
+      pathCells.filter(function(c){return c.info;}).map(function(c,i){
+        return React.createElement('div', {key:i, style:{
+          background:c.info.color+'10',border:'1px solid '+c.info.color+'35',
+          borderRadius:12,padding:'10px 14px',marginBottom:6,
+          fontSize:12,color:C.text,lineHeight:1.6,
+          animation:'fadeIn 0.4s '+((i*0.15)+'s')+' both'
+        }},
+          React.createElement('span',{style:{fontWeight:800,color:c.info.color}}, c.info.name+' '),
+          '— '+c.info.fact
+        );
+      })
+    )
+  );
+}
 
 const ROCKET_PARTS = [
   {
@@ -2342,12 +2551,9 @@ function PuzzleMech({ onDone }) {
   );
 }
 
-function MissionMech({
-  room,
-  onDone
-}) {
-  return React.createElement('div', { style: { animation: 'cardIn 0.3s ease-out' } },
-    React.createElement(PuzzleMech, { onDone: onDone })
+function MissionMech({ room, onDone }) {
+  return React.createElement('div', {style:{animation:'cardIn 0.3s ease-out'}},
+    React.createElement(PipePuzzle, {onDone:onDone})
   );
 }
 
