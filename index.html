@@ -2110,17 +2110,17 @@ function PipelineMech({
 }
 
 // ═══ MODULES DATA ════════════════════════════════
-// ═══ MISSION MECH — PIPE PUZZLE 3×4 ═══════════════
-// connections per type per rotation: 0=N 1=E 2=S 3=W
+// ═══ MISSION MECH — PIPE PUZZLE 3×4 + CPU ASSEMBLY ═══
+
+// connections: 0=N 1=E 2=S 3=W
 const PIPE_CONNS = {
   straight: [[1,3],[0,2],[1,3],[0,2]],
   corner:   [[0,1],[1,2],[2,3],[3,0]],
   tee:      [[0,1,3],[0,1,2],[1,2,3],[0,2,3]]
 };
 
-// 3 rows x 4 cols
-// path: ЗАПРОС(W of r2c0)→(2,0)→(1,0)→(0,0)→(0,1)→(0,2)→(0,3)→(1,3)→(2,3)→ОТВЕТ(E)
-// fixed=true: (2,0) и (2,3) — зафиксированы, не крутятся
+// 3x4 grid. path: ЗАПРОС(W→r2c0)→(1,0)→(0,0)→(0,1)→(0,2)→(0,3)→(1,3)→(r2c3)→ОТВЕТ(E)
+// ВАЖНО: fixed=true ячейки имеют rot=solRot (уже в правильном положении)
 const INIT_CELLS = [
   {r:2,c:0,type:'corner',   rot:3,solRot:3,fixed:true,  info:{name:'📥 ЗАПРОС',        color:'#06d6a0', fact:'Всё начинается с запроса — текст, который ты вводишь. Это «вход» в нейросеть!'}},
   {r:1,c:0,type:'straight', rot:0,solRot:1,fixed:false, info:{name:'⚡ ПРЕДОБРАБОТКА', color:'#ffd166', fact:'ИИ не читает слова — он переводит их в числа. «Привет» = вектор из 768 чисел!'}},
@@ -2128,8 +2128,8 @@ const INIT_CELLS = [
   {r:0,c:1,type:'straight', rot:1,solRot:0,fixed:false, info:{name:'🧮 ВЫЧИСЛЕНИЯ',    color:'#ef476f', fact:'Внутри GPT-4 — триллионы умножений матриц каждый раз когда ты пишешь сообщение!'}},
   {r:0,c:2,type:'straight', rot:1,solRot:0,fixed:false, info:{name:'🧠 НЕЙРОСЕТЬ',     color:'#ff6b35', fact:'100 миллиардов нейронов — каждый решает задачу «да/нет». Вместе — думают!'}},
   {r:0,c:3,type:'corner',   rot:1,solRot:2,fixed:false, info:{name:'📈 ВЕСА МОДЕЛИ',   color:'#118ab2', fact:'Веса — это «память» ИИ. 1.8 триллиона чисел, каждое выучено на миллиардах примеров!'}},
-  {r:1,c:3,type:'straight', rot:0,solRot:1,fixed:false, info:{name:'🔄 ГЕНЕРАЦИЯ',     color:'#e040fb', fact:'ИИ выбирает каждое слово по очереди, предсказывая: что вероятнее всего будет дальше?'}},
-  {r:2,c:3,type:'corner',   rot:2,solRot:0,fixed:true,  info:{name:'💬 ОТВЕТ ИИ',      color:'#ffd166', fact:'Готово! Запрос прошёл через всю нейросеть и превратился в осмысленный ответ. Так работает ChatGPT!'}},
+  {r:1,c:3,type:'straight', rot:0,solRot:1,fixed:false, info:{name:'🔄 ГЕНЕРАЦИЯ',     color:'#e040fb', fact:'ИИ выбирает каждое слово по очереди — что вероятнее всего напишут дальше?'}},
+  {r:2,c:3,type:'corner',   rot:0,solRot:0,fixed:true,  info:{name:'💬 ОТВЕТ ИИ',      color:'#ffd166', fact:'Готово! Запрос прошёл через всю нейросеть и превратился в ответ. Так работает ChatGPT!'}},
   {r:1,c:1,type:'tee',    rot:1,solRot:1,fixed:false,info:null},
   {r:1,c:2,type:'corner', rot:0,solRot:0,fixed:false,info:null},
   {r:2,c:1,type:'corner', rot:2,solRot:2,fixed:false,info:null},
@@ -2138,15 +2138,15 @@ const INIT_CELLS = [
 
 const PIPE_DIR = {0:[40,0],1:[80,40],2:[40,80],3:[0,40]};
 
-function getConns(type, rot) { return PIPE_CONNS[type][rot % 4]; }
+function getConns(type,rot){return PIPE_CONNS[type][rot%4];}
 
-// from = direction of travel to reach cell (E=1 means moved East)
-// face entered = opposite(from)
-function floodFill(cells, startR, startC, travelDir) {
-  var opp = {0:2,1:3,2:0,3:1};
-  var getCell = function(r,c){return cells.find(function(x){return x.r===r&&x.c===c;});};
-  var visited = {};
-  var queue = [{r:startR,c:startC,from:travelDir}];
+// travelDir: направление движения к ячейке (E=1 значит двигались на Восток)
+// вошли через грань = opposite(travelDir)
+function floodFill(cells,startR,startC,travelDir){
+  var opp={0:2,1:3,2:0,3:1};
+  var getCell=function(r,c){return cells.find(function(x){return x.r===r&&x.c===c;});};
+  var visited={};
+  var queue=[{r:startR,c:startC,from:travelDir}];
   while(queue.length>0){
     var cur=queue.shift();
     var key=cur.r+','+cur.c;
@@ -2168,18 +2168,21 @@ function floodFill(cells, startR, startC, travelDir) {
   return visited;
 }
 
-function checkPath(cells) {
+function checkPath(cells){
+  // входим в (2,0) двигаясь на Восток (E=1) → incoming face = W=3
+  // (2,0) при solRot=3: corner[3]=[3,0]=[W,N] — есть W-вход ✓
+  // (2,3) при solRot=0: corner[0]=[0,1]=[N,E] — есть E-выход ✓
   var visited=floodFill(cells,2,0,1);
   if(!visited['2,0']||!visited['2,3']) return false;
   var endCell=cells.find(function(x){return x.r===2&&x.c===3;});
   return getConns(endCell.type,endCell.rot).includes(1);
 }
 
-function PipeCell({ cell, isLit, isFixed, isRotating, onClick }) {
+function PipeCell({cell,isLit,isFixed,isRotating,onClick}){
   var conns=getConns(cell.type,cell.rot);
-  var color=isLit?'#06d6a0':(isFixed?'#ffffff88':'#ffffff30');
-  var bg=isLit?'#06d6a018':(isFixed?'#ffffff10':'#ffffff06');
-  var borderC=isLit?'#06d6a055':(isFixed?'#ffffff35':'#ffffff15');
+  var color=isLit?'#06d6a0':(isFixed?'#ffffff90':'#ffffff30');
+  var bg=isLit?'#06d6a018':(isFixed?'#ffffff12':'#ffffff06');
+  var borderC=isLit?'#06d6a055':(isFixed?'#ffffff40':'#ffffff15');
   var glow=isLit?'0 0 18px #06d6a055':'none';
   return React.createElement('div',{
     onClick:isFixed?null:onClick,
@@ -2205,13 +2208,13 @@ function PipeCell({ cell, isLit, isFixed, isRotating, onClick }) {
     ),
     isFixed&&React.createElement('div',{style:{
       position:'absolute',bottom:2,right:4,
-      fontSize:8,color:isLit?'#06d6a0':'#ffffff50',
+      fontSize:8,color:isLit?'#06d6a0':'#ffffff55',
       fontFamily:"'Orbitron'",fontWeight:800
     }},isLit?'✓':'■')
   );
 }
 
-function PipePuzzle({ onDone }) {
+function PipePuzzle({onDone}){
   const [cells,setCells]=React.useState(INIT_CELLS.map(function(c){return Object.assign({},c);}));
   const [litCells,setLitCells]=React.useState({});
   const [rotating,setRotating]=React.useState(null);
@@ -2226,7 +2229,7 @@ function PipePuzzle({ onDone }) {
       if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback)
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       setTimeout(function(){setShowFacts(true);},700);
-      setTimeout(function(){onDone(10);},9000);
+      setTimeout(function(){onDone(5);},6000);
     }
   },[cells]);
 
@@ -2248,9 +2251,8 @@ function PipePuzzle({ onDone }) {
 
   return React.createElement('div',null,
     React.createElement('div',{style:{textAlign:'center',marginBottom:10}},
-      React.createElement('div',{style:{
-        fontSize:11,color:C.neon,letterSpacing:1.5,fontFamily:"'Orbitron'",fontWeight:800,marginBottom:3
-      }},'ПРОЛОЖИ ПУТЬ НЕЙРОСЕТИ'),
+      React.createElement('div',{style:{fontSize:11,color:C.neon,letterSpacing:1.5,fontFamily:"'Orbitron'",fontWeight:800,marginBottom:3}},
+        'ПРОЛОЖИ ПУТЬ НЕЙРОСЕТИ'),
       React.createElement('div',{style:{fontSize:12,color:C.textDim,marginBottom:8}},
         'Вращай трубки — соедини запрос с ответом ИИ'),
       React.createElement('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center'}},
@@ -2313,9 +2315,9 @@ function PipePuzzle({ onDone }) {
       )
     ),
     !solved&&React.createElement('div',{style:{textAlign:'center',fontSize:11,color:C.textDim}},
-      '👆 Тапни трубку — повернётся на 90°. Зафиксированные ■ не крутятся.'
+      '👆 Тапни трубку — повернётся. Зафиксированные ■ не крутятся.'
     ),
-    showFacts&&React.createElement('div',{style:{marginTop:10,animation:'fadeIn 0.5s'}},
+    showFacts&&React.createElement('div',{style:{marginTop:8,animation:'fadeIn 0.5s'}},
       React.createElement('div',{style:{
         fontSize:11,color:C.neon,fontFamily:"'Orbitron'",letterSpacing:1,
         textAlign:'center',marginBottom:8,fontWeight:800
@@ -2323,9 +2325,9 @@ function PipePuzzle({ onDone }) {
       pathCells.map(function(c,i){
         return React.createElement('div',{key:i,style:{
           background:c.info.color+'12',border:'1px solid '+c.info.color+'40',
-          borderRadius:10,padding:'8px 12px',marginBottom:5,
-          fontSize:11.5,color:C.text,lineHeight:1.6,
-          animation:'fadeIn 0.4s '+((i*0.12)+'s')+' both'
+          borderRadius:10,padding:'7px 12px',marginBottom:4,
+          fontSize:11,color:C.text,lineHeight:1.5,
+          animation:'fadeIn 0.3s '+((i*0.1)+'s')+' both'
         }},
           React.createElement('span',{style:{fontWeight:800,color:c.info.color}},c.info.name+' '),
           '— '+c.info.fact
@@ -2335,11 +2337,245 @@ function PipePuzzle({ onDone }) {
   );
 }
 
-function MissionMech({ room, onDone }) {
-  return React.createElement('div',{style:{animation:'cardIn 0.3s ease-out'}},
-    React.createElement(PipePuzzle,{onDone:onDone})
+// ═══ CPU ASSEMBLY — ЧАСТЬ 2 ═══════════════════════
+
+const CPU_PARTS = [
+  {id:'input',   order:0, emoji:'📥', name:'ВВОД ЗАПРОСА',   color:'#06d6a0', desc:'Пользователь пишет вопрос — он попадает в нейросеть'},
+  {id:'tokens',  order:1, emoji:'🔢', name:'ТОКЕНИЗАЦИЯ',    color:'#ffd166', desc:'Текст разбивается на токены — числовые кусочки слов'},
+  {id:'attn',    order:2, emoji:'🔗', name:'СВЯЗИ СЛОВ',     color:'#a855f7', desc:'ИИ вычисляет связи между каждой парой слов в запросе'},
+  {id:'predict', order:3, emoji:'🧠', name:'ПРЕДСКАЗАНИЕ',   color:'#ef476f', desc:'Нейросеть выбирает самое вероятное следующее слово'},
+  {id:'output',  order:4, emoji:'📤', name:'ВЫВОД ОТВЕТА',   color:'#118ab2', desc:'Готовый ответ слово за словом отправляется пользователю'},
+];
+
+function CpuAssembly({onDone}){
+  const [placed,setPlaced]=React.useState([]);
+  const [wrong,setWrong]=React.useState(null);
+  const [showFacts,setShowFacts]=React.useState(false);
+  const [shuffled]=React.useState(function(){
+    var arr=CPU_PARTS.slice();
+    for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;}
+    return arr;
+  });
+
+  var nextIdx=placed.length;
+  var done=placed.length===CPU_PARTS.length;
+
+  React.useEffect(function(){
+    if(done){
+      if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback)
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      setTimeout(function(){setShowFacts(true);},600);
+      setTimeout(function(){onDone(10);},7000);
+    }
+  },[done]);
+
+  var tap=function(part){
+    if(done||placed.find(function(p){return p.id===part.id;})) return;
+    if(part.order===nextIdx){
+      setPlaced(function(prev){return prev.concat([part]);});
+      if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback)
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+    } else {
+      setWrong(part.id);
+      if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback)
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+      setTimeout(function(){setWrong(null);},400);
+    }
+  };
+
+  var lastColor=placed.length>0?placed[placed.length-1].color:'#ffffff20';
+  var borderCol=done?'#06d6a070':lastColor+'60';
+  var glowStr=done?'0 0 32px #06d6a040':'0 0 10px '+lastColor+'20';
+
+  return React.createElement('div',null,
+    // Header
+    React.createElement('div',{style:{textAlign:'center',marginBottom:10}},
+      React.createElement('div',{style:{fontSize:11,color:C.neon,letterSpacing:1.5,fontFamily:"'Orbitron'",fontWeight:800,marginBottom:3}},
+        'СОБЕРИ НЕЙРОПРОЦЕССОР'),
+      React.createElement('div',{style:{fontSize:12,color:C.textDim}},
+        'Тапай шаги в правильном порядке — как работает ИИ')
+    ),
+    // CPU chip
+    React.createElement('div',{style:{
+      background:'#070714',
+      border:'2px solid '+borderCol,
+      borderRadius:16,overflow:'hidden',
+      boxShadow:glowStr,
+      transition:'all 0.5s',marginBottom:12
+    }},
+      // Chip header
+      React.createElement('div',{style:{
+        background:'linear-gradient(90deg,#ffffff05 0%,#ffffff10 50%,#ffffff05 100%)',
+        borderBottom:'1px solid #ffffff15',
+        padding:'7px 14px',
+        display:'flex',justifyContent:'space-between',alignItems:'center'
+      }},
+        React.createElement('div',{style:{fontFamily:"'Orbitron'",fontSize:10,color:C.neon,fontWeight:800,letterSpacing:1.5}},
+          '⚡ НЕЙРОПРОЦЕССОР v4.1'),
+        React.createElement('div',{style:{
+          fontSize:11,fontWeight:800,color:done?C.neon:C.textDim,
+          fontFamily:"'Orbitron'"
+        }},placed.length+'/5')
+      ),
+      // Body: pins + slots
+      React.createElement('div',{style:{display:'flex',padding:'8px 0'}},
+        // Left pins
+        React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:4,padding:'2px 5px',justifyContent:'space-around'}},
+          CPU_PARTS.map(function(p,i){
+            var pl=placed[i];
+            return React.createElement('div',{key:i,style:{
+              width:9,height:17,
+              background:pl?pl.color+'90':'#ffffff15',
+              borderRadius:'3px 0 0 3px',transition:'all 0.3s',
+              boxShadow:pl?'0 0 6px '+pl.color+'60':'none'
+            }});
+          })
+        ),
+        // Slots
+        React.createElement('div',{style:{flex:1,display:'flex',flexDirection:'column',gap:4,padding:'2px 4px'}},
+          CPU_PARTS.map(function(part,i){
+            var pl=placed[i];
+            return React.createElement('div',{key:i,style:{
+              height:33,borderRadius:7,
+              background:pl?pl.color+'18':'#ffffff05',
+              border:'1px solid '+(pl?pl.color+'45':'#ffffff10'),
+              display:'flex',alignItems:'center',padding:'0 10px',gap:8,
+              transition:'all 0.4s',
+              boxShadow:pl?'inset 0 0 10px '+pl.color+'20':'none'
+            }},
+              pl?[
+                React.createElement('span',{key:'e',style:{fontSize:16}},pl.emoji),
+                React.createElement('div',{key:'n',style:{
+                  fontSize:10,fontWeight:800,color:pl.color,
+                  fontFamily:"'Orbitron'",letterSpacing:0.5
+                }},pl.name),
+                React.createElement('div',{key:'s',style:{
+                  marginLeft:'auto',width:6,height:6,borderRadius:'50%',
+                  background:pl.color,boxShadow:'0 0 6px '+pl.color
+                }})
+              ]:React.createElement('div',{style:{
+                display:'flex',gap:4,alignItems:'center'
+              }},
+                React.createElement('div',{style:{width:5,height:5,borderRadius:'50%',background:'#ffffff10'}}),
+                React.createElement('div',{style:{width:70,height:5,background:'#ffffff08',borderRadius:3}}),
+                React.createElement('div',{style:{marginLeft:'auto',fontSize:9,color:'#ffffff15',fontFamily:"'Orbitron'"}},
+                  '0'+(i+1))
+              )
+            );
+          })
+        ),
+        // Right pins
+        React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:4,padding:'2px 5px',justifyContent:'space-around'}},
+          CPU_PARTS.map(function(p,i){
+            var pl=placed[i];
+            return React.createElement('div',{key:i,style:{
+              width:9,height:17,
+              background:pl?pl.color+'90':'#ffffff15',
+              borderRadius:'0 3px 3px 0',transition:'all 0.3s',
+              boxShadow:pl?'0 0 6px '+pl.color+'60':'none'
+            }});
+          })
+        )
+      ),
+      // Bottom pin strip
+      React.createElement('div',{style:{
+        borderTop:'1px solid #ffffff10',background:'#ffffff03',
+        padding:'4px 20px',display:'flex',gap:8,justifyContent:'center'
+      }},
+        [0,1,2,3,4,5,6].map(function(i){
+          return React.createElement('div',{key:i,style:{
+            width:5,height:11,
+            background:i<placed.length+1?lastColor+'50':'#ffffff12',
+            borderRadius:'0 0 3px 3px',transition:'all 0.3s'
+          }});
+        })
+      )
+    ),
+    // Hint
+    !done&&React.createElement('div',{style:{textAlign:'center',fontSize:11,color:C.textDim,marginBottom:8}},
+      nextIdx===0?'👆 Что происходит первым, когда ты пишешь ИИ?':
+      nextIdx===4?'👆 Осталась последняя часть!':
+      '👆 Что идёт следующим?'
+    ),
+    // Shuffled parts chips
+    !done&&React.createElement('div',{style:{display:'flex',flexWrap:'wrap',gap:7,justifyContent:'center',marginBottom:8}},
+      shuffled.map(function(part){
+        var isPlaced=!!placed.find(function(p){return p.id===part.id;});
+        var isWrong=wrong===part.id;
+        return React.createElement('div',{
+          key:part.id,
+          onClick:function(){tap(part);},
+          style:{
+            display:'flex',alignItems:'center',gap:7,
+            padding:'9px 13px',borderRadius:12,
+            cursor:isPlaced?'default':'pointer',
+            background:isWrong?'#ef476f20':isPlaced?'#ffffff06':part.color+'15',
+            border:'1.5px solid '+(isWrong?'#ef476f80':isPlaced?'#ffffff15':part.color+'55'),
+            opacity:isPlaced?0.35:1,
+            transition:'all 0.2s',
+            boxShadow:isWrong?'0 0 14px #ef476f50':'none',
+            transform:isWrong?'scale(0.9)':'scale(1)'
+          }
+        },
+          React.createElement('span',{style:{fontSize:18}},part.emoji),
+          React.createElement('div',{style:{
+            fontSize:11,fontWeight:800,
+            color:isPlaced?C.textDim:part.color,
+            fontFamily:"'Orbitron'",letterSpacing:0.3
+          }},part.name),
+          isPlaced&&React.createElement('span',{style:{fontSize:12,color:'#ffffff40'}},'✓')
+        );
+      })
+    ),
+    // Facts after done
+    showFacts&&React.createElement('div',{style:{animation:'fadeIn 0.5s'}},
+      React.createElement('div',{style:{
+        fontSize:11,color:C.neon,fontFamily:"'Orbitron'",letterSpacing:1,
+        textAlign:'center',marginBottom:8,fontWeight:800
+      }},'🏆 НЕЙРОПРОЦЕССОР СОБРАН!'),
+      CPU_PARTS.map(function(part,i){
+        return React.createElement('div',{key:i,style:{
+          background:part.color+'12',border:'1px solid '+part.color+'40',
+          borderRadius:10,padding:'8px 12px',marginBottom:4,
+          fontSize:11,color:C.text,lineHeight:1.6,
+          animation:'fadeIn 0.35s '+((i*0.1)+'s')+' both'
+        }},
+          React.createElement('span',{style:{fontWeight:800,color:part.color}},part.emoji+' '+part.name+' '),
+          '— '+part.desc
+        );
+      })
+    )
   );
 }
+
+function MissionMech({room,onDone}){
+  const [stage,setStage]=React.useState(0);
+  var goNext=function(){setStage(1);};
+
+  return React.createElement('div',{style:{animation:'cardIn 0.3s ease-out'}},
+    // Stage tabs
+    React.createElement('div',{style:{display:'flex',gap:6,justifyContent:'center',marginBottom:12}},
+      [{label:'🔌 ПУТЬ ДАННЫХ'},{label:'💾 ПРОЦЕССОР'}].map(function(s,i){
+        var isActive=stage===i;
+        var isDone=stage>i;
+        return React.createElement('div',{key:i,style:{
+          padding:'4px 12px',borderRadius:20,fontSize:10,fontWeight:800,
+          fontFamily:"'Orbitron'",letterSpacing:0.5,
+          background:isActive?C.neon+'25':(isDone?'#06d6a015':'#ffffff06'),
+          border:'1px solid '+(isActive?C.neon+'60':(isDone?'#06d6a040':'#ffffff15')),
+          color:isActive?C.neon:(isDone?'#06d6a080':C.textDim),
+          transition:'all 0.3s'
+        }},
+          (isDone?'✓ ':'')+s.label
+        );
+      })
+    ),
+    stage===0
+      ? React.createElement(PipePuzzle,{onDone:goNext})
+      : React.createElement(CpuAssembly,{onDone:onDone})
+  );
+}
+
 
 
 
