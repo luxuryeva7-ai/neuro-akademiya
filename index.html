@@ -2631,19 +2631,19 @@ function MissionMech({
   room,
   onDone
 }) {
-  const [stage, setStage] = useState(0); // 0,1,2 = mini-games; 3 = summary
+  const [stage, setStage] = useState(0); // 0,1 = mini-games; 2 = summary
   const [results, setResults] = useState([]);
   const nextStage = result => {
     const newResults = [...results, result];
     setResults(newResults);
-    if (stage < 2) {
+    if (stage < 1) {
       setStage(s => s + 1);
     } else {
-      setStage(3);
+      setStage(2);
       setTimeout(() => onDone(10), 2000);
     }
   };
-  if (stage === 3) {
+  if (stage === 2) {
     return React.createElement('div', {
       style: {
         textAlign: 'center',
@@ -2675,14 +2675,11 @@ function MissionMech({
       }
     }, '⭐⭐⭐'));
   }
-  const stages = [React.createElement(MissionStage1, {
+  const stages = [React.createElement(MissionStage2, {
     key: 0,
     onDone: nextStage
-  }), React.createElement(MissionStage2, {
-    key: 1,
-    onDone: nextStage
   }), React.createElement(MissionStage3, {
-    key: 2,
+    key: 1,
     onDone: nextStage
   })];
   return React.createElement('div', {
@@ -2697,7 +2694,7 @@ function MissionMech({
       gap: 6,
       marginBottom: 20
     }
-  }, [0, 1, 2].map(i => React.createElement('div', {
+  }, [0, 1].map(i => React.createElement('div', {
     key: i,
     style: {
       flex: 1,
@@ -2838,7 +2835,7 @@ const MODULES = [{
   rooms: [{
     name: "Запусти свой ИИ",
     type: "mission",
-    desc: "3 мини-игры: данные → нейросеть → обучение"
+    desc: "2 мини-игры: построй нейросеть → запусти обучение"
   }]
 }, {
   id: "nav",
