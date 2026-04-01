@@ -2210,15 +2210,16 @@ function PatternStage({ onDone }) {
     setShowFact(true);
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback)
       window.Telegram.WebApp.HapticFeedback.impactOccurred(correct ? 'medium' : 'heavy');
-    setTimeout(function() {
-      setShowFact(false);
-      setSelected(null);
-      if (round + 1 < PATTERNS.length) {
-        setRound(function(r) { return r + 1; });
-      } else {
-        onDone(newScore);
-      }
-    }, 2600);
+  };
+
+  var goNext = function() {
+    setShowFact(false);
+    setSelected(null);
+    if (round + 1 < PATTERNS.length) {
+      setRound(function(r) { return r + 1; });
+    } else {
+      onDone(score);
+    }
   };
 
   var progressColor = round < 3 ? C.green : round < 6 ? C.gold : C.red;
@@ -2337,8 +2338,18 @@ function PatternStage({ onDone }) {
         marginBottom: 6
       } }, selected === p.ans ? '🎯 Правильно!' : '❌ Не то! Правильный: ' + p.ans),
       React.createElement('div', { style: {
-        fontSize: 13, color: C.text, lineHeight: 1.7
-      } }, '💡 ' + p.fact)
+        fontSize: 13, color: C.text, lineHeight: 1.7, marginBottom: 14
+      } }, '💡 ' + p.fact),
+      React.createElement('button', {
+        onClick: goNext,
+        style: {
+          width: '100%', padding: '12px', borderRadius: 12,
+          fontSize: 14, fontWeight: 800,
+          background: 'linear-gradient(135deg,' + (selected === p.ans ? C.green : C.neon) + ',' + (selected === p.ans ? C.neon : C.purple) + ')',
+          color: '#000', border: 'none', cursor: 'pointer',
+          letterSpacing: 1
+        }
+      }, round + 1 < PATTERNS.length ? 'ДАЛЬШЕ →' : 'ЗАВЕРШИТЬ ✓')
     )
   );
 }
