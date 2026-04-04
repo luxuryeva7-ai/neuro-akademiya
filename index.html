@@ -5,28 +5,39 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
   <title>Нейро Академия</title>
   <link rel="preconnect" href="https://fonts.bunny.net">
-  <link href="https://fonts.bunny.net/css2?family=space-grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.bunny.net/css?family=orbitron:400,700,800,900|space-grotesk:400,500,600,700,800&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#050510;font-family:'Space Grotesk',sans-serif;overflow-x:hidden;padding-top:var(--tg-safe-area-inset-top,0px);color:#e2e8f0}
+    body{
+      background:#020818;
+      font-family:'Space Grotesk',sans-serif;
+      overflow-x:hidden;
+      padding-top:var(--tg-safe-area-inset-top,0px);
+      color:#e2e8f0;
+    }
     button{font-family:'Space Grotesk',sans-serif;-webkit-tap-highlight-color:transparent;cursor:pointer;border:none;outline:none}
     input{font-family:'Space Grotesk',sans-serif}
     ::-webkit-scrollbar{width:0}
     #root{min-height:100vh;padding-bottom:max(var(--tg-safe-area-inset-bottom,0px),20px)}
     @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
     @keyframes slideDown{from{opacity:0;transform:translateY(-20px) translateX(-50%)}to{opacity:1;transform:translateY(0) translateX(-50%)}}
-    @keyframes rocketFloat{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-12px) rotate(1.5deg)}}
+    @keyframes rocketFloat{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-14px) rotate(1.5deg)}}
     @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
     @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
     @keyframes cardIn{from{opacity:0;transform:scale(.88) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
-    @keyframes twinkle{0%,100%{opacity:.12;transform:scale(1)}50%{opacity:.85;transform:scale(1.5)}}
-    @keyframes borderPulse{0%,100%{border-color:rgba(139,92,246,.3)}50%{border-color:rgba(139,92,246,.7)}}
-    @keyframes nebulaGlow{0%,100%{opacity:0.6}50%{opacity:1}}
+    @keyframes twinkle{0%,100%{opacity:.1;transform:scale(1)}50%{opacity:.9;transform:scale(1.6)}}
+    @keyframes borderPulse{0%,100%{border-color:rgba(0,217,126,.2)}50%{border-color:rgba(0,217,126,.6)}}
+    @keyframes nebulaGlow{0%,100%{opacity:0.5}50%{opacity:1}}
     @keyframes sp{to{transform:rotate(360deg)}}
+    @keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(0,217,126,0.3)}50%{box-shadow:0 0 40px rgba(0,217,126,0.7)}}
+    @keyframes orbitronGlow{0%,100%{text-shadow:0 0 10px rgba(0,217,126,0.5)}50%{text-shadow:0 0 30px rgba(0,217,126,1),0 0 60px rgba(0,217,126,0.5)}}
   </style>
 </head>
 <body>
-<div id="loading" style="position:fixed;inset:0;background:#050510;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999"><div style="width:52px;height:52px;border:3px solid #0d0d2b;border-top:3px solid #00f5ff;border-radius:50%;animation:sp 1s linear infinite"></div><div style="color:#00f5ff;margin-top:14px;font-size:11px;letter-spacing:3px;font-family:'Space Grotesk',sans-serif;font-weight:600">НЕЙРО АКАДЕМИЯ</div></div>
+<div id="loading" style="position:fixed;inset:0;background:#020818;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999">
+  <div style="width:56px;height:56px;border:3px solid #0a1628;border-top:3px solid #00d97e;border-radius:50%;animation:sp 1s linear infinite"></div>
+  <div style="color:#00d97e;margin-top:16px;font-size:11px;letter-spacing:3px;font-family:'Orbitron',sans-serif;font-weight:700">НЕЙРО АКАДЕМИЯ</div>
+</div>
 <div id="root"></div>
 <script>// WebView
 (function () {
@@ -3382,33 +3393,49 @@
 })();
 </script>
 <script>
-// ═══ NEBULA CORE — Нейро Академия v2 (Vanilla JS) ═══════════════════════
+// ═══════════════════════════════════════════════════════════════
+// НЕЙРО АКАДЕМИЯ — Nebula Core v3 | Vanilla JS | Premium Design
+// ═══════════════════════════════════════════════════════════════
+
 const TG = window.Telegram?.WebApp || {};
 const tgUser = TG.initDataUnsafe?.user || {};
 const tgUserId = tgUser.id || 0;
 const tgFirstName = tgUser.first_name || "Пилот";
 if (TG.ready) TG.ready();
 if (TG.expand) TG.expand();
-if (TG.setHeaderColor) TG.setHeaderColor('#050510');
-if (TG.setBackgroundColor) TG.setBackgroundColor('#050510');
+if (TG.setHeaderColor) TG.setHeaderColor('#020818');
+if (TG.setBackgroundColor) TG.setBackgroundColor('#020818');
 
 const generateUnlockCode = uid => String(Math.abs(uid * 31337 + 99991 ^ 0xDEAD) % 900000 + 100000);
 const UNLOCK_CODE = tgUserId ? generateUnlockCode(tgUserId) : null;
 
-// ═══ PALETTE ══════════════════════════
+// ═══ PALETTE ════════════════════════════════
 const C = {
-  bg: "#050510", bgMid: "#080820", bgCard: "#0a0a2e",
-  cyan: "#00f5ff", cyanDim: "#00b8cc", cyanGlow: "rgba(0,245,255,0.18)",
-  magenta: "#ff00aa", magentaGlow: "rgba(255,0,170,0.18)",
-  purple: "#8b5cf6", gold: "#ffd700", green: "#00ffaa", orange: "#ff8c42",
-  text: "#e2e8f0", textDim: "#8892a4", textMuted: "#3a4460",
-  card: "#0d0d2b", cardBorder: "rgba(0,245,255,0.12)",
-  white: "#f0f4ff"
+  bg: "#020818",
+  bgMid: "#050e22",
+  bgCard: "#071020",
+  green: "#00d97e",
+  greenDim: "#00a860",
+  greenGlow: "rgba(0,217,126,0.2)",
+  magenta: "#ff3cac",
+  magentaGlow: "rgba(255,60,172,0.18)",
+  blue: "#4cc9f0",
+  blueGlow: "rgba(76,201,240,0.18)",
+  purple: "#7b2fff",
+  gold: "#ffd60a",
+  orange: "#ff6b2b",
+  text: "#e2e8f0",
+  textDim: "#7a8fa6",
+  textMuted: "#2a3a52",
+  card: "rgba(255,255,255,0.05)",
+  cardBorder: "rgba(255,255,255,0.08)",
+  cardGlass: "rgba(0,217,126,0.04)",
+  white: "#f0f8ff"
 };
 
-// ═══ GAME DATA ══════════════════════
+// ═══ GAME DATA ══════════════════════════════
 const MODULES = [
-  {id:"core", title:"AI-ЯДРО", subtitle:"Научи Нейро распознавать ИИ", icon:"⚡", color:C.cyan, xp:60,
+  {id:"core", title:"AI-ЯДРО", subtitle:"Научи Нейро распознавать ИИ", icon:"⚡", color:C.green, xp:60,
    narrative:{intro:"Привет, пилот! Я Нейро — только родился и ничего не знаю об ИИ. Ты будешь меня обучать! Покажи примеры — что ИИ, а что нет. Чем точнее сортируешь — тем я умнее!", complete:"Отлично! Теперь я знаю что такое ИИ! ⚡ AI-ядро активировано — корабль оживает. Но без топлива никуда не улетим!"},
    rooms:[{name:"Учим Нейро: ИИ или нет?", type:"sort", desc:"Покажи Нейро что является ИИ — он учится на твоих примерах!",
      items:[
@@ -3435,9 +3462,9 @@ const MODULES = [
        {icon:"✅",text:"Тексты, проверенные экспертами с правильными ответами",isGood:true,why:"Проверенные данные = надёжное обучение. Именно так обучают медицинские и юридические ИИ"}
      ]}]},
   {id:"mission", title:"МИССИЯ", subtitle:"Создай и запусти свой ИИ", icon:"🚀", color:C.gold, xp:150,
-   narrative:{intro:"Время применить всё что ты знаешь! Три испытания: отсортируй данные, построй нейросеть и запусти обучение. Поехали!", complete:"🚀 МИССИЯ ВЫПОЛНЕНА! Ты прошёл три испытания и знаешь как работает ИИ. Хочешь узнать всё остальное? Открывай следующие уровни!"},
-   rooms:[{name:"Запусти свой ИИ", type:"mission", desc:"8 паттернов с нарастающей сложностью. Угадай — узнай факт про ИИ!"}]},
-  {id:"nav", title:"НАВИГАЦИЯ", subtitle:"Как Нейро научился думать", icon:"🧭", color:C.green, xp:80,
+   narrative:{intro:"Время применить всё что ты знаешь! Два испытания: построй путь данных и активируй нейросеть. Поехали!", complete:"🚀 МИССИЯ ВЫПОЛНЕНА! Ты прошёл испытания и знаешь как работает ИИ. Хочешь узнать всё остальное? Открывай следующие уровни!"},
+   rooms:[{name:"Запусти свой ИИ", type:"mission", desc:"Собери путь данных и активируй нейроны!"}]},
+  {id:"nav", title:"НАВИГАЦИЯ", subtitle:"Как Нейро научился думать", icon:"🧭", color:C.blue, xp:80,
    narrative:{intro:"Навигационный модуль — мозг корабля. Разберёмся как работает мой мозг изнутри. Собери цепочку моего обучения!", complete:"Навигация работает! Ты знаешь как устроен мой мозг. Теперь научи меня слышать тебя — устанавливаем коммуникатор!"},
    rooms:[{name:"Собери мозг Нейро", type:"pipeline", desc:"Собери цепочку обучения нейросети — нажимай по порядку!",
      items:[
@@ -3456,7 +3483,7 @@ const MODULES = [
        {task:"Нейро хочет помочь с домашним заданием по истории",opts:[{text:"Помоги с историей",s:1,comment:"Что именно? Какой период? Какой класс? Я ничего не знаю и напишу что-то случайное."},{text:"Объясни причины Первой мировой войны для школьника",s:2,comment:"Тема есть! Но сколько слов? Для какого задания? Непонятно насколько подробно отвечать."},{text:"Объясни 3 главные причины Первой мировой войны для ученика 9 класса. Формат: 3 пункта по 2-3 предложения. Используй примеры",s:3,comment:"ОТЛИЧНО! Количество + аудитория + структура + метод = идеальный ответ для домашки!"}]}
      ]}]},
   {id:"shield", title:"ЩИТЫ", subtitle:"Поймай галлюцинацию Нейро", icon:"🛡️", color:C.purple, xp:90,
-   narrative:{intro:"Щиты — моя защита от ошибок. Но иногда я галлюцинирую — уверенно говорю неправду! Твоя задача — поймать меня на лжи. Это суперважный навык!", complete:"⭐ ОТЛИЧНАЯ РАБОТА! Модуль щитов пройден! Теперь ты умеешь ловить ИИ на ошибках. Осталось финальное испытание — запусти свою миссию!"},
+   narrative:{intro:"Щиты — моя защита от ошибок. Но иногда я галлюцинирую — уверенно говорю неправду! Твоя задача — поймать меня на лжи. Это суперважный навык!", complete:"⭐ ОТЛИЧНАЯ РАБОТА! Модуль щитов пройден! Теперь ты умеешь ловить ИИ на ошибках — ты настоящий ИИ-мастер!"},
    rooms:[{name:"Детектор галлюцинаций", type:"hallucination", desc:"Правда или выдумка? Поймай Нейро на галлюцинации!",
      items:[
        {claim:"Великую Китайскую стену видно из космоса невооружённым глазом",isTrue:false,truth:"Это миф! Стена слишком узкая — увидеть её из космоса нельзя. Астронавты это подтвердили.",lesson:"ИИ часто повторяют популярные мифы как факты — это классическая галлюцинация!"},
@@ -3468,7 +3495,7 @@ const MODULES = [
      ]}]}
 ];
 
-// ═══ STATE ════════════════════════════
+// ═══ STATE ══════════════════════════════════
 let gs = {xp:0, modules:[], score:0};
 let paid = false;
 let curMod = null, roomIdx = 0, roomScores = [];
@@ -3496,7 +3523,7 @@ function savePaid() {
   try { if(TG.CloudStorage) TG.CloudStorage.setItem('aiq_paid','1',()=>{}); } catch(e){}
 }
 
-// ═══ ROUTING ══════════════════════════
+// ═══ ROUTING ════════════════════════════════
 function go(s) {
   screen = s;
   render();
@@ -3515,7 +3542,7 @@ if(TG.BackButton) {
   });
 }
 
-// ═══ HELPERS ════════════════════════
+// ═══ HELPERS ════════════════════════════════
 function haptic(type) { try { if(TG.HapticFeedback) TG.HapticFeedback.notificationOccurred(type); } catch(e){} }
 function hapticImpact(s) { try { if(TG.HapticFeedback) TG.HapticFeedback.impactOccurred(s||'medium'); } catch(e){} }
 
@@ -3550,202 +3577,262 @@ function html(str) {
   return d.firstElementChild;
 }
 
-// ═══ STARS BACKGROUND ═══════════════
+// ═══ NEBULA BACKGROUND ══════════════════════
+function makeNebula() {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0';
+  // Nebula blobs
+  d.innerHTML = `
+    <div style="position:absolute;top:-10%;right:-15%;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(123,47,255,0.12) 0%,transparent 70%);animation:nebulaGlow 6s ease-in-out infinite"></div>
+    <div style="position:absolute;bottom:10%;left:-10%;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(0,217,126,0.08) 0%,transparent 70%);animation:nebulaGlow 8s ease-in-out 2s infinite"></div>
+    <div style="position:absolute;top:40%;right:-5%;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(76,201,240,0.07) 0%,transparent 70%);animation:nebulaGlow 7s ease-in-out 1s infinite"></div>
+  `;
+  return d;
+}
+
 function makeStars(count=50) {
   const d = document.createElement('div');
   d.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0';
   for(let i=0;i<count;i++) {
     const s = document.createElement('div');
-    const size = Math.random()*2.5+0.4;
-    const dur = (Math.random()*3+2).toFixed(1);
-    const delay = (Math.random()*6).toFixed(1);
+    const size = Math.random()*2.2+0.3;
+    const dur = (Math.random()*4+2).toFixed(1);
+    const delay = (Math.random()*8).toFixed(1);
     s.style.cssText = `position:absolute;left:${Math.random()*100}%;top:${Math.random()*100}%;width:${size}px;height:${size}px;border-radius:50%;background:white;animation:twinkle ${dur}s ease-in-out ${delay}s infinite`;
     d.appendChild(s);
   }
   return d;
 }
 
-// ═══ XP BAR ═════════════════════════
+// ═══ XP BAR ═════════════════════════════════
 function makeXPBar() {
   const totalXP = MODULES.reduce((s,m)=>s+m.xp,0);
   const pct = Math.min(100, Math.round(gs.xp/totalXP*100));
-  return html(`<div style="padding:12px 16px 8px;position:relative;z-index:1">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-size:11px;font-weight:700;color:${C.cyan};letter-spacing:1px">⚡ НЕЙРО XP</span>
-      <span style="font-size:11px;font-weight:700;color:${C.textDim}">${gs.xp} / ${totalXP} XP</span>
+  return html(`<div style="padding:14px 16px 10px;position:relative;z-index:1;background:rgba(0,0,0,0.3);backdrop-filter:blur(10px);border-bottom:1px solid rgba(0,217,126,0.1)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:10px;font-weight:700;color:${C.green};letter-spacing:1.5px;font-family:'Orbitron',sans-serif">⚡ НЕЙРО XP</span>
+      <span style="font-size:10px;font-weight:700;color:${C.textDim}">${gs.xp} / ${totalXP} XP</span>
     </div>
-    <div style="height:6px;background:${C.card};border-radius:8px;overflow:hidden;border:1px solid ${C.cardBorder}">
-      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${C.cyan},${C.magenta});border-radius:8px;box-shadow:0 0 8px ${C.cyan}60;transition:width 0.8s ease"></div>
+    <div style="height:5px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${C.green},${C.blue});border-radius:10px;box-shadow:0 0 10px ${C.green}80;transition:width 0.8s ease"></div>
     </div>
   </div>`);
 }
 
-// ═══ TOAST ══════════════════════════
+// ═══ TOAST ══════════════════════════════════
 function showToast(icon, title, color) {
   const existing = document.getElementById('toast');
   if(existing) existing.remove();
-  const t = html(`<div id="toast" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:${C.bgCard};border:1.5px solid ${color}55;border-radius:16px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 36px rgba(0,0,0,0.6),0 0 28px ${color}30;animation:slideDown .4s ease;max-width:310px;min-width:220px">
-    <span style="font-size:24px">${icon}</span>
+  const t = html(`<div id="toast" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(7,16,32,0.95);border:1.5px solid ${color}60;border-radius:20px;padding:14px 22px;display:flex;align-items:center;gap:14px;box-shadow:0 12px 40px rgba(0,0,0,0.7),0 0 30px ${color}30;animation:slideDown .4s ease;max-width:320px;min-width:240px;backdrop-filter:blur(20px)">
+    <span style="font-size:26px">${icon}</span>
     <div>
-      <div style="color:${color};font-size:9px;font-weight:800;letter-spacing:1.5px">МОДУЛЬ УСТАНОВЛЕН!</div>
-      <div style="color:${C.white};font-weight:700;font-size:13px;margin-top:2px">${title}</div>
+      <div style="color:${color};font-size:9px;font-weight:800;letter-spacing:2px;font-family:'Orbitron',sans-serif">МОДУЛЬ УСТАНОВЛЕН!</div>
+      <div style="color:${C.white};font-weight:700;font-size:13px;margin-top:3px">${title}</div>
     </div>
-    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:${C.textDim};font-size:18px;margin-left:4px;line-height:1;cursor:pointer">×</button>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:${C.textDim};font-size:20px;margin-left:4px;line-height:1;cursor:pointer;padding:0">×</button>
   </div>`);
   document.body.appendChild(t);
   setTimeout(()=>{ if(t.parentElement) t.remove(); }, 3500);
 }
 
-// ═══ SPLASH SCREEN ══════════════════
+// ═══ SHIP SVG ════════════════════════════════
+function shipSVG(size, floating=false) {
+  const w = Math.round(size*0.65), h=size;
+  const animStyle = floating ? 'animation:rocketFloat 3.5s ease-in-out infinite;' : '';
+  return `<svg viewBox="0 0 100 200" width="${w}" height="${h}" style="${animStyle}display:block;margin:0 auto;overflow:visible" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bodyGrad" cx="35%" cy="25%" r="65%">
+        <stop offset="0%" stop-color="#1a3a6e"/>
+        <stop offset="100%" stop-color="#071020"/>
+      </radialGradient>
+      <radialGradient id="cockpitGrad" cx="40%" cy="30%" r="60%">
+        <stop offset="0%" stop-color="${C.blue}80"/>
+        <stop offset="100%" stop-color="${C.blue}15"/>
+      </radialGradient>
+      <radialGradient id="engineGlow" cx="50%" cy="60%" r="50%">
+        <stop offset="0%" stop-color="${C.green}"/>
+        <stop offset="100%" stop-color="${C.green}00"/>
+      </radialGradient>
+      <filter id="shipGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="engineGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <!-- Engine exhaust glow -->
+    <ellipse cx="50" cy="172" rx="16" ry="8" fill="${C.green}" opacity="0.15" filter="url(#engineGlowFilter)"/>
+    <ellipse cx="50" cy="175" rx="10" ry="5" fill="${C.green}" opacity="0.25"/>
+    <!-- Left wing -->
+    <path d="M32 130 L8 168 L32 155 Z" fill="url(#bodyGrad)" stroke="${C.green}50" stroke-width="1.2"/>
+    <path d="M32 135 L14 162 L32 152 Z" fill="${C.green}15"/>
+    <!-- Right wing -->
+    <path d="M68 130 L92 168 L68 155 Z" fill="url(#bodyGrad)" stroke="${C.green}50" stroke-width="1.2"/>
+    <path d="M68 135 L86 162 L68 152 Z" fill="${C.green}15"/>
+    <!-- Main body -->
+    <path d="M50 15 L72 135 L50 125 L28 135 Z" fill="url(#bodyGrad)" stroke="${C.blue}60" stroke-width="1.5" filter="url(#shipGlow)"/>
+    <!-- Body highlight -->
+    <path d="M50 15 L62 85 L50 80 L38 85 Z" fill="rgba(76,201,240,0.08)"/>
+    <!-- Body lines detail -->
+    <line x1="50" y1="30" x2="50" y2="120" stroke="${C.blue}20" stroke-width="0.5"/>
+    <line x1="40" y1="80" x2="60" y2="80" stroke="${C.blue}15" stroke-width="0.5"/>
+    <line x1="38" y1="100" x2="62" y2="100" stroke="${C.blue}15" stroke-width="0.5"/>
+    <!-- Cockpit window -->
+    <ellipse cx="50" cy="58" rx="10" ry="13" fill="url(#cockpitGrad)" stroke="${C.blue}70" stroke-width="1.2"/>
+    <ellipse cx="47" cy="53" rx="4" ry="5" fill="${C.blue}30"/>
+    <!-- Nose glow dot -->
+    <circle cx="50" cy="18" r="2.5" fill="${C.green}" opacity="0.9" filter="url(#engineGlowFilter)"/>
+    <!-- Engine nozzle -->
+    <path d="M40 130 Q50 158 60 130" fill="${C.green}35" stroke="${C.green}60" stroke-width="1"/>
+    <!-- Side thrusters -->
+    <rect x="28" y="125" width="6" height="12" rx="3" fill="${C.green}40" stroke="${C.green}60" stroke-width="0.8"/>
+    <rect x="66" y="125" width="6" height="12" rx="3" fill="${C.green}40" stroke="${C.green}60" stroke-width="0.8"/>
+  </svg>`;
+}
+
+// ═══ SPLASH SCREEN ════════════════════════════
 function renderSplash() {
   const div = document.createElement('div');
-  div.style.cssText = `min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 24px 28px;position:relative;overflow:hidden;background:${C.bg}`;
-  div.appendChild(makeStars(60));
-  
-  // Nebula glow
-  div.appendChild(html(`<div style="position:absolute;top:10%;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,${C.magenta}12,transparent 70%);pointer-events:none;z-index:0"></div>`));
-  div.appendChild(html(`<div style="position:absolute;bottom:20%;left:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,${C.cyan}10,transparent 70%);pointer-events:none;z-index:0"></div>`));
-  
+  div.style.cssText = `min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px 28px;position:relative;overflow:hidden;background:${C.bg}`;
+  div.appendChild(makeNebula());
+  div.appendChild(makeStars(70));
+
   const content = document.createElement('div');
-  content.style.cssText = 'text-align:center;position:relative;z-index:1;animation:fadeIn 1s ease;width:100%';
-  
-  // Ship SVG
-  content.appendChild(html(`<div style="margin-bottom:8px">${shipSVG(160, true)}</div>`));
-  
-  content.appendChild(html(`<h1 style="font-size:28px;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,${C.cyan},${C.magenta});-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px">НЕЙРО АКАДЕМИЯ</h1>`));
-  content.appendChild(html(`<div style="color:${C.textDim};font-size:10px;letter-spacing:3px;margin-bottom:28px">ОБУЧИ ИИ · ИЗУЧИ ИИ · СТАНЬ МАСТЕРОМ</div>`));
-  
-  // Neuro talk bubble
-  const bubble = html(`<div style="background:${C.card};border:1.5px solid ${C.cyan}30;border-radius:20px;padding:16px 20px;margin-bottom:24px;text-align:left;position:relative">
-    <div style="position:absolute;top:-10px;left:20px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:10px solid ${C.cyan}30"></div>
-    <div style="position:absolute;top:-9px;left:21px;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:9px solid ${C.card}"></div>
-    <div style="color:${C.cyan};font-size:11px;font-weight:700;letter-spacing:0.5px;margin-bottom:6px">🤖 НЕЙРО</div>
+  content.style.cssText = 'text-align:center;position:relative;z-index:1;animation:fadeIn 1s ease;width:100%;max-width:400px';
+
+  // Ship
+  content.appendChild(html(`<div style="margin-bottom:4px">${shipSVG(170, true)}</div>`));
+
+  // Title
+  content.appendChild(html(`<h1 style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;margin-bottom:4px;background:linear-gradient(135deg,${C.green} 0%,${C.blue} 50%,${C.magenta} 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;animation:orbitronGlow 3s ease-in-out infinite">НЕЙРО АКАДЕМИЯ</h1>`));
+  content.appendChild(html(`<div style="color:${C.textDim};font-size:9px;letter-spacing:3px;margin-bottom:24px;font-family:'Orbitron',sans-serif">STARSHIP COMMANDER · AI TRAINING PROGRAM</div>`));
+
+  // Neuro bubble
+  const bubble = html(`<div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1px solid rgba(0,217,126,0.2);border-radius:20px;padding:16px 20px;margin-bottom:24px;text-align:left;position:relative">
+    <div style="position:absolute;top:-10px;left:20px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:10px solid rgba(0,217,126,0.2)"></div>
+    <div style="position:absolute;top:-8px;left:22px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:8px solid rgba(5,14,34,0.95)"></div>
+    <div style="color:${C.green};font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:6px;font-family:'Orbitron',sans-serif">🤖 НЕЙРО</div>
     <div style="color:${C.text};font-size:14px;line-height:1.5">Привет, ${tgFirstName}! Я Нейро — только родился и ничего не знаю. Ты будешь меня обучать! Вместе мы соберём корабль и полетим к звёздам 🚀</div>
   </div>`);
   content.appendChild(bubble);
-  
-  const btn = html(`<button style="width:100%;padding:16px;background:linear-gradient(135deg,${C.cyan},${C.magenta});border:none;border-radius:16px;color:${C.bg};font-size:15px;font-weight:800;letter-spacing:1px;cursor:pointer;box-shadow:0 0 30px ${C.cyan}40;transition:transform 0.15s">НАЧАТЬ ОБУЧЕНИЕ ⚡</button>`);
+
+  const btn = html(`<button style="width:100%;padding:18px;background:linear-gradient(135deg,${C.green},${C.blue});border:none;border-radius:18px;color:${C.bg};font-size:16px;font-weight:800;letter-spacing:1px;cursor:pointer;box-shadow:0 0 40px ${C.green}40,0 4px 20px rgba(0,0,0,0.4);font-family:'Orbitron',sans-serif;transition:transform 0.15s,box-shadow 0.15s">НАЧАТЬ ОБУЧЕНИЕ ⚡</button>`);
   btn.addEventListener('click', ()=>{ hapticImpact(); go('city'); });
-  btn.addEventListener('touchstart', ()=>btn.style.transform='scale(0.97)', {passive:true});
-  btn.addEventListener('touchend', ()=>btn.style.transform='', {passive:true});
+  btn.addEventListener('touchstart', ()=>{ btn.style.transform='scale(0.96)'; btn.style.boxShadow=`0 0 60px ${C.green}60,0 4px 20px rgba(0,0,0,0.4)`; }, {passive:true});
+  btn.addEventListener('touchend', ()=>{ btn.style.transform=''; btn.style.boxShadow=`0 0 40px ${C.green}40,0 4px 20px rgba(0,0,0,0.4)`; }, {passive:true});
   content.appendChild(btn);
-  
+
   div.appendChild(content);
   return div;
 }
 
-// ═══ SHIP SVG ════════════════════════
-function shipSVG(size, floating=false) {
-  const w = Math.round(size*0.62), h=size;
-  const animStyle = floating ? 'animation:rocketFloat 3s ease-in-out infinite;' : '';
-  return `<svg viewBox="0 0 90 180" width="${w}" height="${h}" style="${animStyle}display:block;margin:0 auto;overflow:visible">
-    <defs>
-      <radialGradient id="bodyG" cx="40%" cy="30%"><stop offset="0%" stop-color="${C.cyan}22"/><stop offset="100%" stop-color="${C.bg}"/></radialGradient>
-      <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    </defs>
-    <ellipse cx="45" cy="155" rx="18" ry="6" fill="${C.magenta}" opacity="0.15"/>
-    <path d="M45 10 L70 130 L45 118 L20 130 Z" fill="${C.card}" stroke="${C.cyan}" stroke-width="1.2" filter="url(#glow)"/>
-    <path d="M45 10 L60 80 L45 72 L30 80 Z" fill="url(#bodyG)"/>
-    <ellipse cx="45" cy="55" rx="8" ry="10" fill="${C.bgCard}" stroke="${C.cyan}80" stroke-width="1"/>
-    <ellipse cx="45" cy="55" rx="5" ry="7" fill="${C.cyan}25"/>
-    <path d="M20 130 L5 155 L45 140 Z" fill="${C.card}" stroke="${C.magenta}" stroke-width="1" opacity="0.9"/>
-    <path d="M70 130 L85 155 L45 140 Z" fill="${C.card}" stroke="${C.magenta}" stroke-width="1" opacity="0.9"/>
-    <path d="M38 130 Q45 155 52 130" fill="${C.cyan}40" stroke="${C.cyan}" stroke-width="1"/>
-    <circle cx="45" cy="30" r="3" fill="${C.cyan}" opacity="0.9"/>
-  </svg>`;
-}
-
-// ═══ CITY SCREEN ══════════════════
+// ═══ CITY SCREEN ════════════════════════════
 function renderCity() {
   const div = document.createElement('div');
-  div.style.cssText = `min-height:100vh;background:${C.bg};animation:fadeIn .4s ease`;
-  
+  div.style.cssText = `min-height:100vh;background:${C.bg};animation:fadeIn .4s ease;position:relative`;
+
   // XP bar
   div.appendChild(makeXPBar());
-  
+
   // Ship section
-  const shipSection = html(`<div style="position:relative;overflow:hidden;background:linear-gradient(180deg,${C.bgMid} 0%,${C.bg} 100%);border-bottom:1px solid ${C.cardBorder};padding-bottom:16px">`);
-  shipSection.appendChild(makeStars(25));
-  
+  const shipSection = document.createElement('div');
+  shipSection.style.cssText = `position:relative;overflow:hidden;background:linear-gradient(180deg,${C.bgMid} 0%,${C.bg} 100%);border-bottom:1px solid rgba(0,217,126,0.08);padding-bottom:16px`;
+  shipSection.appendChild(makeNebula());
+  shipSection.appendChild(makeStars(20));
+
   const modCount = gs.modules.length;
   const shipContent = document.createElement('div');
   shipContent.style.cssText = 'position:relative;z-index:1;text-align:center;padding-top:16px';
-  
+
   const statusText = modCount===0 ? "КОРАБЛЬ НЕ СОБРАН" : modCount===6 ? "🚀 КОРАБЛЬ ПОЛНОСТЬЮ СОБРАН!" : `⚙️ СБОРКА: ${modCount}/6 МОДУЛЕЙ`;
-  shipContent.appendChild(html(`<div style="color:${C.textMuted};font-size:9px;font-weight:700;letter-spacing:2px;margin-bottom:12px">${statusText}</div>`));
-  shipContent.appendChild(html(`<div>${shipSVG(160, modCount>0)}</div>`));
-  
+  shipContent.appendChild(html(`<div style="color:${modCount===6?C.green:C.textMuted};font-size:9px;font-weight:700;letter-spacing:2px;margin-bottom:10px;font-family:'Orbitron',sans-serif">${statusText}</div>`));
+  shipContent.appendChild(html(`<div>${shipSVG(150, modCount>0)}</div>`));
+
   // Module dots
   const dots = document.createElement('div');
-  dots.style.cssText = 'display:flex;justify-content:center;gap:12px;margin-top:14px;margin-bottom:4px';
+  dots.style.cssText = 'display:flex;justify-content:center;gap:14px;margin-top:14px;margin-bottom:4px';
   MODULES.forEach(m => {
     const installed = gs.modules.includes(m.id);
     const dot = html(`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-      <div style="width:10px;height:10px;border-radius:50%;background:${installed?m.color:m.color+'20'};${installed?`box-shadow:0 0 10px ${m.color}80`:''};border:1px solid ${m.color}40;transition:all .6s"></div>
+      <div style="width:10px;height:10px;border-radius:50%;background:${installed?m.color:m.color+'18'};${installed?`box-shadow:0 0 12px ${m.color}90`:''};border:1px solid ${m.color}50;transition:all .6s"></div>
       <div style="font-size:8px;color:${installed?m.color:C.textMuted}">${m.icon}</div>
     </div>`);
     dots.appendChild(dot);
   });
   shipContent.appendChild(dots);
-  
+
   if(modCount===6) {
-    shipContent.appendChild(html(`<div style="padding:8px 24px 0;animation:fadeIn .5s">
-      <div style="background:linear-gradient(135deg,${C.cyan}18,${C.magenta}10);border:1px solid ${C.cyan}30;border-radius:16px;padding:10px 16px;text-align:center">
-        <div style="color:${C.cyan};font-weight:800;font-size:13px">🎉 НЕЙРО ПОЛНОСТЬЮ ОБУЧЕН!</div>
+    shipContent.appendChild(html(`<div style="padding:10px 24px 0;animation:fadeIn .5s">
+      <div style="background:linear-gradient(135deg,rgba(0,217,126,0.1),rgba(76,201,240,0.07));border:1px solid rgba(0,217,126,0.3);border-radius:16px;padding:10px 16px;text-align:center">
+        <div style="color:${C.green};font-weight:800;font-size:13px;font-family:'Orbitron',sans-serif">🎉 НЕЙРО ПОЛНОСТЬЮ ОБУЧЕН!</div>
         <div style="color:${C.textDim};font-size:11px;margin-top:4px">Ты настоящий ИИ-мастер 🚀</div>
       </div>
     </div>`));
   }
-  
+
   shipSection.appendChild(shipContent);
   div.appendChild(shipSection);
-  
+
   // Modules list
   const modList = document.createElement('div');
-  modList.style.cssText = 'padding:16px 16px 0';
-  modList.appendChild(html(`<div style="color:${C.textMuted};font-size:9px;font-weight:800;letter-spacing:1.5px;margin-bottom:12px">МОДУЛИ КОРАБЛЯ</div>`));
-  
+  modList.style.cssText = 'padding:16px 16px 0;position:relative;z-index:1';
+  modList.appendChild(html(`<div style="color:${C.textMuted};font-size:9px;font-weight:800;letter-spacing:2px;margin-bottom:12px;font-family:'Orbitron',sans-serif">МОДУЛИ КОРАБЛЯ</div>`));
+
   const cards = document.createElement('div');
   cards.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-bottom:20px';
-  
+
   MODULES.forEach(mod => {
     const installed = gs.modules.includes(mod.id);
     const locked = isPaidLocked(mod);
     const unlocked = canOpen(mod);
-    
+
     const card = document.createElement('button');
-    card.style.cssText = `display:flex;align-items:center;gap:14px;padding:14px 16px;
-      background:${installed?`linear-gradient(135deg,${mod.color}12,${mod.color}06)`:locked?`${C.purple}06`:unlocked?`linear-gradient(135deg,${mod.color}18,${mod.color}0a)`:C.card};
-      border:1.5px solid ${installed?`${mod.color}45`:locked?`${C.purple}30`:unlocked?`${mod.color}70`:C.cardBorder};
-      border-radius:18px;cursor:${locked||unlocked?'pointer':'default'};outline:none;text-align:left;
-      opacity:${!unlocked&&!locked?.3:1};transition:all .3s;width:100%;
-      box-shadow:${installed?`0 4px 20px ${mod.color}40`:unlocked?`0 4px 16px ${mod.color}25`:'none'}`;
-    
+    card.style.cssText = `
+      display:flex;align-items:center;gap:14px;padding:14px 16px;
+      background:${installed
+        ? `linear-gradient(135deg,${mod.color}10,${mod.color}05)`
+        : locked
+          ? 'rgba(123,47,255,0.05)'
+          : unlocked
+            ? `linear-gradient(135deg,${mod.color}15,${mod.color}08)`
+            : 'rgba(255,255,255,0.03)'};
+      backdrop-filter:blur(20px);
+      border:1.5px solid ${installed
+        ? `${mod.color}40`
+        : locked
+          ? 'rgba(123,47,255,0.25)'
+          : unlocked
+            ? `${mod.color}60`
+            : 'rgba(255,255,255,0.06)'};
+      border-radius:20px;cursor:${locked||unlocked?'pointer':'default'};outline:none;text-align:left;
+      opacity:${(!unlocked&&!locked)?0.35:1};transition:all .25s;width:100%;
+      box-shadow:${installed?`0 4px 24px ${mod.color}30,inset 0 1px 0 rgba(255,255,255,0.08)`:unlocked?`0 4px 16px ${mod.color}20`:'none'}`;
+
     // Icon box
-    const iconBox = html(`<div style="width:50px;height:50px;border-radius:15px;
-      background:${installed?`${mod.color}22`:locked?`${mod.color}08`:`${C.white}06`};
-      border:2px solid ${installed?`${mod.color}55`:locked?`${C.purple}35`:'transparent'};
-      display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;
-      ${installed?`box-shadow:0 0 18px ${mod.color}30`:''};
-      ${locked?'filter:brightness(0.45) saturate(0.6)':''}">${installed?'✅':mod.icon}</div>`);
+    const iconBox = html(`<div style="width:52px;height:52px;border-radius:16px;
+      background:${installed?`${mod.color}18`:locked?'rgba(123,47,255,0.08)':'rgba(255,255,255,0.04)'};
+      border:1.5px solid ${installed?`${mod.color}50`:locked?'rgba(123,47,255,0.3)':'rgba(255,255,255,0.06)'};
+      display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;
+      ${installed?`box-shadow:0 0 20px ${mod.color}25`:''};
+      ${locked?'filter:brightness(0.4) saturate(0.5)':''}">${installed?'✅':mod.icon}</div>`);
     card.appendChild(iconBox);
-    
-    // Text
+
     const textDiv = document.createElement('div');
-    textDiv.style.cssText = 'flex:1';
-    textDiv.appendChild(html(`<div style="color:${installed?mod.color:locked?C.purple:unlocked?mod.color:C.textMuted};font-weight:800;font-size:13px;letter-spacing:.5px">${mod.title}</div>`));
+    textDiv.style.cssText = 'flex:1;min-width:0';
+    textDiv.appendChild(html(`<div style="color:${installed?mod.color:locked?C.purple:unlocked?mod.color:C.textMuted};font-weight:800;font-size:13px;letter-spacing:.5px;font-family:'Orbitron',sans-serif">${mod.title}</div>`));
     textDiv.appendChild(html(`<div style="color:${C.textDim};font-size:11px;margin-top:3px;line-height:1.4">${mod.subtitle}</div>`));
-    textDiv.appendChild(html(`<div style="color:${installed?mod.color:locked?C.purple:C.textMuted};font-size:10px;margin-top:4px">${installed?`✓ +${mod.xp} XP`:locked?`💎 250 ⭐`:`${mod.xp} XP`}</div>`));
+    textDiv.appendChild(html(`<div style="color:${installed?mod.color:locked?C.purple:C.textMuted};font-size:10px;margin-top:4px;font-weight:700">${installed?`✓ +${mod.xp} XP`:locked?'💎 250 ⭐':`${mod.xp} XP`}</div>`));
     card.appendChild(textDiv);
-    
-    // Arrow or lock
+
     if(!installed && unlocked && !locked) {
-      card.appendChild(html(`<div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,${mod.color},${mod.color}AA);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px ${mod.color}45;font-size:16px;color:#fff">→</div>`));
+      card.appendChild(html(`<div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,${mod.color},${mod.color}AA);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px ${mod.color}50;font-size:16px;color:${C.bg};flex-shrink:0">→</div>`));
     }
     if(locked) {
-      card.appendChild(html(`<div style="width:32px;height:32px;border-radius:10px;background:${C.purple}20;border:1.5px solid ${C.purple}40;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔒</div>`));
+      card.appendChild(html(`<div style="width:34px;height:34px;border-radius:11px;background:rgba(123,47,255,0.15);border:1.5px solid rgba(123,47,255,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔒</div>`));
     }
-    
+
     if(locked||unlocked) {
       card.addEventListener('click', () => {
         hapticImpact('light');
@@ -3758,24 +3845,24 @@ function renderCity() {
     cards.appendChild(card);
   });
   modList.appendChild(cards);
-  
+
   // Upgrade block
   if(!paid) {
-    const upg = html(`<div style="background:linear-gradient(135deg,${C.purple}0d,${C.magenta}07);border:1.5px solid ${C.purple}35;border-radius:20px;padding:20px;margin-bottom:24px;animation:borderPulse 3s infinite">
-      <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:38px;margin-bottom:10px">🚀</div>
-        <div style="font-size:16px;font-weight:800;color:${C.white};margin-bottom:6px">Полный курс ИИ</div>
-        <div style="color:${C.textDim};font-size:12px;line-height:1.5">Открой 3 продвинутых модуля: НАВИГАЦИЯ, КОММУНИКАТОР, ЩИТЫ</div>
+    const upg = html(`<div style="background:linear-gradient(135deg,rgba(123,47,255,0.08),rgba(255,60,172,0.05));backdrop-filter:blur(20px);border:1.5px solid rgba(0,217,126,0.2);border-radius:24px;padding:22px;margin-bottom:24px;animation:borderPulse 3s infinite">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="font-size:40px;margin-bottom:10px">🚀</div>
+        <div style="font-size:17px;font-weight:800;color:${C.white};margin-bottom:6px;font-family:'Orbitron',sans-serif">ПОЛНЫЙ КУРС ИИ</div>
+        <div style="color:${C.textDim};font-size:12px;line-height:1.6">Открой 3 продвинутых модуля:<br>НАВИГАЦИЯ, КОММУНИКАТОР, ЩИТЫ</div>
       </div>
-      <div style="display:flex;gap:8px;flex-direction:column;margin-bottom:14px">
-        ${['🧭 Как работает мозг нейросети','📡 Мастер промптов','🛡️ Детектор галлюцинаций ИИ'].map(f=>`<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:${C.text}"><span style="color:${C.cyan}">✓</span>${f}</div>`).join('')}
+      <div style="display:flex;gap:8px;flex-direction:column;margin-bottom:16px">
+        ${['🧭 Как работает мозг нейросети','📡 Мастер промптов','🛡️ Детектор галлюцинаций ИИ'].map(f=>`<div style="display:flex;align-items:center;gap:10px;font-size:12px;color:${C.text};padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:10px"><span style="color:${C.green};font-weight:700">✓</span>${f}</div>`).join('')}
       </div>
-      <button id="buyBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,${C.purple},${C.magenta});border:none;border-radius:14px;color:white;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 0 20px ${C.purple}40;letter-spacing:0.5px">💎 Открыть за 250 ⭐</button>
+      <button id="buyBtn" style="width:100%;padding:16px;background:linear-gradient(135deg,${C.purple},${C.magenta});border:none;border-radius:16px;color:white;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 0 24px rgba(123,47,255,0.5);letter-spacing:0.5px;font-family:'Orbitron',sans-serif">💎 Открыть за 250 ⭐</button>
       <div style="text-align:center;margin-top:12px">
         <button id="codeBtn" style="background:none;border:none;color:${C.textDim};font-size:11px;cursor:pointer;text-decoration:underline">Есть код доступа?</button>
       </div>
     </div>`);
-    
+
     upg.querySelector('#buyBtn').addEventListener('click', () => {
       hapticImpact();
       const url = 'https://t.me/neuro_academy_bot?start=pay_'+tgUserId;
@@ -3788,12 +3875,12 @@ function renderCity() {
     });
     modList.appendChild(upg);
   }
-  
+
   div.appendChild(modList);
   return div;
 }
 
-// ═══ OPEN LEVEL ═══════════════════
+// ═══ OPEN LEVEL ════════════════════════════
 function openLevel(mod) {
   curMod = mod;
   roomIdx = 0;
@@ -3801,73 +3888,71 @@ function openLevel(mod) {
   go('level_intro');
 }
 
-// ═══ LEVEL INTRO ══════════════════
+// ═══ LEVEL INTRO ═══════════════════════════
 function renderLevelIntro() {
   const mod = curMod;
-  const div = html(`<div style="min-height:100vh;display:flex;flex-direction:column;padding:24px 20px;background:${C.bg};animation:fadeIn .4s ease;position:relative;overflow:hidden"></div>`);
+  const div = document.createElement('div');
+  div.style.cssText = `min-height:100vh;display:flex;flex-direction:column;padding:24px 20px;background:${C.bg};animation:fadeIn .4s ease;position:relative;overflow:hidden`;
+  div.appendChild(makeNebula());
   div.appendChild(makeStars(30));
-  
+
   const content = document.createElement('div');
   content.style.cssText = 'position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center';
-  
-  content.appendChild(html(`<div style="font-size:64px;margin-bottom:16px;animation:pop .4s ease">${mod.icon}</div>`));
-  content.appendChild(html(`<h2 style="font-size:22px;font-weight:800;color:${mod.color};letter-spacing:1px;margin-bottom:6px;text-align:center">${mod.title}</h2>`));
+
+  content.appendChild(html(`<div style="font-size:68px;margin-bottom:16px;animation:pop .4s ease;filter:drop-shadow(0 0 20px ${mod.color}80)">${mod.icon}</div>`));
+  content.appendChild(html(`<h2 style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:800;color:${mod.color};letter-spacing:2px;margin-bottom:6px;text-align:center;text-shadow:0 0 20px ${mod.color}60">${mod.title}</h2>`));
   content.appendChild(html(`<div style="color:${C.textDim};font-size:13px;margin-bottom:24px;text-align:center">${mod.subtitle}</div>`));
-  
-  // Narrative
-  content.appendChild(html(`<div style="background:${C.card};border:1.5px solid ${mod.color}30;border-radius:20px;padding:20px;margin-bottom:24px;width:100%">
-    <div style="color:${mod.color};font-size:11px;font-weight:700;letter-spacing:0.5px;margin-bottom:8px">🤖 НЕЙРО говорит:</div>
+
+  content.appendChild(html(`<div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1.5px solid ${mod.color}25;border-radius:22px;padding:20px;margin-bottom:24px;width:100%">
+    <div style="color:${mod.color};font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:8px;font-family:'Orbitron',sans-serif">🤖 НЕЙРО ГОВОРИТ:</div>
     <div style="color:${C.text};font-size:14px;line-height:1.6">${mod.narrative.intro}</div>
   </div>`));
-  
-  // XP preview
-  content.appendChild(html(`<div style="display:flex;align-items:center;gap:8px;background:${mod.color}12;border:1px solid ${mod.color}30;border-radius:12px;padding:10px 16px;margin-bottom:24px">
-    <span style="font-size:20px">⚡</span>
+
+  content.appendChild(html(`<div style="display:flex;align-items:center;gap:10px;background:${mod.color}10;border:1px solid ${mod.color}30;border-radius:14px;padding:12px 18px;margin-bottom:26px;width:100%">
+    <span style="font-size:22px">⚡</span>
     <div>
-      <div style="color:${mod.color};font-weight:800;font-size:13px">+${mod.xp} XP за модуль</div>
+      <div style="color:${mod.color};font-weight:800;font-size:13px;font-family:'Orbitron',sans-serif">+${mod.xp} XP за модуль</div>
       <div style="color:${C.textDim};font-size:11px">${mod.rooms.length} задание${mod.rooms.length>1?'я':''}</div>
     </div>
   </div>`));
-  
-  const btn = html(`<button style="width:100%;padding:16px;background:linear-gradient(135deg,${mod.color},${mod.color}CC);border:none;border-radius:16px;color:${C.bg};font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 0 24px ${mod.color}40;letter-spacing:0.5px">НАЧАТЬ →</button>`);
+
+  const btn = html(`<button style="width:100%;padding:18px;background:linear-gradient(135deg,${mod.color},${mod.color}CC);border:none;border-radius:18px;color:${C.bg};font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 0 28px ${mod.color}50;letter-spacing:1px;font-family:'Orbitron',sans-serif;transition:transform 0.15s">НАЧАТЬ →</button>`);
   btn.addEventListener('click', ()=>{ hapticImpact(); go('playing'); });
   btn.addEventListener('touchstart', ()=>btn.style.transform='scale(0.97)', {passive:true});
   btn.addEventListener('touchend', ()=>btn.style.transform='', {passive:true});
   content.appendChild(btn);
-  
+
   div.appendChild(content);
   return div;
 }
 
-// ═══ PLAYING SCREEN ═══════════════
+// ═══ PLAYING SCREEN ════════════════════════
 function renderPlaying() {
   const mod = curMod;
   const room = mod.rooms[roomIdx];
-  
-  const div = html(`<div style="min-height:100vh;background:${C.bg};animation:fadeIn .3s ease">`);
-  
-  // Header
-  const header = html(`<div style="padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid ${C.cardBorder}">
-    <div style="width:36px;height:36px;border-radius:12px;background:${mod.color}20;border:1.5px solid ${mod.color}40;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${mod.icon}</div>
+
+  const div = document.createElement('div');
+  div.style.cssText = `min-height:100vh;background:${C.bg};animation:fadeIn .3s ease`;
+
+  const header = html(`<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.4);backdrop-filter:blur(12px)">
+    <div style="width:38px;height:38px;border-radius:13px;background:${mod.color}18;border:1.5px solid ${mod.color}40;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${mod.icon}</div>
     <div style="flex:1">
-      <div style="color:${mod.color};font-size:12px;font-weight:700;letter-spacing:.5px">${mod.title}</div>
-      <div style="color:${C.textDim};font-size:11px">${room.name}</div>
+      <div style="color:${mod.color};font-size:11px;font-weight:700;letter-spacing:1px;font-family:'Orbitron',sans-serif">${mod.title}</div>
+      <div style="color:${C.textDim};font-size:11px;margin-top:1px">${room.name}</div>
     </div>
-    <div style="font-size:10px;color:${C.textMuted}">${roomIdx+1}/${mod.rooms.length}</div>
+    <div style="font-size:10px;color:${C.textMuted};font-family:'Orbitron',sans-serif">${roomIdx+1}/${mod.rooms.length}</div>
   </div>`);
   div.appendChild(header);
-  
-  // Mechanic container
+
   const mechDiv = document.createElement('div');
   mechDiv.style.cssText = 'padding:16px';
-  
+
   const onDone = (earned, total) => {
     const ns = [...roomScores, {earned, total}];
     roomScores = ns;
     if(roomIdx+1 < mod.rooms.length) {
       roomIdx++;
       go('room_done_tmp');
-      // Actually show room done then next
       setTimeout(()=>go('playing'), 100);
     } else {
       const te = ns.reduce((s,r)=>s+r.earned,0);
@@ -3881,89 +3966,100 @@ function renderPlaying() {
       if(!had) setTimeout(()=>showToast(mod.icon, mod.title+' установлен!', mod.color), 300);
     }
   };
-  
-  const mechFns = {sort:renderSortMech, feed:renderFeedMech, pipeline:renderPipelineMech, prompt_lab:renderPromptLabMech, hallucination:renderHallucinationMech, mission:renderMissionMech};
-  const mechEl = mechFns[room.type] ? mechFns[room.type](room, onDone) : html(`<div style="color:${C.red}">Механика не найдена: ${room.type}</div>`);
+
+  const mechFns = {
+    sort:renderSortMech,
+    feed:renderFeedMech,
+    pipeline:renderPipelineMech,
+    prompt_lab:renderPromptLabMech,
+    hallucination:renderHallucinationMech,
+    mission:renderMissionMech
+  };
+  const mechEl = mechFns[room.type] ? mechFns[room.type](room, onDone) : html(`<div style="color:${C.magenta}">Механика не найдена: ${room.type}</div>`);
   mechDiv.appendChild(mechEl);
   div.appendChild(mechDiv);
   return div;
 }
 
-// ═══ LEVEL DONE ══════════════════
+// ═══ LEVEL DONE ════════════════════════════
 function renderLevelDone() {
   const mod = curMod;
   const te = roomScores.reduce((s,r)=>s+r.earned,0);
   const tt = roomScores.reduce((s,r)=>s+r.total,0);
   const pct = tt>0?Math.round(te/tt*100):100;
   const medal = pct>=90?'🥇':pct>=70?'🥈':'🥉';
-  
-  const div = html(`<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;background:${C.bg};animation:fadeIn .4s;position:relative;overflow:hidden">`);
+
+  const div = document.createElement('div');
+  div.style.cssText = `min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;background:${C.bg};animation:fadeIn .4s;position:relative;overflow:hidden`;
+  div.appendChild(makeNebula());
   div.appendChild(makeStars(40));
-  
+
   const content = document.createElement('div');
   content.style.cssText = 'position:relative;z-index:1;text-align:center;width:100%';
-  
-  content.appendChild(html(`<div style="font-size:72px;margin-bottom:8px;animation:pop .5s ease">${medal}</div>`));
-  content.appendChild(html(`<h2 style="font-size:22px;font-weight:800;color:${mod.color};margin-bottom:8px">${mod.title} установлен!</h2>`));
-  content.appendChild(html(`<div style="color:${C.textDim};font-size:13px;margin-bottom:24px">${mod.narrative.complete}</div>`));
-  
-  content.appendChild(html(`<div style="background:${C.card};border:1.5px solid ${mod.color}30;border-radius:20px;padding:20px;margin-bottom:24px">
-    <div style="font-size:32px;font-weight:800;color:${mod.color};margin-bottom:4px">${pct}%</div>
-    <div style="color:${C.textDim};font-size:12px;margin-bottom:12px">точность ответов</div>
-    <div style="display:flex;justify-content:center;gap:24px">
-      <div><div style="font-size:18px;font-weight:800;color:${C.cyan}">+${Math.round(mod.xp*(te/Math.max(tt,1)))} XP</div><div style="color:${C.textDim};font-size:10px">получено</div></div>
-      <div><div style="font-size:18px;font-weight:800;color:${C.gold}">${te}/${tt}</div><div style="color:${C.textDim};font-size:10px">очков</div></div>
+
+  content.appendChild(html(`<div style="font-size:76px;margin-bottom:10px;animation:pop .5s ease;filter:drop-shadow(0 0 30px rgba(255,214,10,0.6))">${medal}</div>`));
+  content.appendChild(html(`<h2 style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:800;color:${mod.color};margin-bottom:8px;text-shadow:0 0 20px ${mod.color}60">${mod.title} УСТАНОВЛЕН!</h2>`));
+  content.appendChild(html(`<div style="color:${C.textDim};font-size:13px;margin-bottom:24px;line-height:1.6">${mod.narrative.complete}</div>`));
+
+  content.appendChild(html(`<div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1.5px solid ${mod.color}30;border-radius:22px;padding:22px;margin-bottom:24px">
+    <div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;color:${mod.color};margin-bottom:4px;text-shadow:0 0 20px ${mod.color}60">${pct}%</div>
+    <div style="color:${C.textDim};font-size:12px;margin-bottom:14px">точность ответов</div>
+    <div style="display:flex;justify-content:center;gap:28px">
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:800;color:${C.green}">+${Math.round(mod.xp*(te/Math.max(tt,1)))} XP</div><div style="color:${C.textDim};font-size:10px">получено</div></div>
+      <div><div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:800;color:${C.gold}">${te}/${tt}</div><div style="color:${C.textDim};font-size:10px">очков</div></div>
     </div>
   </div>`));
-  
-  const btn = html(`<button style="width:100%;padding:16px;background:linear-gradient(135deg,${C.cyan},${C.magenta});border:none;border-radius:16px;color:${C.bg};font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 0 24px ${C.cyan}40">НА КАРТУ МОДУЛЕЙ →</button>`);
+
+  const btn = html(`<button style="width:100%;padding:18px;background:linear-gradient(135deg,${C.green},${C.blue});border:none;border-radius:18px;color:${C.bg};font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 0 30px ${C.green}50;font-family:'Orbitron',sans-serif;letter-spacing:0.5px;transition:transform 0.15s">НА КАРТУ МОДУЛЕЙ →</button>`);
   btn.addEventListener('click', ()=>{ hapticImpact(); go('city'); });
   btn.addEventListener('touchstart', ()=>btn.style.transform='scale(0.97)', {passive:true});
   btn.addEventListener('touchend', ()=>btn.style.transform='', {passive:true});
   content.appendChild(btn);
-  
+
   div.appendChild(content);
   return div;
 }
 
-// ═══ PAYWALL ═════════════════════
+// ═══ PAYWALL ═══════════════════════════════
 function renderPaywall() {
-  let codeInput = '', codeError = false, codeSuccess = false;
-  
-  const div = html(`<div style="min-height:100vh;display:flex;flex-direction:column;padding:24px 20px;background:${C.bg};animation:fadeIn .4s;position:relative;overflow:hidden">`);
+  const div = document.createElement('div');
+  div.style.cssText = `min-height:100vh;display:flex;flex-direction:column;padding:24px 20px;background:${C.bg};animation:fadeIn .4s;position:relative;overflow:hidden`;
+  div.appendChild(makeNebula());
   div.appendChild(makeStars(30));
-  
-  const content = html(`<div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">`);
-  
-  content.appendChild(html(`<div style="font-size:56px;margin-bottom:16px;animation:pop .4s">💎</div>`));
-  content.appendChild(html(`<h2 style="font-size:22px;font-weight:800;color:${C.white};margin-bottom:8px;text-align:center">Полный курс</h2>`));
+
+  const content = document.createElement('div');
+  content.style.cssText = 'position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center';
+
+  content.appendChild(html(`<div style="font-size:60px;margin-bottom:16px;animation:pop .4s;filter:drop-shadow(0 0 20px rgba(76,201,240,0.6))">💎</div>`));
+  content.appendChild(html(`<h2 style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:800;color:${C.white};margin-bottom:8px;text-align:center">ПОЛНЫЙ КУРС</h2>`));
   content.appendChild(html(`<div style="color:${C.textDim};font-size:13px;margin-bottom:28px;text-align:center;line-height:1.5">Открой все 6 модулей и стань<br>настоящим ИИ-экспертом</div>`));
-  
-  // Features
+
   const feats = ['🧭 Навигация: мозг нейросети изнутри','📡 Коммуникатор: мастер промптов','🛡️ Щиты: ловим галлюцинации ИИ'];
-  feats.forEach(f => content.appendChild(html(`<div style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 16px;background:${C.card};border:1px solid ${C.cardBorder};border-radius:12px;margin-bottom:8px;font-size:13px;color:${C.text}">${f}</div>`)));
-  
-  const buyBtn = html(`<button style="width:100%;padding:16px;background:linear-gradient(135deg,${C.purple},${C.magenta});border:none;border-radius:16px;color:white;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 0 24px ${C.purple}40;margin-top:16px;margin-bottom:16px">💎 Открыть за 250 ⭐</button>`);
+  feats.forEach(f => content.appendChild(html(`<div style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.04);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin-bottom:8px;font-size:13px;color:${C.text}">${f}</div>`)));
+
+  const buyBtn = html(`<button style="width:100%;padding:18px;background:linear-gradient(135deg,${C.purple},${C.magenta});border:none;border-radius:18px;color:white;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 0 28px rgba(123,47,255,0.5);margin-top:16px;margin-bottom:16px;font-family:'Orbitron',sans-serif;letter-spacing:0.5px;transition:transform 0.15s">💎 Открыть за 250 ⭐</button>`);
   buyBtn.addEventListener('click', ()=>{
     hapticImpact();
     const url = 'https://t.me/neuro_academy_bot?start=pay_'+tgUserId;
     if(TG.openTelegramLink) TG.openTelegramLink(url);
     else window.open(url,'_blank');
   });
+  buyBtn.addEventListener('touchstart', ()=>buyBtn.style.transform='scale(0.97)', {passive:true});
+  buyBtn.addEventListener('touchend', ()=>buyBtn.style.transform='', {passive:true});
   content.appendChild(buyBtn);
-  
+
   // Code input
   const codeSection = document.createElement('div');
   codeSection.style.cssText = 'width:100%';
-  
+
   const codeLabel = html(`<div style="color:${C.textDim};font-size:12px;text-align:center;margin-bottom:8px">Или введи код доступа:</div>`);
   const codeRow = html(`<div style="display:flex;gap:8px">`);
-  const codeField = html(`<input type="text" placeholder="Код доступа" style="flex:1;padding:12px 16px;background:${C.card};border:1.5px solid ${C.cardBorder};border-radius:12px;color:${C.text};font-size:14px;font-family:inherit;outline:none">`);
-  const codeSubmit = html(`<button style="padding:12px 20px;background:${C.cyan}20;border:1.5px solid ${C.cyan}40;border-radius:12px;color:${C.cyan};font-size:13px;font-weight:700;cursor:pointer">ОК</button>`);
-  
+  const codeField = html(`<input type="text" placeholder="Код доступа" style="flex:1;padding:14px 16px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:14px;color:${C.text};font-size:14px;font-family:inherit;outline:none;backdrop-filter:blur(10px)">`);
+  const codeSubmit = html(`<button style="padding:14px 22px;background:${C.green}18;border:1.5px solid ${C.green}40;border-radius:14px;color:${C.green};font-size:13px;font-weight:700;cursor:pointer;font-family:'Orbitron',sans-serif">ОК</button>`);
+
   const codeMsg = document.createElement('div');
-  codeMsg.style.cssText = 'margin-top:8px;font-size:12px;text-align:center;min-height:20px';
-  
+  codeMsg.style.cssText = 'margin-top:10px;font-size:12px;text-align:center;min-height:20px';
+
   const applyCode = () => {
     const t = codeField.value.trim();
     if((UNLOCK_CODE && t===UNLOCK_CODE) || t==='DEMO_UNLOCK') {
@@ -3978,205 +4074,226 @@ function renderPaywall() {
       codeMsg.style.color = C.magenta;
       codeMsg.textContent = '✗ Неверный код';
       codeField.style.borderColor = C.magenta;
-      setTimeout(()=>{ codeField.style.borderColor=C.cardBorder; codeMsg.textContent=''; }, 2000);
+      setTimeout(()=>{ codeField.style.borderColor='rgba(255,255,255,0.1)'; codeMsg.textContent=''; }, 2000);
     }
   };
-  
+
   codeSubmit.addEventListener('click', applyCode);
   codeField.addEventListener('keydown', e=>{ if(e.key==='Enter') applyCode(); });
-  
+
   codeRow.appendChild(codeField);
   codeRow.appendChild(codeSubmit);
   codeSection.appendChild(codeLabel);
   codeSection.appendChild(codeRow);
   codeSection.appendChild(codeMsg);
   content.appendChild(codeSection);
-  
+
   div.appendChild(content);
   return div;
 }
 
-// ═══ MECHANICS ════════════════════════
+// ═══ MECHANICS ═══════════════════════════════
 
-// 1. SORT MECHANIC (swipe ИИ / не ИИ)
+// Reusable progress bar
+function makeProgressBar(idx, total, color) {
+  const pct = (idx/total)*100;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:6px;margin-bottom:16px;overflow:hidden`;
+  const bar = html(`<div id="pBarFill" style="height:100%;width:${pct}%;background:linear-gradient(90deg,${color},${color}AA);border-radius:6px;box-shadow:0 0 8px ${color}60;transition:width .4s ease"></div>`);
+  wrap.appendChild(bar);
+  return wrap;
+}
+
+// 1. SORT MECHANIC
 function renderSortMech(room, onDone) {
   const items = [...room.items].sort(()=>Math.random()-0.5);
   let idx = 0, correct = 0;
-  
+
   const wrap = document.createElement('div');
   wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center';
-  
-  const progress = document.createElement('div');
-  progress.style.cssText = `width:100%;height:4px;background:${C.card};border-radius:4px;margin-bottom:16px;overflow:hidden`;
-  const progressBar = html(`<div style="height:100%;background:linear-gradient(90deg,${C.cyan},${C.magenta});border-radius:4px;transition:width 0.4s ease"></div>`);
-  progress.appendChild(progressBar);
-  wrap.appendChild(progress);
-  
+
+  const progWrap = makeProgressBar(0, items.length, C.green);
+  wrap.appendChild(progWrap);
+
   const label = html(`<div style="display:flex;justify-content:space-between;width:100%;margin-bottom:12px">
     <div style="color:${C.textDim};font-size:11px">Карточка <span id="cIdx">1</span> из ${items.length}</div>
-    <div style="color:${C.cyan};font-size:11px;font-weight:700">✓ <span id="cCorr">0</span> верно</div>
+    <div style="color:${C.green};font-size:11px;font-weight:700">✓ <span id="cCorr">0</span> верно</div>
   </div>`);
   wrap.appendChild(label);
-  
-  // Hint labels
+
   const hints = html(`<div style="display:flex;justify-content:space-between;width:100%;margin-bottom:8px;padding:0 4px">
     <div style="color:${C.magenta};font-size:12px;font-weight:700">← НЕ ИИ</div>
-    <div style="color:${C.cyan};font-size:12px;font-weight:700">ИИ →</div>
+    <div style="color:${C.green};font-size:12px;font-weight:700">ИИ →</div>
   </div>`);
   wrap.appendChild(hints);
-  
+
   const cardArea = document.createElement('div');
   cardArea.style.cssText = 'width:100%;position:relative;min-height:160px;margin-bottom:16px';
   wrap.appendChild(cardArea);
-  
-  const feedbackDiv = html(`<div id="sortFeedback" style="min-height:56px;text-align:center;padding:0 8px;transition:all 0.3s"></div>`);
+
+  const feedbackDiv = html(`<div style="min-height:56px;text-align:center;padding:0 4px;transition:all .3s;margin-bottom:4px"></div>`);
   wrap.appendChild(feedbackDiv);
-  
-  const btnRow = html(`<div style="display:flex;gap:12px;width:100%;margin-top:8px">
-    <button id="notAI" style="flex:1;padding:14px;background:${C.magenta}18;border:2px solid ${C.magenta}50;border-radius:16px;color:${C.magenta};font-size:14px;font-weight:800;cursor:pointer">❌ НЕ ИИ</button>
-    <button id="isAI" style="flex:1;padding:14px;background:${C.cyan}18;border:2px solid ${C.cyan}50;border-radius:16px;color:${C.cyan};font-size:14px;font-weight:800;cursor:pointer">✅ ИИ</button>
+
+  const btnRow = html(`<div style="display:flex;gap:12px;width:100%;margin-top:4px">
+    <button id="notAI" style="flex:1;padding:16px;background:rgba(255,60,172,0.1);border:2px solid rgba(255,60,172,0.4);border-radius:18px;color:${C.magenta};font-size:14px;font-weight:800;cursor:pointer;backdrop-filter:blur(10px)">❌ НЕ ИИ</button>
+    <button id="isAI" style="flex:1;padding:16px;background:rgba(0,217,126,0.1);border:2px solid rgba(0,217,126,0.4);border-radius:18px;color:${C.green};font-size:14px;font-weight:800;cursor:pointer;backdrop-filter:blur(10px)">✅ ИИ</button>
   </div>`);
   wrap.appendChild(btnRow);
-  
+
+  function updateProgress() {
+    const fill = progWrap.querySelector('#pBarFill');
+    if(fill) fill.style.width = `${(idx/items.length)*100}%`;
+    label.querySelector('#cIdx').textContent = Math.min(idx+1, items.length);
+    label.querySelector('#cCorr').textContent = correct;
+  }
+
   function renderCard() {
     if(idx>=items.length) { onDone(correct, items.length); return; }
     const item = items[idx];
-    progressBar.style.width = `${(idx/items.length)*100}%`;
-    label.querySelector('#cIdx').textContent = idx+1;
-    label.querySelector('#cCorr').textContent = correct;
+    updateProgress();
     feedbackDiv.innerHTML = '';
-    
+
     cardArea.innerHTML = '';
-    const card = html(`<div style="width:100%;background:${C.card};border:1.5px solid ${C.cardBorder};border-radius:20px;padding:24px;text-align:center;animation:cardIn .35s ease-out">
-      <div style="font-size:48px;margin-bottom:12px">${item.icon}</div>
+    const card = html(`<div style="width:100%;background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1.5px solid rgba(255,255,255,0.08);border-radius:22px;padding:26px;text-align:center;animation:cardIn .35s ease-out">
+      <div style="font-size:50px;margin-bottom:12px">${item.icon}</div>
       <div style="color:${C.white};font-size:15px;font-weight:700;line-height:1.4">${item.text}</div>
     </div>`);
-    
-    // Swipe support
+
     let startX=0, dragging=false;
     card.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; dragging=true; }, {passive:true});
-    card.addEventListener('touchmove', e=>{ if(!dragging) return; const dx=e.touches[0].clientX-startX; card.style.transform=`translateX(${dx*0.5}px) rotate(${dx*0.03}deg)`; card.style.borderColor=dx>30?C.cyan:dx<-30?C.magenta:C.cardBorder; }, {passive:true});
-    card.addEventListener('touchend', e=>{ if(!dragging) return; dragging=false; const dx=e.changedTouches[0].clientX-startX; card.style.transform=''; card.style.borderColor=C.cardBorder; if(dx>50) answer(true); else if(dx<-50) answer(false); }, {passive:true});
-    
+    card.addEventListener('touchmove', e=>{ if(!dragging) return; const dx=e.touches[0].clientX-startX; card.style.transform=`translateX(${dx*0.5}px) rotate(${dx*0.03}deg)`; card.style.borderColor=dx>30?`${C.green}60`:dx<-30?`${C.magenta}60`:'rgba(255,255,255,0.08)'; }, {passive:true});
+    card.addEventListener('touchend', e=>{ if(!dragging) return; dragging=false; const dx=e.changedTouches[0].clientX-startX; card.style.transform=''; card.style.borderColor='rgba(255,255,255,0.08)'; if(dx>50) answer(true); else if(dx<-50) answer(false); }, {passive:true});
+
     cardArea.appendChild(card);
   }
-  
+
   function answer(userSaysAI) {
     const item = items[idx];
     const isRight = userSaysAI === item.isAI;
     if(isRight) correct++;
     haptic(isRight?'success':'error');
-    
-    feedbackDiv.innerHTML = `<div style="background:${isRight?C.cyan:C.magenta}18;border:1px solid ${isRight?C.cyan:C.magenta}40;border-radius:14px;padding:10px 14px">
-      <div style="color:${isRight?C.cyan:C.magenta};font-weight:800;font-size:13px;margin-bottom:4px">${isRight?'✓ Верно!':'✗ Не совсем...'} ${item.isAI?'Это ИИ!':'Это не ИИ'}</div>
+
+    const col = isRight?C.green:C.magenta;
+    feedbackDiv.innerHTML = `<div style="background:${col}12;border:1px solid ${col}35;border-radius:16px;padding:12px 14px">
+      <div style="color:${col};font-weight:800;font-size:13px;margin-bottom:4px">${isRight?'✓ Верно!':'✗ Не совсем...'} ${item.isAI?'Это ИИ!':'Это не ИИ'}</div>
       <div style="color:${C.textDim};font-size:11px;line-height:1.4">${item.why}</div>
     </div>`;
-    
+
     idx++;
-    const nextBtn = html(`<button style="width:100%;padding:12px;background:none;border:1.5px solid ${C.cyan}40;border-radius:12px;color:${C.cyan};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px">${idx>=items.length?'ЗАВЕРШИТЬ ✓':'ДАЛЬШЕ →'}</button>`);
-    nextBtn.addEventListener('click', ()=>{ progressBar.style.width=`${(idx/items.length)*100}%`; label.querySelector('#cIdx').textContent=idx+1; label.querySelector('#cCorr').textContent=correct; renderCard(); });
+    const nextBtn = html(`<button style="width:100%;padding:13px;background:none;border:1.5px solid ${C.green}35;border-radius:14px;color:${C.green};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:'Orbitron',sans-serif;letter-spacing:0.5px">${idx>=items.length?'ЗАВЕРШИТЬ ✓':'ДАЛЬШЕ →'}</button>`);
+    nextBtn.addEventListener('click', ()=>{ renderCard(); });
     feedbackDiv.appendChild(nextBtn);
   }
-  
+
   btnRow.querySelector('#notAI').addEventListener('click', ()=>answer(false));
   btnRow.querySelector('#isAI').addEventListener('click', ()=>answer(true));
-  
+
   renderCard();
   return wrap;
 }
 
-// 2. FEED MECHANIC (good/bad data)
+// 2. FEED MECHANIC
 function renderFeedMech(room, onDone) {
   const items = [...room.items].sort(()=>Math.random()-0.5);
   let idx=0, correct=0;
-  
+
   const wrap = document.createElement('div');
-  
-  const progress = html(`<div style="width:100%;height:4px;background:${C.card};border-radius:4px;margin-bottom:16px;overflow:hidden"><div id="fp" style="height:100%;background:linear-gradient(90deg,${C.green},${C.cyan});border-radius:4px;transition:width .4s;width:0%"></div></div>`);
-  wrap.appendChild(progress);
-  
-  const label = html(`<div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="color:${C.textDim};font-size:11px">Данные <span id="fIdx">1</span> из ${items.length}</div><div style="color:${C.green};font-size:11px;font-weight:700">✓ <span id="fCorr">0</span></div></div>`);
+
+  const progWrap = makeProgressBar(0, items.length, C.orange);
+  wrap.appendChild(progWrap);
+
+  const label = html(`<div style="display:flex;justify-content:space-between;margin-bottom:12px">
+    <div style="color:${C.textDim};font-size:11px">Данные <span id="fIdx">1</span> из ${items.length}</div>
+    <div style="color:${C.orange};font-size:11px;font-weight:700">✓ <span id="fCorr">0</span></div>
+  </div>`);
   wrap.appendChild(label);
-  
+
   const cardArea = document.createElement('div');
   cardArea.style.cssText = 'margin-bottom:16px;min-height:140px';
   wrap.appendChild(cardArea);
-  
+
   const feedbackDiv = html(`<div style="min-height:56px;margin-bottom:8px"></div>`);
   wrap.appendChild(feedbackDiv);
-  
+
   const btnRow = html(`<div style="display:flex;gap:12px">
-    <button id="badBtn" style="flex:1;padding:14px;background:${C.magenta}18;border:2px solid ${C.magenta}50;border-radius:16px;color:${C.magenta};font-size:14px;font-weight:800;cursor:pointer">🗑️ ВЫБРОСИТЬ</button>
-    <button id="goodBtn" style="flex:1;padding:14px;background:${C.green}18;border:2px solid ${C.green}50;border-radius:16px;color:${C.green};font-size:14px;font-weight:800;cursor:pointer">✅ ОБУЧАТЬ</button>
+    <button id="badBtn" style="flex:1;padding:16px;background:rgba(255,60,172,0.1);border:2px solid rgba(255,60,172,0.4);border-radius:18px;color:${C.magenta};font-size:14px;font-weight:800;cursor:pointer;backdrop-filter:blur(10px)">🗑️ ВЫБРОСИТЬ</button>
+    <button id="goodBtn" style="flex:1;padding:16px;background:rgba(255,107,43,0.1);border:2px solid rgba(255,107,43,0.4);border-radius:18px;color:${C.orange};font-size:14px;font-weight:800;cursor:pointer;backdrop-filter:blur(10px)">✅ ОБУЧАТЬ</button>
   </div>`);
   wrap.appendChild(btnRow);
-  
+
+  function updateProgress() {
+    const fill = progWrap.querySelector('#pBarFill');
+    if(fill) fill.style.width = `${(idx/items.length)*100}%`;
+    label.querySelector('#fIdx').textContent = Math.min(idx+1, items.length);
+    label.querySelector('#fCorr').textContent = correct;
+  }
+
   function showCard() {
     if(idx>=items.length) { onDone(correct, items.length); return; }
     const item = items[idx];
-    wrap.querySelector('#fp').style.width=`${(idx/items.length)*100}%`;
-    label.querySelector('#fIdx').textContent=idx+1;
-    label.querySelector('#fCorr').textContent=correct;
+    updateProgress();
     feedbackDiv.innerHTML='';
-    
-    cardArea.innerHTML=`<div style="width:100%;background:${C.card};border:1.5px solid ${C.cardBorder};border-radius:20px;padding:24px;text-align:center;animation:cardIn .3s ease-out">
-      <div style="font-size:44px;margin-bottom:12px">${item.icon}</div>
+
+    cardArea.innerHTML=`<div style="width:100%;background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1.5px solid rgba(255,255,255,0.08);border-radius:22px;padding:26px;text-align:center;animation:cardIn .3s ease-out">
+      <div style="font-size:46px;margin-bottom:12px">${item.icon}</div>
       <div style="color:${C.white};font-size:14px;font-weight:700;line-height:1.4">${item.text}</div>
     </div>`;
   }
-  
+
   function answer(userSaysGood) {
     const item = items[idx];
     const isRight = userSaysGood===item.isGood;
     if(isRight) correct++;
     haptic(isRight?'success':'error');
-    feedbackDiv.innerHTML=`<div style="background:${isRight?C.green:C.magenta}18;border:1px solid ${isRight?C.green:C.magenta}40;border-radius:14px;padding:10px 14px">
-      <div style="color:${isRight?C.green:C.magenta};font-weight:800;font-size:13px;margin-bottom:4px">${isRight?'✓ Верно!':'✗ Нет...'} ${item.isGood?'Хорошие данные!':'Плохие данные'}</div>
+    const col = isRight?C.orange:C.magenta;
+    feedbackDiv.innerHTML=`<div style="background:${col}12;border:1px solid ${col}35;border-radius:16px;padding:12px 14px">
+      <div style="color:${col};font-weight:800;font-size:13px;margin-bottom:4px">${isRight?'✓ Верно!':'✗ Нет...'} ${item.isGood?'Хорошие данные!':'Плохие данные'}</div>
       <div style="color:${C.textDim};font-size:11px;line-height:1.4">${item.why}</div>
     </div>`;
     idx++;
-    const nextBtn = html(`<button style="width:100%;padding:12px;background:none;border:1.5px solid ${C.cyan}40;border-radius:12px;color:${C.cyan};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px">${idx>=items.length?'ЗАВЕРШИТЬ ✓':'ДАЛЬШЕ →'}</button>`);
+    const nextBtn = html(`<button style="width:100%;padding:13px;background:none;border:1.5px solid ${C.green}35;border-radius:14px;color:${C.green};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:'Orbitron',sans-serif;letter-spacing:0.5px">${idx>=items.length?'ЗАВЕРШИТЬ ✓':'ДАЛЬШЕ →'}</button>`);
     nextBtn.addEventListener('click', showCard);
     feedbackDiv.appendChild(nextBtn);
   }
-  
+
   btnRow.querySelector('#badBtn').addEventListener('click', ()=>answer(false));
   btnRow.querySelector('#goodBtn').addEventListener('click', ()=>answer(true));
   showCard();
   return wrap;
 }
 
-// 3. PIPELINE MECHANIC (sequence tap)
+// 3. PIPELINE MECHANIC
 function renderPipelineMech(room, onDone) {
   const items = [...room.items].sort((a,b)=>a.order-b.order);
   const shuffled = [...items].sort(()=>Math.random()-0.5);
-  let next=1, selected=[], showingFact=false, factIdx=0;
-  
+  let next=1, selected=[];
+
   const wrap = document.createElement('div');
-  
-  wrap.appendChild(html(`<div style="text-align:center;color:${C.textDim};font-size:13px;margin-bottom:16px">Нажимай на шаги по порядку — от первого к последнему</div>`));
-  
+
+  wrap.appendChild(html(`<div style="text-align:center;color:${C.textDim};font-size:13px;margin-bottom:16px;line-height:1.4">Нажимай на шаги по порядку — от первого к последнему</div>`));
+
   const grid = document.createElement('div');
   grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px';
-  
+
   const factDiv = html(`<div style="min-height:72px;margin-bottom:8px"></div>`);
   wrap.appendChild(grid);
   wrap.appendChild(factDiv);
-  
+
   function refresh() {
     grid.innerHTML='';
     shuffled.forEach(item => {
       const done = selected.includes(item.order);
       const isNext = item.order===next;
-      const btn = html(`<button style="padding:14px 10px;background:${done?C.green+'20':isNext?C.cyan+'15':C.card};
-        border:2px solid ${done?C.green+'60':isNext?C.cyan+'60':C.cardBorder};
-        border-radius:16px;color:${done?C.green:isNext?C.cyan:C.textDim};font-size:22px;cursor:${done?'default':'pointer'};
+      const btn = html(`<button style="padding:16px 10px;background:${done?C.blue+'15':isNext?C.green+'12':'rgba(255,255,255,0.04)'};
+        backdrop-filter:blur(12px);
+        border:2px solid ${done?C.blue+'50':isNext?C.green+'50':'rgba(255,255,255,0.07)'};
+        border-radius:18px;color:${done?C.blue:isNext?C.green:C.textDim};font-size:24px;cursor:${done?'default':'pointer'};
         display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .3s;
-        ${isNext?`box-shadow:0 0 16px ${C.cyan}30`:''};
-        ${done?`box-shadow:0 0 12px ${C.green}30`:''}">
+        ${isNext?`box-shadow:0 0 18px ${C.green}25`:''};
+        ${done?`box-shadow:0 0 14px ${C.blue}25`:''}">
         <span>${item.icon}</span>
-        <span style="font-size:9px;font-weight:800;letter-spacing:0.5px">${item.label}</span>
-        ${done?`<span style="font-size:10px">✓</span>`:''}
+        <span style="font-size:9px;font-weight:800;letter-spacing:0.5px;font-family:'Orbitron',sans-serif">${item.label}</span>
+        ${done?`<span style="font-size:11px;color:${C.blue}">✓</span>`:''}
       </button>`);
       if(!done) {
         btn.addEventListener('click', ()=>{
@@ -4184,25 +4301,26 @@ function renderPipelineMech(room, onDone) {
             hapticImpact('light');
             selected.push(item.order);
             next++;
-            factDiv.innerHTML=`<div style="background:${C.cyan}12;border:1px solid ${C.cyan}30;border-radius:14px;padding:10px 14px;animation:fadeIn .3s">
-              <div style="color:${C.cyan};font-weight:700;font-size:12px;margin-bottom:4px">${item.icon} ${item.label}</div>
+            factDiv.innerHTML=`<div style="background:${C.green}10;border:1px solid ${C.green}25;border-radius:16px;padding:12px 14px;animation:fadeIn .3s;backdrop-filter:blur(10px)">
+              <div style="color:${C.green};font-weight:700;font-size:11px;margin-bottom:4px;font-family:'Orbitron',sans-serif">${item.icon} ${item.label}</div>
               <div style="color:${C.textDim};font-size:11px;line-height:1.4">${item.desc}</div>
             </div>`;
             if(selected.length>=items.length) {
               haptic('success');
-              setTimeout(()=>onDone(items.length, items.length), 800);
+              setTimeout(()=>onDone(items.length, items.length), 900);
             } else { refresh(); }
           } else {
             haptic('error');
             btn.style.animation='shake .4s ease-in-out';
-            setTimeout(()=>btn.style.animation='', 500);
+            btn.style.borderColor=C.magenta+'60';
+            setTimeout(()=>{ btn.style.animation=''; btn.style.borderColor='rgba(255,255,255,0.07)'; }, 500);
           }
         });
       }
       grid.appendChild(btn);
     });
   }
-  
+
   refresh();
   return wrap;
 }
@@ -4211,60 +4329,63 @@ function renderPipelineMech(room, onDone) {
 function renderPromptLabMech(room, onDone) {
   const items = room.items;
   let qIdx=0, totalScore=0;
-  
+
   const wrap = document.createElement('div');
-  
-  const progressEl = html(`<div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="color:${C.textDim};font-size:11px">Задача <span id="pqIdx">1</span> из ${items.length}</div><div style="color:${C.gold};font-size:11px;font-weight:700">★ <span id="pScore">0</span></div></div>`);
+
+  const progressEl = html(`<div style="display:flex;justify-content:space-between;margin-bottom:14px">
+    <div style="color:${C.textDim};font-size:11px">Задача <span id="pqIdx">1</span> из ${items.length}</div>
+    <div style="color:${C.gold};font-size:11px;font-weight:700;font-family:'Orbitron',sans-serif">★ <span id="pScore">0</span></div>
+  </div>`);
   wrap.appendChild(progressEl);
-  
+
   const taskArea = document.createElement('div');
   wrap.appendChild(taskArea);
-  
+
   function showQuestion() {
     if(qIdx>=items.length) { onDone(totalScore, items.length*3); return; }
     const q = items[qIdx];
     progressEl.querySelector('#pqIdx').textContent=qIdx+1;
     progressEl.querySelector('#pScore').textContent=totalScore;
     taskArea.innerHTML='';
-    
-    const taskBox = html(`<div style="background:${C.card};border:1.5px solid ${C.gold}30;border-radius:16px;padding:16px;margin-bottom:14px">
-      <div style="color:${C.gold};font-size:10px;font-weight:700;letter-spacing:0.5px;margin-bottom:6px">🤖 ЗАДАЧА НЕЙРО:</div>
+
+    const taskBox = html(`<div style="background:rgba(255,214,10,0.06);backdrop-filter:blur(10px);border:1.5px solid rgba(255,214,10,0.2);border-radius:18px;padding:16px;margin-bottom:14px">
+      <div style="color:${C.gold};font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:6px;font-family:'Orbitron',sans-serif">🤖 ЗАДАЧА НЕЙРО:</div>
       <div style="color:${C.text};font-size:13px;line-height:1.5">${q.task}</div>
     </div>`);
     taskArea.appendChild(taskBox);
-    
+
     const optsDiv = document.createElement('div');
     optsDiv.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin-bottom:12px';
-    
+
     const feedbackDiv = html(`<div style="min-height:60px"></div>`);
-    
-    q.opts.forEach((opt, oi) => {
-      const stars = '★'.repeat(opt.s)+'☆'.repeat(3-opt.s);
-      const btn = html(`<button style="padding:12px 14px;background:${C.bgCard};border:1.5px solid ${C.cardBorder};border-radius:14px;color:${C.text};font-size:13px;cursor:pointer;text-align:left;line-height:1.4;transition:all .2s">${opt.text}</button>`);
+
+    q.opts.forEach((opt) => {
+      const btn = html(`<button style="padding:14px 16px;background:rgba(255,255,255,0.04);backdrop-filter:blur(10px);border:1.5px solid rgba(255,255,255,0.08);border-radius:16px;color:${C.text};font-size:13px;cursor:pointer;text-align:left;line-height:1.4;transition:all .2s">${opt.text}</button>`);
       btn.addEventListener('click', ()=>{
         hapticImpact(opt.s===3?'medium':'light');
         totalScore += opt.s;
         const col = opt.s===3?C.green:opt.s===2?C.gold:C.magenta;
-        feedbackDiv.innerHTML=`<div style="background:${col}15;border:1px solid ${col}40;border-radius:14px;padding:12px 14px;animation:fadeIn .3s">
+        const stars = '★'.repeat(opt.s)+'☆'.repeat(3-opt.s);
+        feedbackDiv.innerHTML=`<div style="background:${col}10;border:1px solid ${col}35;border-radius:16px;padding:14px;animation:fadeIn .3s;backdrop-filter:blur(10px)">
           <div style="color:${col};font-weight:800;font-size:13px;margin-bottom:4px">${stars} ${opt.s===3?'ИДЕАЛЬНЫЙ ПРОМПТ!':opt.s===2?'Хороший промпт':'Слабый промпт'}</div>
           <div style="color:${C.textDim};font-size:11px;line-height:1.4">${opt.comment}</div>
         </div>`;
-        const nextBtn = html(`<button style="width:100%;padding:12px;background:none;border:1.5px solid ${C.cyan}40;border-radius:12px;color:${C.cyan};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px">${qIdx+1>=items.length?'ЗАВЕРШИТЬ ✓':'СЛЕДУЮЩАЯ →'}</button>`);
+        const nextBtn = html(`<button style="width:100%;padding:13px;background:none;border:1.5px solid ${C.green}35;border-radius:14px;color:${C.green};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:'Orbitron',sans-serif;letter-spacing:0.5px">${qIdx+1>=items.length?'ЗАВЕРШИТЬ ✓':'СЛЕДУЮЩАЯ →'}</button>`);
         nextBtn.addEventListener('click', ()=>{ qIdx++; showQuestion(); });
         feedbackDiv.appendChild(nextBtn);
-        // disable all btns
-        optsDiv.querySelectorAll('button').forEach(b=>{ b.disabled=true; b.style.cursor='default'; });
-        btn.style.background=col+'18';
-        btn.style.borderColor=col+'60';
+        optsDiv.querySelectorAll('button').forEach(b=>{ b.disabled=true; b.style.cursor='default'; b.style.opacity='0.6'; });
+        btn.style.background=col+'15';
+        btn.style.borderColor=col+'50';
         btn.style.color=col;
+        btn.style.opacity='1';
       });
       optsDiv.appendChild(btn);
     });
-    
+
     taskArea.appendChild(optsDiv);
     taskArea.appendChild(feedbackDiv);
   }
-  
+
   showQuestion();
   return wrap;
 }
@@ -4273,79 +4394,83 @@ function renderPromptLabMech(room, onDone) {
 function renderHallucinationMech(room, onDone) {
   const items = room.items;
   let idx=0, correct=0;
-  
+
   const wrap = document.createElement('div');
-  
-  const progress = html(`<div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="color:${C.textDim};font-size:11px">Утверждение <span id="hIdx">1</span> из ${items.length}</div><div style="color:${C.cyan};font-size:11px;font-weight:700">✓ <span id="hCorr">0</span></div></div>`);
+
+  const progress = html(`<div style="display:flex;justify-content:space-between;margin-bottom:14px">
+    <div style="color:${C.textDim};font-size:11px">Утверждение <span id="hIdx">1</span> из ${items.length}</div>
+    <div style="color:${C.blue};font-size:11px;font-weight:700">✓ <span id="hCorr">0</span></div>
+  </div>`);
   wrap.appendChild(progress);
-  
+
   const cardArea = document.createElement('div');
   wrap.appendChild(cardArea);
-  
+
   const feedbackDiv = html(`<div style="min-height:72px;margin-bottom:8px"></div>`);
   wrap.appendChild(feedbackDiv);
-  
+
   const btnRow = html(`<div style="display:flex;gap:12px">
-    <button id="hFalse" style="flex:1;padding:14px;background:${C.magenta}18;border:2px solid ${C.magenta}50;border-radius:16px;color:${C.magenta};font-size:14px;font-weight:800;cursor:pointer">❌ ЛОЖЬ</button>
-    <button id="hTrue" style="flex:1;padding:14px;background:${C.green}18;border:2px solid ${C.green}50;border-radius:16px;color:${C.green};font-size:14px;font-weight:800;cursor:pointer">✅ ПРАВДА</button>
+    <button id="hFalse" style="flex:1;padding:16px;background:rgba(255,60,172,0.1);border:2px solid rgba(255,60,172,0.4);border-radius:18px;color:${C.magenta};font-size:14px;font-weight:800;cursor:pointer;backdrop-filter:blur(10px)">❌ ЛОЖЬ</button>
+    <button id="hTrue" style="flex:1;padding:16px;background:rgba(0,217,126,0.1);border:2px solid rgba(0,217,126,0.4);border-radius:18px;color:${C.green};font-size:14px;font-weight:800;cursor:pointer;backdrop-filter:blur(10px)">✅ ПРАВДА</button>
   </div>`);
   wrap.appendChild(btnRow);
-  
+
   function showCard() {
     if(idx>=items.length) { onDone(correct, items.length); return; }
     const item = items[idx];
     progress.querySelector('#hIdx').textContent=idx+1;
     progress.querySelector('#hCorr').textContent=correct;
     feedbackDiv.innerHTML='';
-    
-    cardArea.innerHTML=`<div style="background:${C.card};border:1.5px solid ${C.cardBorder};border-radius:20px;padding:20px;margin-bottom:14px;animation:cardIn .3s ease-out">
-      <div style="color:${C.textDim};font-size:10px;font-weight:700;letter-spacing:0.5px;margin-bottom:8px">🤖 НЕЙРО УТВЕРЖДАЕТ:</div>
+    btnRow.querySelectorAll('button').forEach(b=>{ b.disabled=false; b.style.opacity='1'; });
+
+    cardArea.innerHTML=`<div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1.5px solid rgba(255,255,255,0.08);border-radius:22px;padding:22px;margin-bottom:14px;animation:cardIn .3s ease-out">
+      <div style="color:${C.textDim};font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:8px;font-family:'Orbitron',sans-serif">🤖 НЕЙРО УТВЕРЖДАЕТ:</div>
       <div style="color:${C.white};font-size:14px;font-weight:700;line-height:1.5">"${item.claim}"</div>
     </div>`;
   }
-  
+
   function answer(userSaysTrue) {
     const item = items[idx];
     const isRight = userSaysTrue===item.isTrue;
     if(isRight) correct++;
     haptic(isRight?'success':'error');
     const col = isRight?C.green:C.magenta;
-    feedbackDiv.innerHTML=`<div style="background:${col}18;border:1px solid ${col}40;border-radius:14px;padding:12px 14px;animation:fadeIn .3s">
+    feedbackDiv.innerHTML=`<div style="background:${col}10;border:1px solid ${col}35;border-radius:16px;padding:14px;animation:fadeIn .3s;backdrop-filter:blur(10px)">
       <div style="color:${col};font-weight:800;font-size:13px;margin-bottom:4px">${isRight?'✓ Верно!':'✗ Ошибка!'} ${item.isTrue?'Это правда':'Это галлюцинация!'}</div>
       <div style="color:${C.text};font-size:12px;line-height:1.4;margin-bottom:6px">${item.truth}</div>
-      <div style="color:${C.cyan};font-size:11px;font-style:italic">💡 ${item.lesson}</div>
+      <div style="color:${C.blue};font-size:11px;font-style:italic">💡 ${item.lesson}</div>
     </div>`;
     idx++;
-    const nextBtn = html(`<button style="width:100%;padding:12px;background:none;border:1.5px solid ${C.cyan}40;border-radius:12px;color:${C.cyan};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px">${idx>=items.length?'ЗАВЕРШИТЬ ✓':'ДАЛЬШЕ →'}</button>`);
+    const nextBtn = html(`<button style="width:100%;padding:13px;background:none;border:1.5px solid ${C.green}35;border-radius:14px;color:${C.green};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:'Orbitron',sans-serif;letter-spacing:0.5px">${idx>=items.length?'ЗАВЕРШИТЬ ✓':'ДАЛЬШЕ →'}</button>`);
     nextBtn.addEventListener('click', showCard);
     feedbackDiv.appendChild(nextBtn);
-    btnRow.querySelectorAll('button').forEach(b=>{ b.disabled=true; b.style.opacity='0.5'; });
+    btnRow.querySelectorAll('button').forEach(b=>{ b.disabled=true; b.style.opacity='0.4'; });
   }
-  
+
   btnRow.querySelector('#hFalse').addEventListener('click', ()=>answer(false));
   btnRow.querySelector('#hTrue').addEventListener('click', ()=>answer(true));
   showCard();
   return wrap;
 }
 
-// 6. MISSION MECHANIC (PipePuzzle + CpuAssembly)
+// 6. MISSION MECHANIC
 function renderMissionMech(room, onDone) {
   let stage=0;
   const wrap = document.createElement('div');
-  
-  const tabs = html(`<div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px"></div>`);
+
+  const tabs = html(`<div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px"></div>`);
   const labels = [{label:'🔌 ПУТЬ ДАННЫХ'},{label:'💾 ПРОЦЕССОР'}];
-  
+
   function updateTabs() {
     tabs.innerHTML='';
     labels.forEach((s,i)=>{
       const isActive=stage===i, isDone=stage>i;
-      tabs.appendChild(html(`<div style="padding:4px 12px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:0.5px;background:${isActive?C.cyan+'25':isDone?C.green+'15':'#ffffff06'};border:1px solid ${isActive?C.cyan+'60':isDone?C.green+'40':'#ffffff15'};color:${isActive?C.cyan:isDone?C.green:C.textDim};transition:all .3s">${isDone?'✓ ':''} ${s.label}</div>`));
+      tabs.appendChild(html(`<div style="padding:6px 14px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:0.5px;font-family:'Orbitron',sans-serif;background:${isActive?C.green+'20':isDone?C.blue+'15':'rgba(255,255,255,0.04)'};border:1px solid ${isActive?C.green+'50':isDone?C.blue+'40':'rgba(255,255,255,0.08)'};color:${isActive?C.green:isDone?C.blue:C.textDim};transition:all .3s">${isDone?'✓ ':''} ${s.label}</div>`));
     });
   }
-  
+
   const stageWrap = document.createElement('div');
-  
+
   function goStage(n) {
     stage=n;
     updateTabs();
@@ -4353,47 +4478,46 @@ function renderMissionMech(room, onDone) {
     if(n===0) stageWrap.appendChild(renderPipePuzzle(()=>goStage(1)));
     else stageWrap.appendChild(renderCpuAssembly(onDone));
   }
-  
+
   wrap.appendChild(tabs);
   wrap.appendChild(stageWrap);
   goStage(0);
   return wrap;
 }
 
-// Pipe Puzzle - sequences matching
+// Pipe Puzzle
 function renderPipePuzzle(onDone) {
   const sequences = [
-    {emoji:"🐱",label:"Фото кота",color:C.cyan},{emoji:"🌀",label:"Обработка",color:C.magenta},{emoji:"🧠",label:"Обучение",color:C.gold},{emoji:"✅",label:"Результат",color:C.green}
+    {emoji:"🐱",label:"Фото кота",color:C.green},
+    {emoji:"🌀",label:"Обработка",color:C.magenta},
+    {emoji:"🧠",label:"Обучение",color:C.gold},
+    {emoji:"✅",label:"Результат",color:C.blue}
   ];
   const shuffled = [...sequences].sort(()=>Math.random()-0.5);
-  let order=[], done=false;
-  
+  let order=[];
+
   const wrap = document.createElement('div');
-  wrap.appendChild(html(`<div style="text-align:center;color:${C.textDim};font-size:13px;margin-bottom:16px;line-height:1.4">Собери правильный путь данных через нейросеть! Нажимай по порядку 👇</div>`));
-  
-  const pipesDiv = html(`<div style="display:flex;align-items:center;justify-content:center;gap:2px;margin-bottom:16px;flex-wrap:wrap;gap:6px"></div>`);
-  
+  wrap.appendChild(html(`<div style="text-align:center;color:${C.textDim};font-size:13px;margin-bottom:14px;line-height:1.4">Собери правильный путь данных через нейросеть! Нажимай по порядку 👇</div>`));
+
+  const pipesDiv = html(`<div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>`);
+
   function updatePipes() {
     pipesDiv.innerHTML='';
     sequences.forEach((s,i)=>{
       const placed = order[i];
-      const bg = placed ? placed.color+'20' : C.card;
-      const border = placed ? placed.color+'50' : C.cardBorder;
-      const text = placed ? placed.emoji+' '+placed.label : '?';
-      const textColor = placed ? placed.color : C.textMuted;
-      pipesDiv.appendChild(html(`<div style="padding:8px 10px;background:${bg};border:1.5px solid ${border};border-radius:12px;font-size:11px;font-weight:700;color:${textColor};min-width:70px;text-align:center;transition:all .3s">${text}</div>`));
-      if(i<sequences.length-1) pipesDiv.appendChild(html(`<div style="color:${C.cyan}60;font-size:14px">→</div>`));
+      pipesDiv.appendChild(html(`<div style="padding:8px 10px;background:${placed?placed.color+'15':'rgba(255,255,255,0.04)'};backdrop-filter:blur(10px);border:1.5px solid ${placed?placed.color+'45':'rgba(255,255,255,0.07)'};border-radius:12px;font-size:11px;font-weight:700;color:${placed?placed.color:C.textMuted};min-width:68px;text-align:center;transition:all .3s">${placed?placed.emoji+' '+placed.label:'?'}</div>`));
+      if(i<sequences.length-1) pipesDiv.appendChild(html(`<div style="color:${C.green}50;font-size:14px">→</div>`));
     });
   }
-  
+
   const choicesDiv = html(`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"></div>`);
   const feedbackDiv = html(`<div style="min-height:40px"></div>`);
-  
+
   function renderChoices() {
     choicesDiv.innerHTML='';
     shuffled.forEach(s=>{
       const used = order.includes(s);
-      const btn = html(`<button style="padding:12px;background:${used?s.color+'15':C.card};border:2px solid ${used?s.color+'50':C.cardBorder};border-radius:14px;color:${used?s.color:C.textDim};font-size:13px;cursor:${used?'default':'pointer'};transition:all .3s;display:flex;align-items:center;gap:8px;${used?'opacity:0.5':''}">${s.emoji} ${s.label} ${used?'✓':''}</button>`);
+      const btn = html(`<button style="padding:14px;background:${used?s.color+'12':'rgba(255,255,255,0.04)'};backdrop-filter:blur(10px);border:2px solid ${used?s.color+'40':'rgba(255,255,255,0.07)'};border-radius:16px;color:${used?s.color:C.textDim};font-size:13px;cursor:${used?'default':'pointer'};transition:all .3s;display:flex;align-items:center;gap:8px;${used?'opacity:0.5':''}">${s.emoji} ${s.label} ${used?'✓':''}</button>`);
       if(!used) {
         btn.addEventListener('click', ()=>{
           const nextCorrect = sequences[order.length];
@@ -4404,8 +4528,8 @@ function renderPipePuzzle(onDone) {
             renderChoices();
             if(order.length>=sequences.length) {
               haptic('success');
-              feedbackDiv.innerHTML=`<div style="background:${C.green}18;border:1px solid ${C.green}40;border-radius:12px;padding:10px;text-align:center;color:${C.green};font-weight:700;font-size:13px">✓ Путь данных собран правильно!</div>`;
-              const nextBtn = html(`<button style="width:100%;padding:12px;background:${C.cyan}20;border:1.5px solid ${C.cyan}40;border-radius:12px;color:${C.cyan};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px">ДАЛЕЕ → ПРОЦЕССОР</button>`);
+              feedbackDiv.innerHTML=`<div style="background:${C.green}12;border:1px solid ${C.green}35;border-radius:14px;padding:12px;text-align:center;color:${C.green};font-weight:700;font-size:13px">✓ Путь данных собран правильно!</div>`;
+              const nextBtn = html(`<button style="width:100%;padding:13px;background:${C.green}15;border:1.5px solid ${C.green}40;border-radius:14px;color:${C.green};font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:'Orbitron',sans-serif">ДАЛЕЕ → ПРОЦЕССОР</button>`);
               nextBtn.addEventListener('click', onDone);
               feedbackDiv.appendChild(nextBtn);
             }
@@ -4420,7 +4544,7 @@ function renderPipePuzzle(onDone) {
       choicesDiv.appendChild(btn);
     });
   }
-  
+
   updatePipes();
   renderChoices();
   wrap.appendChild(pipesDiv);
@@ -4429,68 +4553,73 @@ function renderPipePuzzle(onDone) {
   return wrap;
 }
 
-// CPU Assembly - click targets in matrix
+// CPU Assembly
 function renderCpuAssembly(onDone) {
   const nodes = [
-    {id:0,label:"Вход",x:50,y:10,color:C.cyan},{id:1,label:"Слой 1",x:20,y:35,color:C.magenta},{id:2,label:"Слой 2",x:80,y:35,color:C.magenta},
-    {id:3,label:"Обучение",x:35,y:60,color:C.gold},{id:4,label:"Оценка",x:65,y:60,color:C.gold},{id:5,label:"Выход",x:50,y:85,color:C.green}
+    {id:0,label:"Вход",x:50,y:10,color:C.green},
+    {id:1,label:"Слой 1",x:20,y:35,color:C.magenta},
+    {id:2,label:"Слой 2",x:80,y:35,color:C.magenta},
+    {id:3,label:"Обучение",x:35,y:60,color:C.gold},
+    {id:4,label:"Оценка",x:65,y:60,color:C.gold},
+    {id:5,label:"Выход",x:50,y:85,color:C.blue}
   ];
   const order = [0,1,2,3,4,5];
   let nextIdx=0;
-  
+
   const wrap = document.createElement('div');
   wrap.appendChild(html(`<div style="text-align:center;color:${C.textDim};font-size:13px;margin-bottom:12px">Активируй нейроны по порядку — запусти процессор!</div>`));
-  
+
   const svgWrap = document.createElement('div');
-  svgWrap.style.cssText = 'position:relative;width:100%;height:220px;background:'+C.card+';border:1.5px solid '+C.cardBorder+';border-radius:16px;overflow:hidden;margin-bottom:12px';
-  
+  svgWrap.style.cssText = `position:relative;width:100%;height:230px;background:rgba(255,255,255,0.03);backdrop-filter:blur(10px);border:1.5px solid rgba(255,255,255,0.06);border-radius:18px;overflow:hidden;margin-bottom:12px`;
+
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('width','100%');
   svg.setAttribute('height','100%');
   svg.setAttribute('viewBox','0 0 100 100');
-  
-  // Draw connections
+
   const connections = [[0,1],[0,2],[1,3],[2,3],[1,4],[2,4],[3,5],[4,5]];
   connections.forEach(([a,b])=>{
     const na=nodes[a], nb=nodes[b];
     const line = document.createElementNS('http://www.w3.org/2000/svg','line');
     line.setAttribute('x1',na.x); line.setAttribute('y1',na.y);
     line.setAttribute('x2',nb.x); line.setAttribute('y2',nb.y);
-    line.setAttribute('stroke','rgba(0,245,255,0.15)'); line.setAttribute('stroke-width','0.5');
+    line.setAttribute('stroke','rgba(0,217,126,0.12)'); line.setAttribute('stroke-width','0.6');
     svg.appendChild(line);
   });
-  
+
   const circleEls = {}, textEls = {};
   let activated = [];
-  
+
   nodes.forEach(n=>{
     const g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.setAttribute('transform',`translate(${n.x},${n.y})`);
     g.style.cursor='pointer';
-    
+
     const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    circle.setAttribute('r','7'); circle.setAttribute('fill',C.bgCard);
-    circle.setAttribute('stroke',n.color+'40'); circle.setAttribute('stroke-width','1');
+    circle.setAttribute('r','7'); circle.setAttribute('fill','rgba(7,16,32,0.8)');
+    circle.setAttribute('stroke',n.color+'35'); circle.setAttribute('stroke-width','1.2');
     circleEls[n.id]=circle;
-    
+
     const text = document.createElementNS('http://www.w3.org/2000/svg','text');
-    text.setAttribute('text-anchor','middle'); text.setAttribute('y','10.5');
-    text.setAttribute('font-size','2.5'); text.setAttribute('fill',n.color+'60');
+    text.setAttribute('text-anchor','middle'); text.setAttribute('y','11');
+    text.setAttribute('font-size','2.8'); text.setAttribute('fill',n.color+'55');
+    text.setAttribute('font-family','Space Grotesk, sans-serif');
     text.textContent=n.label;
     textEls[n.id]=text;
-    
+
     g.appendChild(circle); g.appendChild(text);
-    
+
     g.addEventListener('click', ()=>{
       if(activated.includes(n.id)) return;
       if(order[nextIdx]===n.id) {
         hapticImpact('light');
         activated.push(n.id);
         nextIdx++;
-        circle.setAttribute('fill',n.color+'50');
+        circle.setAttribute('fill',n.color+'40');
         circle.setAttribute('stroke',n.color);
+        circle.setAttribute('stroke-width','1.5');
         text.setAttribute('fill',n.color);
-        
+
         if(nextIdx>=nodes.length) {
           haptic('success');
           setTimeout(()=>onDone(8,8), 600);
@@ -4498,13 +4627,13 @@ function renderCpuAssembly(onDone) {
       } else {
         haptic('error');
         circle.setAttribute('stroke',C.magenta);
-        setTimeout(()=>circle.setAttribute('stroke',n.color+'40'), 600);
+        setTimeout(()=>circle.setAttribute('stroke',n.color+'35'), 600);
       }
     });
-    
+
     svg.appendChild(g);
   });
-  
+
   svgWrap.appendChild(svg);
   wrap.appendChild(svgWrap);
   wrap.appendChild(html(`<div style="text-align:center;color:${C.textDim};font-size:11px">Нажимай узлы сверху вниз</div>`));
@@ -4518,17 +4647,17 @@ function render() {
   root.innerHTML='';
   const loading = document.getElementById('loading');
   if(loading) loading.style.display='none';
-  
-  let el;
-  if(screen==='splash') el=renderSplash();
-  else if(screen==='city') el=renderCity();
-  else if(screen==='level_intro') el=renderLevelIntro();
-  else if(screen==='playing') el=renderPlaying();
-  else if(screen==='level_done') el=renderLevelDone();
-  else if(screen==='paywall') el=renderPaywall();
-  else el=renderCity();
-  
-  if(el) root.appendChild(el);
+
+  let screenEl;
+  if(screen==='splash') screenEl=renderSplash();
+  else if(screen==='city') screenEl=renderCity();
+  else if(screen==='level_intro') screenEl=renderLevelIntro();
+  else if(screen==='playing') screenEl=renderPlaying();
+  else if(screen==='level_done') screenEl=renderLevelDone();
+  else if(screen==='paywall') screenEl=renderPaywall();
+  else screenEl=renderCity();
+
+  if(screenEl) root.appendChild(screenEl);
   root.scrollTop=0;
 }
 
