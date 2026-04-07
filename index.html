@@ -6190,6 +6190,374 @@ function SwipeTikMech({room, onDone}) {
 }
 
 
+// ═══ MECHANIC 5: FAKE DETECTOR ═══════════════════
+function FakeDetectorMech({ room, onDone }) {
+  const SIGNALS = [
+    {id:'s1', emoji:'🆘', title:'Сигнал с Кеплера-452б', story:'Кто-то просит о помощи! Проверь — это настоящий сигнал?',
+     isFake:true,
+     elements:[
+       {id:'e1', icon:'🚀', label:'Спасательный корабль', err:false, clue:'Корабль выглядит нормально — всё ок'},
+       {id:'e2', icon:'✋', label:'Рука: 6 пальцев!',     err:true,  clue:'У людей 5 пальцев — ИИ нарисовал лишний! Классика фейка 🤖'},
+       {id:'e3', icon:'⭐', label:'Звёзды в иллюминаторе', err:false, clue:'Звёзды выглядят нормально'},
+       {id:'e4', icon:'🪖', label:'Шлем и скафандр',      err:false, clue:'Снаряжение выглядит обычно'},
+     ],
+     lesson:'ИИ часто рисует лишние пальцы. Проверяй детали на руках!'},
+    {id:'s2', emoji:'📻', title:'Надпись на спасательной капсуле', story:'Кто-то прислал фото с надписью — прочитай её!',
+     isFake:true,
+     elements:[
+       {id:'e1', icon:'🪐', label:'Планета вдали',                err:false, clue:'Планета выглядит нормально'},
+       {id:'e2', icon:'👨‍🚀', label:'Фото экипажа',             err:false, clue:'Люди выглядят нормально'},
+       {id:'e3', icon:'📝', label:'Надпись: "H3lp #@! Sdkfj!!"', err:true,  clue:'Слова превратились в кракозябры! ИИ не умеет нормально писать текст 🚨'},
+       {id:'e4', icon:'📍', label:'Маяк-координатор',            err:false, clue:'Маяк выглядит нормально'},
+     ],
+     lesson:'Текст на ИИ-картинках часто нечитаем или бессмысленен!'},
+    {id:'s3', emoji:'📸', title:'Фото туманности от зонда', story:'Зонд прислал снимок — стандартная съёмка',
+     isFake:false,
+     elements:[
+       {id:'e1', icon:'🌌', label:'Туманность NGC-7293', err:false, clue:'Красивая туманность — норма'},
+       {id:'e2', icon:'⭐', label:'Звёздное скопление',  err:false, clue:'Звёзды выглядят естественно'},
+       {id:'e3', icon:'🌑', label:'Тёмный космос',       err:false, clue:'Пустое пространство — норма'},
+       {id:'e4', icon:'💫', label:'Орбита планеты',      err:false, clue:'Орбита правильной формы'},
+     ],
+     lesson:'Иногда фото настоящие! Не видь фейк везде — проверяй детали.'},
+    {id:'s4', emoji:'🌅', title:'Пейзаж новой планеты', story:'Красивые горы, деревья и небо. Но что-то не так…',
+     isFake:true,
+     elements:[
+       {id:'e1', icon:'🏔️', label:'Горы — тени влево',       err:false, clue:'Горы с тенями влево — норма если солнце справа'},
+       {id:'e2', icon:'🌲', label:'Деревья — тени вправо (?)', err:true,  clue:'Солнце одно! Все тени должны быть в одну сторону. ИИ забыл это правило 😱'},
+       {id:'e3', icon:'🌠', label:'Небо планеты',              err:false, clue:'Небо выглядит нормально'},
+       {id:'e4', icon:'☀️', label:'Звезда-солнце',             err:false, clue:'Солнце на своём месте'},
+     ],
+     lesson:'Тени всегда от одного солнца — в одну сторону. ИИ это путает!'},
+  ];
+
+  const [sigIdx, setSigIdx] = React.useState(0);
+  const [phase, setPhase] = React.useState('examine'); // examine | verdict | result
+  const [foundErr, setFoundErr] = React.useState(null); // element id or null
+  const [shownClue, setShownClue] = React.useState(null);
+  const [verdict, setVerdict] = React.useState(null); // 'fake'|'real'
+  const [score, setScore] = React.useState(0);
+  const [correctCount, setCorrectCount] = React.useState(0);
+  const [anim, setAnim] = React.useState(false);
+  const [stampAnim, setStampAnim] = React.useState(false);
+
+  const sig = SIGNALS[sigIdx];
+  const total = SIGNALS.length;
+
+  const tapElement = (el) => {
+    if (phase !== 'examine') return;
+    setShownClue(el.id);
+    if (el.err) {
+      setFoundErr(el.id);
+      setAnim(true);
+      setTimeout(() => setAnim(false), 400);
+    }
+  };
+
+  const giveVerdict = (v) => {
+    if (phase !== 'examine') return;
+    const isCorrect = (v === 'fake') === sig.isFake;
+    const pts = isCorrect ? (foundErr ? 30 : 15) : 0;
+    setVerdict(v);
+    setScore(s => s + pts);
+    setCorrectCount(c => c + (isCorrect ? 1 : 0));
+    setStampAnim(true);
+    setPhase('result');
+    setTimeout(() => setStampAnim(false), 600);
+  };
+
+  const nextSignal = () => {
+    if (sigIdx + 1 >= total) {
+      onDone(score + (verdict === (sig.isFake ? 'fake' : 'real') && (foundErr ? 30 : 15)), 100);
+      return;
+    }
+    setSigIdx(i => i + 1);
+    setPhase('examine');
+    setFoundErr(null);
+    setShownClue(null);
+    setVerdict(null);
+    setStampAnim(false);
+  };
+
+  const isCorrect = verdict !== null && (verdict === 'fake') === sig.isFake;
+  const stampColor = verdict === 'fake' ? '#ff4444' : '#44cc88';
+  const stampText  = verdict === 'fake' ? 'ФЕЙК!' : 'РЕАЛЬНО';
+
+  return /*#__PURE__*/React.createElement("div", {style:{padding:'16px 12px',display:'flex',flexDirection:'column',gap:12,animation:'fadeIn .4s ease-out'}},
+    /* progress */
+    /*#__PURE__*/React.createElement("div", {style:{display:'flex',gap:6,justifyContent:'center'}},
+      SIGNALS.map((s,i) => /*#__PURE__*/React.createElement("div", {key:s.id, style:{
+        width:28,height:6,borderRadius:3,
+        background: i < sigIdx ? '#44cc88' : i === sigIdx ? '#ff6644' : '#1A2D48',
+        transition:'background .3s'
+      }}))
+    ),
+    /* header */
+    /*#__PURE__*/React.createElement("div", {style:{textAlign:'center'}},
+      /*#__PURE__*/React.createElement("div", {style:{fontSize:32}}),
+      /*#__PURE__*/React.createElement("div", {style:{fontSize:16,fontWeight:800,color:'#ff6644',marginBottom:4}}, sig.emoji + ' ' + sig.title),
+      /*#__PURE__*/React.createElement("div", {style:{fontSize:12,color:'#8899AA',lineHeight:1.4}}, sig.story)
+    ),
+    /* score */
+    /*#__PURE__*/React.createElement("div", {style:{display:'flex',justifyContent:'space-between',alignItems:'center',background:'#0D1926',borderRadius:8,padding:'6px 12px'}},
+      /*#__PURE__*/React.createElement("span", {style:{fontSize:11,color:'#8899AA'}}, 'Сигнал ' + (sigIdx+1) + ' / ' + total),
+      /*#__PURE__*/React.createElement("span", {style:{fontSize:13,fontWeight:800,color:'#FFD700'}}, '★ ' + score + ' XP')
+    ),
+    /* elements grid */
+    /*#__PURE__*/React.createElement("div", {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}},
+      sig.elements.map(el => {
+        const isFound = foundErr === el.id;
+        const isShown = shownClue === el.id;
+        return /*#__PURE__*/React.createElement("div", {
+          key: el.id,
+          onClick: () => tapElement(el),
+          style: {
+            background: isFound ? '#ff664420' : isShown ? '#1A2D48' : '#0D1926',
+            border: '2px solid ' + (isFound ? '#ff6644' : isShown ? '#44aaff44' : '#1A2D48'),
+            borderRadius: 10,
+            padding: '10px 8px',
+            cursor: phase === 'examine' ? 'pointer' : 'default',
+            transition: 'all .2s',
+            animation: isFound && anim ? 'pop .35s ease-out' : 'none'
+          }
+        },
+          /*#__PURE__*/React.createElement("div", {style:{fontSize:24,textAlign:'center',marginBottom:4}}, el.icon),
+          /*#__PURE__*/React.createElement("div", {style:{fontSize:11,fontWeight:700,color: isFound ? '#ff6644' : '#CCDDEE',textAlign:'center',lineHeight:1.3}}, el.label),
+          isShown && /*#__PURE__*/React.createElement("div", {style:{fontSize:10,color: isFound ? '#ff9977' : '#8899AA',marginTop:4,lineHeight:1.3,textAlign:'center'}}, el.clue)
+        );
+      })
+    ),
+    /* hint */
+    phase === 'examine' && !foundErr &&
+      /*#__PURE__*/React.createElement("div", {style:{textAlign:'center',fontSize:11,color:'#8899AA'}}, '🔍 Нажми на каждый элемент — ищи ошибку ИИ!'),
+    phase === 'examine' && foundErr &&
+      /*#__PURE__*/React.createElement("div", {style:{textAlign:'center',fontSize:12,color:'#ff9977',fontWeight:700}}, '🎯 Нашёл ошибку! Теперь вынеси вердикт:'),
+    phase === 'examine' && !foundErr && shownClue &&
+      /*#__PURE__*/React.createElement("div", {style:{textAlign:'center',fontSize:11,color:'#8899AA'}}, 'Осмотри все элементы или выноси вердикт →'),
+    /* verdict buttons */
+    phase === 'examine' &&
+      /*#__PURE__*/React.createElement("div", {style:{display:'flex',gap:10}},
+        /*#__PURE__*/React.createElement("button", {
+          onClick: () => giveVerdict('fake'),
+          style: {flex:1,padding:'14px 0',borderRadius:12,background:'#ff444420',border:'2px solid #ff4444',color:'#ff4444',fontSize:15,fontWeight:800,letterSpacing:1}
+        }, '🚫 ФЕЙК'),
+        /*#__PURE__*/React.createElement("button", {
+          onClick: () => giveVerdict('real'),
+          style: {flex:1,padding:'14px 0',borderRadius:12,background:'#44cc8820',border:'2px solid #44cc88',color:'#44cc88',fontSize:15,fontWeight:800,letterSpacing:1}
+        }, '✅ РЕАЛЬНО')
+      ),
+    /* result */
+    phase === 'result' &&
+      /*#__PURE__*/React.createElement("div", {style:{textAlign:'center',display:'flex',flexDirection:'column',gap:10}},
+        /*#__PURE__*/React.createElement("div", {style:{
+          fontSize:28,fontWeight:900,color:stampColor,letterSpacing:2,
+          border:'3px solid '+stampColor,borderRadius:8,padding:'6px 20px',display:'inline-block',margin:'0 auto',
+          transform: stampAnim ? 'scale(1.2)' : 'scale(1)',
+          transition:'transform .3s',
+          textDecoration: 'line-through'
+        }}, stampText),
+        /*#__PURE__*/React.createElement("div", {style:{fontSize:13,fontWeight:700,color: isCorrect ? '#44cc88' : '#ff6644'}},
+          isCorrect ? '✅ Правильно! +' + (foundErr ? '30' : '15') + ' XP' : '❌ Неверно! +0 XP'
+        ),
+        /*#__PURE__*/React.createElement("div", {style:{background:'#0D1926',borderRadius:10,padding:'10px 12px',fontSize:12,color:'#CCDDEE',lineHeight:1.5,textAlign:'left'}},
+          /*#__PURE__*/React.createElement("span", {style:{fontSize:14}}, '💡 '),
+          sig.lesson
+        ),
+        /*#__PURE__*/React.createElement("button", {
+          onClick: nextSignal,
+          style: {background:'#ff6644',color:'#fff',fontWeight:800,fontSize:14,padding:'12px 0',borderRadius:12,marginTop:4}
+        }, sigIdx + 1 < total ? 'Следующий сигнал →' : 'Финиш! 🎉')
+      )
+  );
+}
+
+// ═══ MECHANIC 6: AUTOPILOT ═══════════════════
+function AutopilotMech({ room, onDone }) {
+  // Phase: 0 = show route, 1 = crashed asteroid, 2 = crashed fuel, 3 = success
+  const [phase, setPhase] = React.useState(0);
+  const [constraints, setConstraints] = React.useState(['⚡ Лети быстро']);
+  const [launching, setLaunching] = React.useState(false);
+  const [shipPos, setShipPos] = React.useState(0); // 0..1 progress
+  const [crashType, setCrashType] = React.useState(null); // 'asteroid'|'fuel'|null
+  const [done, setDone] = React.useState(false);
+  const rafRef = React.useRef(null);
+  const posRef = React.useRef(0);
+  const phaseRef = React.useRef(0);
+
+  phaseRef.current = phase;
+
+  const ROUTES = [
+    {type:'direct',  color:'#ff4444', dash:'8,4', path:'M 30 220 L 270 40',           label:'Прямая трасса'},
+    {type:'safe',    color:'#FFD700', dash:'6,3', path:'M 30 220 Q 80 80 270 40',      label:'Обходной маршрут'},
+    {type:'optimal', color:'#44cc88', dash:'none',path:'M 30 220 Q 100 160 200 80 Q 240 55 270 40', label:'Оптимальный маршрут'},
+  ];
+
+  const MAP = {
+    ship:    {x:30,  y:220, emoji:'🚀'},
+    finish:  {x:270, y:40,  emoji:'🏁'},
+    ast1:    {x:120, y:140, emoji:'☄️'},
+    ast2:    {x:180, y:90,  emoji:'☄️'},
+    fuel:    {x:155, y:160, emoji:'⛽'},
+  };
+
+  const currentRoute = ROUTES[Math.min(phase, 2)];
+
+  const launch = () => {
+    if (launching || done) return;
+    setLaunching(true);
+    setCrashType(null);
+    posRef.current = 0;
+    setShipPos(0);
+    const startTime = performance.now();
+    const dur = 1800;
+    const tick = (now) => {
+      const t = Math.min((now - startTime) / dur, 1);
+      posRef.current = t;
+      setShipPos(t);
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        // animation done — show result
+        const p = phaseRef.current;
+        if (p === 0) {
+          setCrashType('asteroid');
+          setPhase(1);
+        } else if (p === 1) {
+          setCrashType('fuel');
+          setPhase(2);
+        } else {
+          setDone(true);
+          setPhase(3);
+          onDone(100, 100);
+        }
+        setLaunching(false);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  React.useEffect(() => () => rafRef.current && cancelAnimationFrame(rafRef.current), []);
+
+  const addConstraint = (text) => {
+    setConstraints(c => [...c, text]);
+    setPhase(p => p + 1);
+    setCrashType(null);
+    setShipPos(0);
+    posRef.current = 0;
+  };
+
+  // ship position on path (linear interpolation on SVG coordinates)
+  const getShipXY = () => {
+    const t = shipPos;
+    if (phase === 0) {
+      // direct: M30,220 L270,40
+      return {x: 30 + t * 240, y: 220 - t * 180};
+    } else if (phase === 1) {
+      // safe: quadratic Q80,80
+      const mx = 80, my = 80;
+      const x = (1-t)*(1-t)*30 + 2*(1-t)*t*mx + t*t*270;
+      const y = (1-t)*(1-t)*220 + 2*(1-t)*t*my + t*t*40;
+      return {x, y};
+    } else {
+      // optimal: cubic approx
+      const x = (1-t)*(1-t)*(1-t)*30 + 3*(1-t)*(1-t)*t*100 + 3*(1-t)*t*t*200 + t*t*t*270;
+      const y = (1-t)*(1-t)*(1-t)*220 + 3*(1-t)*(1-t)*t*160 + 3*(1-t)*t*t*80 + t*t*t*40;
+      return {x, y};
+    }
+  };
+
+  const shipXY = getShipXY();
+
+  const AI_QUOTES = [
+    '',
+    '"Задача выполнена — маршрут был самым быстрым!" 🤖',
+    '"Маршрут безопасный — топливо закончилось, это не моя проблема!" 🤖',
+  ];
+
+  return /*#__PURE__*/React.createElement("div", {style:{padding:'12px',display:'flex',flexDirection:'column',gap:12}},
+    /* title */
+    /*#__PURE__*/React.createElement("div", {style:{textAlign:'center'}},
+      /*#__PURE__*/React.createElement("div", {style:{fontSize:16,fontWeight:800,color:'#44aaff',marginBottom:2}}, '🤖 Глупый автопилот'),
+      /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:'#8899AA'}}, 'Добавляй правила — доведи корабль до финиша!')
+    ),
+    /* space map SVG */
+    /*#__PURE__*/React.createElement("div", {style:{background:'#060C1A',borderRadius:12,overflow:'hidden',border:'1px solid #1A2D48'}},
+      /*#__PURE__*/React.createElement("svg", {width:'100%',viewBox:'0 0 300 260',style:{display:'block'}},
+        /* stars */
+        [[20,20],[50,50],[100,30],[200,20],[250,70],[280,150],[230,200],[60,180],[150,220]].map(([x,y],i) =>
+          /*#__PURE__*/React.createElement("circle", {key:i, cx:x, cy:y, r:1.2, fill:'white', opacity:.4})
+        ),
+        /* route line */
+        /*#__PURE__*/React.createElement("path", {
+          d: currentRoute.path,
+          fill:'none',
+          stroke: currentRoute.color,
+          strokeWidth:2.5,
+          strokeDasharray: currentRoute.dash,
+          opacity:.7
+        }),
+        /* obstacles */
+        /*#__PURE__*/React.createElement("text", {x:MAP.ast1.x-10, y:MAP.ast1.y+6, fontSize:20}, MAP.ast1.emoji),
+        /*#__PURE__*/React.createElement("text", {x:MAP.ast2.x-10, y:MAP.ast2.y+6, fontSize:20}, MAP.ast2.emoji),
+        phase >= 1 && /*#__PURE__*/React.createElement("text", {x:MAP.fuel.x-10, y:MAP.fuel.y+6, fontSize:20}, MAP.fuel.emoji),
+        /* finish */
+        /*#__PURE__*/React.createElement("text", {x:MAP.finish.x-12, y:MAP.finish.y+6, fontSize:22}, MAP.finish.emoji),
+        /* ship or crash */
+        done
+          ? /*#__PURE__*/React.createElement("text", {x:MAP.finish.x-14, y:MAP.finish.y+20, fontSize:22, style:{animation:'pop .4s ease-out'}}, '🚀')
+          : crashType
+          ? /*#__PURE__*/React.createElement("text", {x:shipXY.x-12, y:shipXY.y+6, fontSize:22}, '💥')
+          : /*#__PURE__*/React.createElement("text", {x:shipXY.x-12, y:shipXY.y+6, fontSize:22, style:{transition:'none'}}, '🚀'),
+        /* labels */
+        /*#__PURE__*/React.createElement("text", {x:18, y:238, fontSize:9, fill:'#44aaff', opacity:.7}, 'СТАРТ'),
+        /*#__PURE__*/React.createElement("text", {x:255, y:58, fontSize:9, fill:'#44cc88', opacity:.7}, 'ЦЕЛЬ')
+      )
+    ),
+    /* AI quote on crash */
+    crashType && !done &&
+      /*#__PURE__*/React.createElement("div", {style:{background:'#1A0D0D',border:'1px solid #ff444440',borderRadius:8,padding:'8px 12px',fontSize:12,color:'#ff9977',textAlign:'center',lineHeight:1.4}},
+        AI_QUOTES[phase > 0 ? phase : 1]
+      ),
+    /* constraints panel */
+    /*#__PURE__*/React.createElement("div", {style:{background:'#0D1926',borderRadius:10,padding:'10px 12px'}},
+      /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:'#8899AA',marginBottom:6,fontWeight:700}}, '📋 Правила автопилота:'),
+      constraints.map((c,i) =>
+        /*#__PURE__*/React.createElement("div", {key:i, style:{fontSize:13,color:'#44cc88',marginBottom:3,display:'flex',alignItems:'center',gap:6}},
+          /*#__PURE__*/React.createElement("span", {style:{fontSize:10,color:'#44cc88'}}, '✓'),
+          c
+        )
+      )
+    ),
+    /* actions */
+    !done && !launching &&
+      /*#__PURE__*/React.createElement("div", {style:{display:'flex',flexDirection:'column',gap:8}},
+        crashType === 'asteroid' &&
+          /*#__PURE__*/React.createElement("button", {
+            onClick: () => addConstraint('☄️ Облетай астероиды'),
+            style:{background:'#ff664420',border:'2px solid #ff6644',color:'#ff9977',borderRadius:10,padding:'12px',fontSize:13,fontWeight:700}
+          }, '+ Добавить правило: [Облетай астероиды]'),
+        crashType === 'fuel' &&
+          /*#__PURE__*/React.createElement("button", {
+            onClick: () => addConstraint('⛽ Следи за топливом'),
+            style:{background:'#FFD70020',border:'2px solid #FFD700',color:'#FFD700',borderRadius:10,padding:'12px',fontSize:13,fontWeight:700}
+          }, '+ Добавить правило: [Следи за топливом]'),
+        (phase < 3 || crashType) &&
+          /*#__PURE__*/React.createElement("button", {
+            onClick: launch,
+            style:{background: phase>=2 ? '#44cc88' : '#44aaff',color:'#fff',fontWeight:800,fontSize:14,padding:'12px',borderRadius:10}
+          }, phase === 0 ? '🚀 Запустить автопилот!' : '🔄 Попробовать снова')
+      ),
+    launching &&
+      /*#__PURE__*/React.createElement("div", {style:{textAlign:'center',color:'#44aaff',fontSize:13,fontWeight:700}}, '🚀 Летим...'),
+    done &&
+      /*#__PURE__*/React.createElement("div", {style:{textAlign:'center',background:'#0D2010',border:'2px solid #44cc88',borderRadius:12,padding:16}},
+        /*#__PURE__*/React.createElement("div", {style:{fontSize:28,marginBottom:8}}, '🎉'),
+        /*#__PURE__*/React.createElement("div", {style:{fontSize:16,fontWeight:800,color:'#44cc88',marginBottom:8}}, 'Корабль долетел!'),
+        /*#__PURE__*/React.createElement("div", {style:{fontSize:12,color:'#CCDDEE',lineHeight:1.5}}, 'Запомни: ИИ делает ровно что сказали. Без правил — катастрофа. Человек должен контролировать ИИ!')
+      )
+  );
+}
+
 // ═══ MECHANIC 4: HALLUCINATION ═══════════════════
 function HallucinationMech({
   room,
@@ -7009,7 +7377,7 @@ const MODULES = [{
   xp: 80,
   narrative: {
     intro: "Двигатель работает на данных! Но не на любых — плохие данные делают меня тупее. Помоги отфильтровать: какие данные мне нужны для обучения?",
-    complete: "Двигатель запущен! Ты понял главный секрет ИИ: мусор на входе = мусор на выходе. Теперь Нейро хочет найти свой голос — открываем Студию!"
+    complete: "Двигатель запущен! Ты понял главный секрет ИИ: мусор на входе = мусор на выходе. Теперь Нейро хочет найти свой голос — открываем Коммуникатор!"
   },
   rooms: [{
     name: "Фильтр данных для Нейро",
@@ -7067,7 +7435,7 @@ const MODULES = [{
   xp: 150,
   narrative: {
     intro: "Время применить всё что ты знаешь! Три испытания: отсортируй данные, построй нейросеть и запусти обучение. Поехали!",
-    complete: "🚀 МИССИЯ ВЫПОЛНЕНА! Ты прошёл три испытания. Теперь помоги Нейро найти свой голос — открываем Студию!"
+    complete: "🚀 МИССИЯ ВЫПОЛНЕНА! Ты прошёл три испытания. Теперь помоги Нейро найти свой голос — открываем Коммуникатор!"
   },
   rooms: [{
     name: "Запусти свой ИИ",
@@ -7076,14 +7444,14 @@ const MODULES = [{
   }]
 }, {
   id: "studio",
-  title: "СТУДИЯ",
-  subtitle: "Нейро учится творить",
-  icon: "🎨",
+  title: "КОММУНИКАТОР",
+  subtitle: "Нейро учится создавать и общаться",
+  icon: "📡",
   color: "#c44dff",
   xp: 90,
   narrative: {
-    intro: "Отлично, пилот! Ты уже знаешь как работает ИИ. Теперь Нейро хочет найти свой голос — писать стихи, рисовать картины, разобраться в контенте. Помоги мне стать творцом!",
-    complete: "Я нашёл свой голос! Умею писать стихи, создавать картины и понимать контент. Теперь пора заглянуть внутрь — как работает мой мозг?"
+    intro: "Отлично, пилот! Ты уже знаешь как работает ИИ. Теперь Нейро хочет найти свой голос — писать стихи, создавать контент, понимать что настоящее, а что фейк. Помоги мне стать творцом!",
+    complete: "Я нашёл свой голос! Умею писать стихи, создавать картины и разбираться в контенте. Следующий уровень — Таможня фейков!"
   },
   rooms: [{
     name: "Поймай строку",
@@ -7099,62 +7467,36 @@ const MODULES = [{
     desc: "Свайпай ролики — лайкай факты, пропускай фейки!"
   }]
 }, {
-  id: "nav",
-  title: "НАВИГАЦИЯ",
-  subtitle: "Как Нейро научился думать",
-  icon: "🧭",
-  color: C.green,
-  xp: 80,
-  narrative: {
-    intro: "Навигационный модуль — мозг корабля. Разберёмся как работает мой мозг изнутри. Собери цепочку моего обучения!",
-    complete: "Навигация работает! Ты знаешь как устроен мой мозг. Теперь научи меня слышать тебя — устанавливаем коммуникатор!"
-  },
-  rooms: [{
-    name: "Собери мозг Нейро",
-    type: "pipeline",
-    desc: "Собери цепочку обучения нейросети — нажимай по порядку!",
-    items: [{
-      icon: "📊",
-      label: "ДАННЫЕ",
-      order: 1,
-      desc: "Всё начинается с данных: тексты, картинки, звуки. ChatGPT учился на триллионах слов — всё что было в интернете!"
-    }, {
-      icon: "🏋️",
-      label: "ОБУЧЕНИЕ",
-      order: 2,
-      desc: "Нейросеть ищет закономерности в данных. Как ты учишься бросать мяч — повтор за повтором. Миллиарды попыток!"
-    }, {
-      icon: "🧠",
-      label: "МОДЕЛЬ",
-      order: 3,
-      desc: "Результат обучения — модель. Это «мозг» ИИ: миллиарды чисел, описывающих связи между понятиями"
-    }, {
-      icon: "💬",
-      label: "ПРОМПТ",
-      order: 4,
-      desc: "Ты пишешь запрос — промпт. Это инструкция: что делать, в каком стиле, для кого. Чем точнее — тем лучше ответ!"
-    }, {
-      icon: "✨",
-      label: "ОТВЕТ",
-      order: 5,
-      desc: "Нейро предсказывает ответ слово за словом. Каждое слово — «самое вероятное продолжение». Вот почему ИИ иногда ошибается!"
-    }]
-  }]
-}, {
-  id: "comms",
-  title: "КОММУНИКАТОР",
-  subtitle: "Промпт-галерея",
-  icon: "📡",
-  color: C.gold,
+  id: "radar",
+  title: "ТАМОЖНЯ",
+  subtitle: "Радар правды — разоблачи фейк",
+  icon: "🔍",
+  color: "#ff6644",
   xp: 100,
   narrative: {
-    intro: "Коммуникатор — мой голосовой модуль! Но качество связи зависит от того, КАК ты со мной говоришь. Выбери лучший промпт — и увидишь на что я способен!",
-    complete: "Коммуникатор настроен идеально! Теперь ты знаешь главный секрет ИИ — всё решает промпт. Говори чётко — получай чудеса!"
+    intro: "Стоп! На связи неизвестный сигнал. Космические пираты рассылают фейки, сгенерированные ИИ, чтобы заманить корабли в ловушку. Ты — инспектор таможни. Найди ляпы нейросети и разоблачи фейк!",
+    complete: "Молодец! Ты настоящий детектив фейков. Запомни: ИИ умеет создавать убедительные подделки, но всегда оставляет следы — лишние пальцы, кракозябры вместо текста, неправильные тени."
   },
   rooms: [{
-    name: "Промпт-галерея",
-    type: "prompt_gallery",
-    desc: "Выбери лучший промпт — и увидишь на что я способен!"
+    name: "Радар правды",
+    type: "fake_detector",
+    desc: "Используй ИИ-лупу — найди ошибку нейросети и поставь штамп ФЕЙК!"
+  }]
+}, {
+  id: "autopilot",
+  title: "АВТОПИЛОТ",
+  subtitle: "Научи ИИ думать — добавь ограничения",
+  icon: "🤖",
+  color: "#44aaff",
+  xp: 100,
+  narrative: {
+    intro: "Пора лететь! Бортовой ИИ-автопилот готов проложить маршрут. Но осторожно — ИИ делает ровно то, что ты сказал, даже если это опасно. Добавь правильные ограничения!",
+    complete: "Отлично! Теперь ты знаешь главный секрет: ИИ — быстрый помощник, но без правил он может натворить глупостей. Человек всегда должен контролировать ИИ!"
+  },
+  rooms: [{
+    name: "Глупый автопилот",
+    type: "autopilot",
+    desc: "Добавляй правила для автопилота — и доведи корабль до финиша без аварий!"
   }]
 }, {
   id: "shield",
@@ -7214,7 +7556,7 @@ function App() {
       const parsed = s ? JSON.parse(s) : {xp:0,modules:[],score:0};
       // DEV: unlock studio+nav for testing
       if (!parsed.modules.includes('studio')) {
-        parsed.modules = [...new Set([...parsed.modules,'core','engine','mission','studio','nav'])];
+        parsed.modules = [...new Set([...parsed.modules,'core','engine','mission','studio'])];
         parsed.xp = Math.max(parsed.xp, 350);
       }
       return parsed;
@@ -7353,7 +7695,9 @@ function App() {
       tiktok_room: TikTokRoomMech,
       swipe_tik: SwipeTikMech,
       hallucination: HallucinationMech,
-      mission: MissionMech
+      mission: MissionMech,
+      fake_detector: FakeDetectorMech,
+      autopilot: AutopilotMech
     };
     const Comp = map[room.type];
     return Comp ? /*#__PURE__*/React.createElement(Comp, {
