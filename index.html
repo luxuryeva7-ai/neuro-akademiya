@@ -5476,6 +5476,271 @@ function PromptLabMech({
   }, idx + 1 < room.items.length ? "ДАЛЬШЕ →" : "ГОТОВО"));
 }
 
+// ═══ MECHANIC: PROMPT GALLERY ══════════════════════════════════
+
+function CatchStarGame() {
+  const canvasRef = useRef(null);
+  const [gameScore, setGameScore] = React.useState(0);
+  const [gameOver, setGameOver] = React.useState(false);
+  const stateRef = useRef({score:0,shipX:120,stars:[],running:true,elapsed:0});
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const s = stateRef.current;
+    s.shipX = W/2; s.running = true; s.score = 0; s.elapsed = 0; s.stars = [];
+    const timerI = setInterval(() => {
+      s.elapsed++;
+      if (s.elapsed >= 15) { clearInterval(timerI); clearInterval(spawnI); s.running = false; setGameOver(true); }
+    }, 1000);
+    const spawnI = setInterval(() => {
+      if (!s.running) return;
+      s.stars.push({x:20+Math.random()*(W-40),y:0,speed:1.5+Math.random()*2,golden:Math.random()>0.35,r:9});
+    }, 900);
+    const onT = e => { e.preventDefault(); const rect=canvas.getBoundingClientRect(); const t=e.touches[0]||e.changedTouches[0]; s.shipX=Math.max(18,Math.min(W-18,(t.clientX-rect.left)*(W/rect.width))); };
+    const onC = e => { const rect=canvas.getBoundingClientRect(); s.shipX=Math.max(18,Math.min(W-18,(e.clientX-rect.left)*(W/rect.width))); };
+    canvas.addEventListener('touchmove',onT,{passive:false});
+    canvas.addEventListener('touchstart',onT,{passive:false});
+    canvas.addEventListener('click',onC);
+    let raf;
+    const loop = () => {
+      if (!s.running) return;
+      ctx.fillStyle='#050510'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#00f5ff'; ctx.beginPath(); ctx.moveTo(s.shipX,H-14); ctx.lineTo(s.shipX-14,H-2); ctx.lineTo(s.shipX+14,H-2); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#ffffff44'; ctx.fillRect(s.shipX-3,H-12,6,5);
+      s.stars = s.stars.filter(st => {
+        st.y += st.speed;
+        if (st.y>H-26 && st.y<H-2 && Math.abs(st.x-s.shipX)<20) { s.score+=st.golden?1:-1; setGameScore(s.score); return false; }
+        if (st.y>H+10) return false;
+        ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(st.golden?'⭐':'💥',st.x,st.y); return true;
+      });
+      ctx.fillStyle='#ffffffcc'; ctx.font='11px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText('Очки: '+s.score,6,6);
+      ctx.textAlign='right'; ctx.fillText('⏱ '+(15-s.elapsed)+'с',W-6,6);
+      raf = requestAnimationFrame(loop);
+    };
+    loop();
+    return () => { s.running=false; clearInterval(timerI); clearInterval(spawnI); if(raf)cancelAnimationFrame(raf); canvas.removeEventListener('touchmove',onT); canvas.removeEventListener('touchstart',onT); canvas.removeEventListener('click',onC); };
+  }, []);
+  if (gameOver) return /*#__PURE__*/React.createElement("div",{style:{textAlign:'center',padding:20,background:'#0a1020',borderRadius:12}},
+    /*#__PURE__*/React.createElement("div",{style:{fontSize:28,marginBottom:8}},'🏆'),
+    /*#__PURE__*/React.createElement("div",{style:{fontSize:22,color:C.gold,fontWeight:700}},'Счёт: '+gameScore),
+    /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.dim,marginTop:6}},'Вот что значит конкретный промпт!')
+  );
+  return /*#__PURE__*/React.createElement("div",{style:{borderRadius:12,overflow:'hidden',touchAction:'none'}},
+    /*#__PURE__*/React.createElement("canvas",{ref:canvasRef,width:280,height:200,style:{display:'block',width:'100%',background:'#050510',borderRadius:12}})
+  );
+}
+
+function TikTokMock() {
+  const [step, setStep] = React.useState(0);
+  const facts = [
+    {e:'🌍',t:'Земля летит вокруг Солнца со скоростью 107\u00a0000\u00a0км/ч'},
+    {e:'🪐',t:'В Сатурне поместились бы 764 Земли'},
+    {e:'⭐',t:'Свет от Солнца до Земли идёт 8 минут'},
+    {e:'🌌',t:'Во Вселенной больше звёзд чем песчинок на всех пляжах'},
+  ];
+  const showCta = step >= facts.length;
+  useEffect(() => {
+    if (showCta) return;
+    const t = setTimeout(() => setStep(s => s+1), 3000);
+    return () => clearTimeout(t);
+  }, [step, showCta]);
+  const pct = showCta ? 100 : Math.round((step/facts.length)*100);
+  return /*#__PURE__*/React.createElement("div",{style:{position:'relative',background:'#000',borderRadius:16,overflow:'hidden',width:140,margin:'0 auto',height:240,border:'2px solid #333',boxShadow:'0 0 16px #00f5ff44'}},
+    /*#__PURE__*/React.createElement("style",null,'@keyframes warpS{0%{transform:scale(0.1);opacity:.7}100%{transform:scale(3);opacity:0}}@keyframes factIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes ctaGl{0%,100%{text-shadow:0 0 8px #00f5ff}50%{text-shadow:0 0 24px #00f5ff}}'),
+    ...[...Array(16)].map((_,i)=>/*#__PURE__*/React.createElement("div",{key:'ws'+i,style:{position:'absolute',left:`${10+(i*5.7)%80}%`,top:`${10+(i*7.3)%80}%`,width:2,height:2,background:'#fff',borderRadius:'50%',animation:`warpS ${0.8+i*0.25}s ${i*0.12}s infinite`,transformOrigin:'center',pointerEvents:'none'}})),
+    !showCta && /*#__PURE__*/React.createElement("div",{key:'f'+step,style:{position:'absolute',bottom:44,left:0,right:0,padding:'6px 10px',background:'rgba(0,0,0,.78)',animation:'factIn 0.4s both'}},
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:18,textAlign:'center'}},facts[step]&&facts[step].e),
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:9,color:'#eee',textAlign:'center',lineHeight:1.4,marginTop:3}},facts[step]&&facts[step].t)
+    ),
+    showCta && /*#__PURE__*/React.createElement("div",{style:{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',textAlign:'center'}},
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:24}},'🚀'),
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:13,fontWeight:700,color:'#fff',animation:'ctaGl 1.5s infinite'}},'ПОДПИШИСЬ!')
+    ),
+    /*#__PURE__*/React.createElement("div",{style:{position:'absolute',right:5,bottom:44,display:'flex',flexDirection:'column',gap:6,alignItems:'center'}},
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:14}},'❤️'),
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:14}},'💬'),
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:14}},'↗️')
+    ),
+    /*#__PURE__*/React.createElement("div",{style:{position:'absolute',bottom:0,left:0,right:0,height:3,background:'#222'}},
+      /*#__PURE__*/React.createElement("div",{style:{height:'100%',background:'#00f5ff',width:pct+'%',transition:'width 3s linear'}})
+    )
+  );
+}
+
+function PromptGalleryMech({room,onDone}) {
+  const [taskIdx, setTaskIdx] = React.useState(0);
+  const [selPrompt, setSelPrompt] = React.useState(null);
+  const [generating, setGenerating] = React.useState(false);
+  const [showResult, setShowResult] = React.useState(false);
+  const [firstPick, setFirstPick] = React.useState(null);
+  const [viewSet, setViewSet] = React.useState(new Set());
+  const [totalScore, setTotalScore] = React.useState(0);
+
+  const TASKS = [{
+    desc:'Нейро хочет написать стих про космос для друга',
+    prompts:[
+      {stars:1,text:'Напиши стих',comment:'Я даже не понял про что писать! Без деталей получается ерунда 😅'},
+      {stars:2,text:'Напиши короткое стихотворение про космос',comment:'Уже лучше! Но это мог написать кто угодно. Нет изюминки.'},
+      {stars:3,text:'Напиши стих про одинокий корабль, который ищет друга среди звёзд. 4 строки, простые слова, грустно-тёплое настроение. Для ребёнка 10 лет',comment:'ВОТ ЭТО ДА! Настроение + аудитория + длина + тема = я точно знал что писать. Чувствуешь разницу?'},
+    ]
+  },{
+    desc:'Нейро хочет сделать игру для скучающего пилота',
+    prompts:[
+      {stars:1,text:'Сделай игру',comment:'Это разве игра? Даже кнопок нет! Без деталей я не знаю что делать.'},
+      {stars:2,text:'Сделай простую браузерную игру на JavaScript',comment:'Работает! Но «простая игра» — слишком широко. Я не знал что именно делать.'},
+      {stars:3,text:'Сделай игру «Поймай звезду»: звёзды падают сверху, корабль двигается и ловит их. ⭐+1, 💥−1. Таймер 15 секунд',comment:'НЕВЕРОЯТНО! Конкретика + правила + стиль = настоящая игра! Это сила хорошего промпта!'},
+    ]
+  },{
+    desc:'Нейро хочет создать картинку для поста в соцсети про космос',
+    prompts:[
+      {stars:1,text:'Нарисуй картинку',comment:'Картинку ЧЕГО?! Я нарисовал первое что пришло в голову 😅'},
+      {stars:2,text:'Нарисуй красивую космическую картинку с планетами',comment:'Есть тема! Но без стиля и деталей — получился детский рисунок, а не арт.'},
+      {stars:3,text:'Создай атмосферную картинку: маленький светящийся корабль летит к огромной фиолетовой планете с кольцами. Туманность из розовых и голубых облаков, звёзды. Стиль: пиксель-арт, неоновые цвета',comment:'КОСМОС! Композиция + стиль + детали + атмосфера = я нарисовал НАСТОЯЩИЙ арт!'},
+    ]
+  },{
+    desc:'Нейро хочет объяснить младшему брату как работает интернет',
+    prompts:[
+      {stars:1,text:'Объясни интернет',comment:'Я напишу научный текст который никто не поймёт 😴'},
+      {stars:2,text:'Объясни как работает интернет простым языком',comment:'Проще, но «простой язык» — для кого? Для 6-летнего и 16-летнего — разный уровень!'},
+      {stars:3,text:'Объясни как работает интернет ребёнку 7 лет. Аналогия с почтой. Максимум 4 предложения. Добавь эмодзи',comment:'ИДЕАЛЬНО! Аналогия + возраст + формат + лимит = даже 7-летний поймёт!'},
+    ]
+  },{
+    desc:'Нейро хочет сделать короткое видео для TikTok про космос',
+    prompts:[
+      {stars:1,text:'Сделай видео',comment:'Видео про ЧТО? Какое? Для кого? Я даже не знаю с чего начать! 🫠'},
+      {stars:2,text:'Сделай короткое видео про космос для TikTok',comment:'Есть тема и площадка! Но нет динамики, истории, стиля.'},
+      {stars:3,text:'Сделай 15-секундный вертикальный TikTok: камера летит сквозь космос, каждые 3 секунды — факт про космос, финал: «Подпишись 🚀»',comment:'ВИРУСНЫЙ КОНТЕНТ! Хронометраж + формат + стиль + CTA = профессиональный ролик!'},
+    ]
+  }];
+
+  const task = TASKS[taskIdx];
+  const starsLabel = ['','⭐','⭐⭐','⭐⭐⭐'];
+  const starsColor = {1:C.red,2:C.gold,3:C.green};
+  const starsMood = {1:'sad',2:'confused',3:'excited'};
+
+  const pickPrompt = i => {
+    if (generating) return;
+    const ns = new Set(viewSet); ns.add(i); setViewSet(ns);
+    if (firstPick===null) setFirstPick(i);
+    setSelPrompt(i); setGenerating(true); setShowResult(false);
+    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+    setTimeout(() => {
+      setGenerating(false); setShowResult(true);
+      if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    }, 1500);
+  };
+
+  const nextTask = () => {
+    const fp = firstPick!==null?firstPick:selPrompt;
+    const stars = task.prompts[fp].stars;
+    const pts = stars===3?30:stars===2?20:10;
+    const bonus = viewSet.size>=3?10:0;
+    const newTotal = totalScore+pts+bonus;
+    if (taskIdx+1<TASKS.length) {
+      setTotalScore(newTotal); setTaskIdx(taskIdx+1); setSelPrompt(null);
+      setGenerating(false); setShowResult(false); setFirstPick(null); setViewSet(new Set());
+    } else { onDone(newTotal,200); }
+  };
+
+  const renderResult = (ti,pi) => {
+    const stars = TASKS[ti].prompts[pi].stars;
+    if (ti===0) {
+      if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#1a1a1a',borderRadius:8,padding:12,color:'#666',fontSize:12,fontStyle:'italic',lineHeight:1.7}},'Розы красные, фиалки синие,\nИИ умный, а я красивый.\n— скучно, шаблонно, не про космос');
+      if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#111820',border:'1px solid #334',borderRadius:8,padding:12,fontSize:12,lineHeight:1.9,color:C.text}},
+        /*#__PURE__*/React.createElement("div",null,'В бескрайнем космосе летим,'),
+        /*#__PURE__*/React.createElement("div",null,'Среди далёких звёзд и тьмы...'),
+        /*#__PURE__*/React.createElement("div",{style:{color:C.dim,fontSize:10,marginTop:4}},'— нормально, но без души')
+      );
+      return /*#__PURE__*/React.createElement("div",{style:{background:'linear-gradient(180deg,#120022,#05000f)',borderRadius:12,padding:16,position:'relative',overflow:'hidden',minHeight:110}},
+        /*#__PURE__*/React.createElement("style",null,'@keyframes pL{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes twk{0%,100%{opacity:.15}50%{opacity:.9}}'),
+        ...[...Array(10)].map((_,i)=>/*#__PURE__*/React.createElement("span",{key:'s'+i,style:{position:'absolute',left:`${8+(i*9.3)%85}%`,top:`${5+(i*11.7)%85}%`,fontSize:i%3?'10px':'14px',animation:`twk ${1+i*.3}s ${i*.2}s infinite`,pointerEvents:'none',opacity:.3}},'✨')),
+        /*#__PURE__*/React.createElement("div",{style:{color:'#e8d5ff',fontSize:15,marginBottom:6,fontStyle:'italic',textAlign:'center',animation:'pL .6s .1s both'}},'Лечу один среди планет, 🌟'),
+        /*#__PURE__*/React.createElement("div",{style:{color:'#d5eeff',fontSize:15,marginBottom:6,fontStyle:'italic',textAlign:'center',animation:'pL .6s .7s both'}},'Мой двигатель — как тихий свет. ✨'),
+        /*#__PURE__*/React.createElement("div",{style:{color:'#ffd5ee',fontSize:15,marginBottom:6,fontStyle:'italic',textAlign:'center',animation:'pL .6s 1.3s both'}},'Но верю: где-то в тишине 💫'),
+        /*#__PURE__*/React.createElement("div",{style:{color:'#d5ffd5',fontSize:15,fontStyle:'italic',textAlign:'center',animation:'pL .6s 1.9s both'}},'Есть кто-то, кто скучал по мне. 🚀')
+      );
+    }
+    if (ti===1) {
+      if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#1a1a1a',borderRadius:8,padding:12,color:'#666',fontSize:11,lineHeight:1.6}},'🎮 Игра: угадай число от 1 до 10.\nЯ загадал 7.\n\n(просто текст, ничего интерактивного)');
+      if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#111820',border:'1px solid #334',borderRadius:8,padding:12,textAlign:'center'}},
+        /*#__PURE__*/React.createElement("div",{style:{fontSize:13,color:C.text,marginBottom:8}},'👆 Кликер'),
+        /*#__PURE__*/React.createElement("div",{style:{fontSize:32,color:C.gold,fontWeight:700,fontFamily:'monospace'}},'0'),
+        /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.dim,marginTop:4}},'нажми — и счётчик вырастет. скучно...')
+      );
+      return /*#__PURE__*/React.createElement("div",null,
+        /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.dim,textAlign:'center',marginBottom:4}},'👆 Тапни по экрану чтобы двигать корабль'),
+        /*#__PURE__*/React.createElement(CatchStarGame,{key:'csg-'+pi})
+      );
+    }
+    if (ti===2) {
+      if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#1a1a1a',borderRadius:8,padding:16,textAlign:'center'}},
+        /*#__PURE__*/React.createElement("div",{style:{width:60,height:60,background:'#2a2a2a',borderRadius:4,margin:'0 auto 8px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28}},'😐'),
+        /*#__PURE__*/React.createElement("div",{style:{fontSize:10,color:'#555'}},'картинка.jpg')
+      );
+      if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#000820',borderRadius:8,overflow:'hidden'}},
+        /*#__PURE__*/React.createElement("svg",{width:'100%',height:110,viewBox:'0 0 280 110'},
+          /*#__PURE__*/React.createElement("rect",{width:280,height:110,fill:'#000820'}),
+          /*#__PURE__*/React.createElement("circle",{cx:70,cy:55,r:34,fill:'#3344aa'}),
+          /*#__PURE__*/React.createElement("circle",{cx:185,cy:45,r:22,fill:'#aa4433'}),
+          /*#__PURE__*/React.createElement("circle",{cx:245,cy:65,r:15,fill:'#44aa44'}),
+          ...[...Array(8)].map((_,i)=>/*#__PURE__*/React.createElement("circle",{key:i,cx:10+(i*34),cy:8+(i*9)%80,r:1.5,fill:'#fff',opacity:.6}))
+        ),
+        /*#__PURE__*/React.createElement("div",{style:{fontSize:10,color:C.dim,padding:'4px 8px'}},'\u2014 цветные кружки... без атмосферы')
+      );
+      return /*#__PURE__*/React.createElement("div",{dangerouslySetInnerHTML:{__html:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 160" style="border-radius:12px;width:100%;display:block"><defs><radialGradient id="bg2" cx="60%" cy="40%"><stop offset="0%" stop-color="#1a0040"/><stop offset="100%" stop-color="#020010"/></radialGradient><radialGradient id="pl2" cx="50%" cy="50%"><stop offset="0%" stop-color="#7722cc"/><stop offset="60%" stop-color="#4400aa"/><stop offset="100%" stop-color="#220055"/></radialGradient><filter id="gl2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><style>@keyframes fly{0%{transform:translateX(-30px)}100%{transform:translateX(260px)}}@keyframes nb{0%,100%{opacity:.2}50%{opacity:.5}}@keyframes st{0%,100%{opacity:.1}50%{opacity:.9}}</style></defs><rect width="280" height="160" fill="url(#bg2)"/>${[...Array(28)].map((_,i)=>`<circle cx="${5+(i*9.7)%270}" cy="${5+(i*5.3)%150}" r="${i%4?1:1.8}" fill="#fff" style="animation:st ${1+i*.2}s ${i*.1}s infinite"/>`).join('')}<ellipse cx="75" cy="95" rx="50" ry="20" fill="#ff88cc" opacity=".22" style="animation:nb 3s infinite"/><ellipse cx="210" cy="55" rx="38" ry="15" fill="#8899ff" opacity=".22" style="animation:nb 4s 1.2s infinite"/><circle cx="200" cy="85" r="42" fill="url(#pl2)"/><ellipse cx="200" cy="85" rx="66" ry="11" fill="none" stroke="#9944ff" stroke-width="5" opacity=".65" transform="rotate(-18 200 85)"/><ellipse cx="200" cy="85" rx="74" ry="14" fill="none" stroke="#7722cc" stroke-width="3" opacity=".4" transform="rotate(-18 200 85)"/><g style="animation:fly 5s linear infinite" filter="url(#gl2)"><polygon points="10,0 0,16 20,16" fill="#00f5ff" opacity=".95"/><polygon points="10,12 6,16 14,16" fill="#ff00aa"/><line x1="10" y1="16" x2="3" y2="24" stroke="#00f5ff" stroke-width="1.5" opacity=".5"/><line x1="10" y1="16" x2="17" y2="24" stroke="#00f5ff" stroke-width="1.5" opacity=".5"/></g></svg>`}});
+    }
+    if (ti===3) {
+      if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#1a1a1a',borderRadius:8,padding:12,color:'#666',fontSize:11,lineHeight:1.6}},'Интернет — глобальная система объединённых компьютерных сетей для хранения и передачи информации, использующая протоколы TCP/IP... [и ещё 300 слов]');
+      if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#111820',border:'1px solid #334',borderRadius:8,padding:12,fontSize:12,lineHeight:1.7,color:C.text}},'Интернет — это когда компьютеры по всему миру соединены проводами и обмениваются данными... нормально, но скучновато и длинно.');
+      return /*#__PURE__*/React.createElement("div",{style:{background:'#060e1a',borderRadius:10,padding:'10px 6px'}},
+        /*#__PURE__*/React.createElement("style",null,'@keyframes sU{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}'),
+        ...[
+          {e:'📬',t:'Интернет — это волшебная почта!',d:.1},
+          {e:'✉️',t:'Ты пишешь письмо (запрос) и кладёшь в ящик (браузер)',d:.6},
+          {e:'🏃',t:'Быстрый почтальон (роутер) несёт его по адресу (URL)',d:1.1},
+          {e:'📦',t:'Через секунду тебе приходит ответ — видео, картинка или игра!',d:1.6},
+        ].map((item,i)=>/*#__PURE__*/React.createElement("div",{key:i,style:{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',background:'rgba(0,245,255,.06)',borderRadius:8,marginBottom:5,animation:`sU .5s ${item.d}s both`}},
+          /*#__PURE__*/React.createElement("div",{style:{fontSize:20,flexShrink:0}},item.e),
+          /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.text,lineHeight:1.4}},item.t)
+        ))
+      );
+    }
+    // ti===4 video/tiktok
+    if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#111',borderRadius:8,padding:20,textAlign:'center'}},
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:32,opacity:.25}},'▶️'),
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:10,color:'#555',marginTop:4}},'video.mp4 — 0:00')
+    );
+    if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#000',borderRadius:8,padding:20,textAlign:'center',border:'1px solid #333'}},
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:22,color:'#fff',fontWeight:700,letterSpacing:4}},'КОСМОС'),
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:10,color:'#555',marginTop:8}},'0:05 | статичный слайд')
+    );
+    return /*#__PURE__*/React.createElement(TikTokMock,{key:'ttm-'+pi});
+  };
+
+  return /*#__PURE__*/React.createElement("div",null,
+    /*#__PURE__*/React.createElement("div",{style:{textAlign:'center',color:C.dim,fontSize:12,marginBottom:8}},'Задача '+(taskIdx+1)+' из '+TASKS.length),
+    /*#__PURE__*/React.createElement("div",{style:{background:C.card,border:`1px solid ${C.cardBorder}`,borderRadius:12,padding:14,marginBottom:12,fontSize:13,color:C.text,lineHeight:1.5}},'📋 ',task.desc),
+    ...task.prompts.map((p,i)=>/*#__PURE__*/React.createElement("div",{key:i,onClick:()=>pickPrompt(i),style:{background:C.card,border:`1px solid ${selPrompt===i?starsColor[p.stars]:C.cardBorder}`,borderRadius:10,padding:'10px 12px',marginBottom:8,cursor:generating?'wait':'pointer',boxShadow:selPrompt===i?`0 0 14px ${starsColor[p.stars]}44`:'none',transition:'all .2s',opacity:generating&&selPrompt!==i?.6:1}},
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:13,marginBottom:3}},starsLabel[p.stars]),
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.dim,fontStyle:'italic',lineHeight:1.4}},'\u201c'+p.text+'\u201d')
+    )),
+    generating&&/*#__PURE__*/React.createElement("div",{style:{textAlign:'center',padding:'14px 0',color:C.dim,fontSize:13}},
+      /*#__PURE__*/React.createElement("div",{style:{fontSize:22,marginBottom:6}},'⚡'),'Нейро думает...'
+    ),
+    showResult&&selPrompt!==null&&/*#__PURE__*/React.createElement("div",null,
+      /*#__PURE__*/React.createElement("div",{style:{marginBottom:10}},renderResult(taskIdx,selPrompt)),
+      /*#__PURE__*/React.createElement(Talk,{mood:starsMood[task.prompts[selPrompt].stars],text:task.prompts[selPrompt].comment}),
+      viewSet.size<3&&/*#__PURE__*/React.createElement("div",{style:{textAlign:'center',fontSize:11,color:C.dim,marginTop:4,marginBottom:6}},'☝️ Попробуй другие варианты для сравнения (+10 бонус за любопытство!)'),
+      viewSet.size>=3&&/*#__PURE__*/React.createElement("div",{style:{textAlign:'center',fontSize:12,color:C.gold,marginTop:4,marginBottom:6}},'🌟 +10 бонус за любопытство!'),
+      /*#__PURE__*/React.createElement(Btn,{onClick:nextTask,full:true,style:{marginTop:8},color:C.gold},taskIdx+1<TASKS.length?'ДАЛЬШЕ →':'ГОТОВО')
+    )
+  );
+}
+
 // ═══ MECHANIC 4: HALLUCINATION ═══════════════════
 function HallucinationMech({
   room,
@@ -6405,64 +6670,18 @@ const MODULES = [{
 }, {
   id: "comms",
   title: "КОММУНИКАТОР",
-  subtitle: "Мастер промптов",
+  subtitle: "Промпт-галерея",
   icon: "📡",
   color: C.gold,
   xp: 100,
   narrative: {
-    intro: "Коммуникатор — это связь между тобой и мной. Промпт — язык, на котором ты говоришь с ИИ. Выбирай лучший промпт — и я дам суперответ!",
-    complete: "Коммуникатор установлен! Теперь ты умеешь правильно говорить с ИИ. Последний шаг — научись меня проверять!"
+    intro: "Коммуникатор — мой голосовой модуль! Но качество связи зависит от того, КАК ты со мной говоришь. Выбери лучший промпт — и увидишь на что я способен!",
+    complete: "Коммуникатор настроен идеально! Теперь ты знаешь главный секрет ИИ — всё решает промпт. Говори чётко — получай чудеса!"
   },
   rooms: [{
-    name: "Промпт-лаборатория",
-    type: "prompt_lab",
-    desc: "Выбери лучший промпт — посмотри как я реагирую!",
-    items: [{
-      task: "Нейро хочет написать поздравление другу Максиму на ДР (14 лет, любит футбол)",
-      opts: [{
-        text: "Напиши поздравление",
-        s: 1,
-        comment: "Слишком размыто! Я не знаю для кого, в каком стиле. Напишу что-то банальное."
-      }, {
-        text: "Напиши весёлое поздравление с ДР другу-футболисту",
-        s: 2,
-        comment: "Лучше! Есть стиль и тема. Но нет имени, возраста — получится среднее поздравление."
-      }, {
-        text: "Напиши весёлое поздравление другу Максиму (14 лет, фанат футбола и Реала). До 40 слов. Добавь шутку про футбол",
-        s: 3,
-        comment: "ИДЕАЛЬНО! Имя + возраст + интерес + формат + стиль = я знаю ровно что нужно!"
-      }]
-    }, {
-      task: "Нейро хочет объяснить квантовую физику однокласснику",
-      opts: [{
-        text: "Объясни квантовую физику",
-        s: 1,
-        comment: "Я не знаю для кого объяснять — напишу сложный научный текст, который никто не поймёт."
-      }, {
-        text: "Объясни квантовую физику простым языком",
-        s: 2,
-        comment: "Уже лучше! Но «простой язык» — это для кого? Для ребёнка и для студента — разные уровни."
-      }, {
-        text: "Объясни квантовую физику школьнику 7 класса. Используй аналогии с играми. Максимум 80 слов. Без формул",
-        s: 3,
-        comment: "ТОПОВЫЙ ПРОМПТ! Возраст + формат + ограничение + стиль = я точно знаю что делать."
-      }]
-    }, {
-      task: "Нейро хочет помочь с домашним заданием по истории",
-      opts: [{
-        text: "Помоги с историей",
-        s: 1,
-        comment: "Что именно? Какой период? Какой класс? Я ничего не знаю и напишу что-то случайное."
-      }, {
-        text: "Объясни причины Первой мировой войны для школьника",
-        s: 2,
-        comment: "Тема есть! Но сколько слов? Для какого задания? Непонятно насколько подробно отвечать."
-      }, {
-        text: "Объясни 3 главные причины Первой мировой войны для ученика 9 класса. Формат: 3 пункта по 2-3 предложения. Используй примеры",
-        s: 3,
-        comment: "ОТЛИЧНО! Количество + аудитория + структура + метод = идеальный ответ для домашки!"
-      }]
-    }]
+    name: "Промпт-галерея",
+    type: "prompt_gallery",
+    desc: "Выбери промпт — увидишь результат!"
   }]
 }, {
   id: "shield",
@@ -6532,6 +6751,20 @@ function App() {
       };
     }
   });
+  // DEV: unlock comms for testing
+  useEffect(() => {
+    const saved = localStorage.getItem('aiq5_gs');
+    const gs0 = saved ? JSON.parse(saved) : null;
+    const needsUnlock = !gs0 || !gs0.modules || !gs0.modules.includes('nav');
+    if (needsUnlock) {
+      const updated = gs0 || {xp:0,modules:[],score:0};
+      if (!updated.modules.includes('core')) updated.modules.push('core');
+      if (!updated.modules.includes('nav')) updated.modules.push('nav');
+      localStorage.setItem('aiq5_gs', JSON.stringify(updated));
+      localStorage.setItem('aiq5_paid', '1');
+      window.location.reload();
+    }
+  }, []);
   const [paid, setPaid] = useState(() => localStorage.getItem('aiq5_paid') === '1');
   const [curMod, setCurMod] = useState(null);
   const [roomIdx, setRoomIdx] = useState(0);
@@ -6657,6 +6890,7 @@ function App() {
       feed: FeedMech,
       pipeline: PipelineMech,
       prompt_lab: PromptLabMech,
+      prompt_gallery: PromptGalleryMech,
       hallucination: HallucinationMech,
       mission: MissionMech
     };
