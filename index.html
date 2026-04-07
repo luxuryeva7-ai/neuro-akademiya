@@ -5921,12 +5921,13 @@ function PromptGameMech({ room, onDone }) {
       prompt: 'Создай игру: корабль летит в космосе, собирает звёзды ⭐ (+1 очко) и золотые 💫 (+3), уворачивается от астероидов ☄️. Таймер 30 секунд, три жизни. Чем точнее промпт — тем круче корабль!',
       color: '#44cc88',
       bgColor: '#051a05',
-      duration: 20,
-      shipGlow: '#00f5ffaa',
+      duration: 25,
+      shipGlow: '#00f5ffcc',
       shipColor: '#00f5ff',
-      starRate: 480,
-      astRate: 1800,
-      starSpeedBase: 3.0,
+      starRate: 280,
+      astRate: 2500,
+      starSpeedBase: 3.8,
+      goldChance: 0.45,
       comment: 'НЕВЕРОЯТНО! Детали + правила + механики = идеальная игра! Это и есть сила промпта! 🚀🌟',
     },
   ];
@@ -5946,34 +5947,60 @@ function PromptGameMech({ room, onDone }) {
 
   // ── draw Neyro ship (color per round) ─────────────────────
   const drawShip = (ctx, x, y, cfg) => {
-    const s = 20;
+    const s = cfg.idx === 2 ? 30 : 20;
     ctx.save();
     ctx.translate(x, y);
+    // outer mega-glow (round 3 only)
+    if (cfg.idx===2) {
+      const og = ctx.createRadialGradient(0,0,0,0,0,s*2.5);
+      og.addColorStop(0,'rgba(0,245,255,0.18)'); og.addColorStop(1,'transparent');
+      ctx.fillStyle=og; ctx.beginPath(); ctx.arc(0,0,s*2.5,0,Math.PI*2); ctx.fill();
+    }
     // glow
-    const g = ctx.createRadialGradient(0,0,0,0,0,s*1.4);
+    const g = ctx.createRadialGradient(0,0,0,0,0,s*1.6);
     g.addColorStop(0, cfg.shipGlow);
     g.addColorStop(1, 'transparent');
     ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(0,0,s*1.4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,s*1.6,0,Math.PI*2); ctx.fill();
     // body
     ctx.fillStyle = cfg.shipColor;
     ctx.beginPath();
     ctx.moveTo(0,-s); ctx.lineTo(s*0.45,-s*0.3); ctx.lineTo(s*0.45,s*0.5);
     ctx.lineTo(0,s*0.75); ctx.lineTo(-s*0.45,s*0.5); ctx.lineTo(-s*0.45,-s*0.3);
     ctx.closePath(); ctx.fill();
+    // body outline glow (round 3)
+    if (cfg.idx===2) {
+      ctx.strokeStyle='rgba(0,245,255,0.6)'; ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(0,-s); ctx.lineTo(s*0.45,-s*0.3); ctx.lineTo(s*0.45,s*0.5);
+      ctx.lineTo(0,s*0.75); ctx.lineTo(-s*0.45,s*0.5); ctx.lineTo(-s*0.45,-s*0.3);
+      ctx.closePath(); ctx.stroke();
+    }
     // wings
     ctx.fillStyle = cfg.idx===2 ? '#ff00aa' : cfg.idx===1 ? '#cc8800' : '#882222';
-    ctx.beginPath(); ctx.moveTo(s*0.4,s*0.1); ctx.lineTo(s*0.9,s*0.7); ctx.lineTo(s*0.4,s*0.5); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(-s*0.4,s*0.1); ctx.lineTo(-s*0.9,s*0.7); ctx.lineTo(-s*0.4,s*0.5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(s*0.4,s*0.1); ctx.lineTo(s*1.1,s*0.8); ctx.lineTo(s*0.4,s*0.5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-s*0.4,s*0.1); ctx.lineTo(-s*1.1,s*0.8); ctx.lineTo(-s*0.4,s*0.5); ctx.closePath(); ctx.fill();
+    // wing glow (round 3)
+    if (cfg.idx===2) {
+      ctx.strokeStyle='rgba(255,0,170,0.7)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(s*0.4,s*0.1); ctx.lineTo(s*1.1,s*0.8); ctx.lineTo(s*0.4,s*0.5); ctx.closePath(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-s*0.4,s*0.1); ctx.lineTo(-s*1.1,s*0.8); ctx.lineTo(-s*0.4,s*0.5); ctx.closePath(); ctx.stroke();
+    }
     // cockpit
-    ctx.fillStyle = '#ffffff33';
-    ctx.beginPath(); ctx.ellipse(0,-s*0.3,s*0.2,s*0.25,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = cfg.idx===2 ? 'rgba(0,245,255,0.4)' : '#ffffff33';
+    ctx.beginPath(); ctx.ellipse(0,-s*0.3,s*0.22,s*0.28,0,0,Math.PI*2); ctx.fill();
+    // cockpit shine
+    if (cfg.idx===2) {
+      ctx.fillStyle='rgba(255,255,255,0.5)';
+      ctx.beginPath(); ctx.ellipse(-s*0.06,-s*0.38,s*0.07,s*0.08,0,0,Math.PI*2); ctx.fill();
+    }
     // engine flame
-    const fl = ctx.createRadialGradient(0,s*0.8,0,0,s*0.8,s*0.5);
-    fl.addColorStop(0, cfg.idx===2?'#00f5ffcc':cfg.idx===1?'#FFD700cc':'#ff444488');
+    const fl = ctx.createRadialGradient(0,s*0.85,0,0,s*0.85,cfg.idx===2?s*0.8:s*0.5);
+    fl.addColorStop(0, cfg.idx===2?'#00f5ffee':cfg.idx===1?'#FFD700cc':'#ff444488');
+    fl.addColorStop(0.5, cfg.idx===2?'#ff00aa66':'transparent');
     fl.addColorStop(1,'transparent');
     ctx.fillStyle=fl;
-    ctx.beginPath(); ctx.ellipse(0,s*0.9,s*0.28,s*0.32,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,s*(cfg.idx===2?1.0:0.9),s*(cfg.idx===2?0.4:0.28),s*(cfg.idx===2?0.5:0.32),0,0,Math.PI*2); ctx.fill();
     ctx.restore();
   };
 
@@ -6004,7 +6031,7 @@ function PromptGameMech({ room, onDone }) {
     // spawn stars/gold
     const starI = setInterval(()=>{
       if(!s.running) return;
-      const gold = Math.random()<0.25;
+      const gold = Math.random()<(c.goldChance||0.25);
       s.objects.push({x:20+Math.random()*(W-40),y:-20,
         speed:c.starSpeedBase+Math.random()*1.5,
         type:gold?'gold':'star',wobble:(Math.random()-.5)*.3});
