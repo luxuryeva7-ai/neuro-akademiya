@@ -5883,6 +5883,348 @@ function PromptGalleryMech({room, onDone}) {
   );
 }
 
+// ═══ PROMPT GAME — 3 раунда ═══════════════════════════════
+
+function PromptGameMech({ room, onDone }) {
+  const ROUNDS = [
+    {
+      idx: 0,
+      label: '⭐ Плохой промпт',
+      prompt: 'Напиши стих',
+      color: '#ff4444',
+      bgColor: '#1a0505',
+      duration: 12,
+      shipGlow: '#ff444466',
+      shipColor: '#888888',
+      starRate: 1600,
+      astRate: 550,
+      starSpeedBase: 1.5,
+      comment: 'Корабль едва двигался — Нейро не понял задачу! Без деталей — получается ерунда 😅',
+    },
+    {
+      idx: 1,
+      label: '⭐⭐ Средний промпт',
+      prompt: 'Напиши короткое стихотворение про космос',
+      color: '#FFD700',
+      bgColor: '#1a1505',
+      duration: 15,
+      shipGlow: '#FFD70066',
+      shipColor: '#FFD700',
+      starRate: 950,
+      astRate: 900,
+      starSpeedBase: 2.2,
+      comment: 'Намного лучше! Но без настроения и аудитории — нет изюминки 🤔',
+    },
+    {
+      idx: 2,
+      label: '⭐⭐⭐ Отличный промпт!',
+      prompt: 'Напиши стих про одинокий корабль, который ищет друга среди звёзд. 4 строки, простые слова, для ребёнка 10 лет',
+      color: '#44cc88',
+      bgColor: '#051a05',
+      duration: 20,
+      shipGlow: '#00f5ffaa',
+      shipColor: '#00f5ff',
+      starRate: 480,
+      astRate: 1800,
+      starSpeedBase: 3.0,
+      comment: 'НЕВЕРОЯТНО! Детали + настроение + аудитория = ЧУДО! Вот сила промпта! 🚀🌟',
+    },
+  ];
+
+  const [phase, setPhase]       = React.useState('brief'); // brief|playing|done|final
+  const [round, setRound]       = React.useState(0);
+  const [dispScore, setDispScore] = React.useState(0);
+  const [dispLives, setDispLives] = React.useState(3);
+  const [dispTime,  setDispTime]  = React.useState(12);
+  const [scores,    setScores]    = React.useState([0,0,0]);
+  const scoresRef   = React.useRef([0,0,0]);
+  const canvasRef   = React.useRef(null);
+  const stRef       = React.useRef({score:0,lives:3,shipX:160,objects:[],running:false,time:0,bgStars:[]});
+  const cleanupRef  = React.useRef(null);
+
+  const cfg = ROUNDS[round];
+
+  // ── draw Neyro ship (color per round) ─────────────────────
+  const drawShip = (ctx, x, y, cfg) => {
+    const s = 20;
+    ctx.save();
+    ctx.translate(x, y);
+    // glow
+    const g = ctx.createRadialGradient(0,0,0,0,0,s*1.4);
+    g.addColorStop(0, cfg.shipGlow);
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0,0,s*1.4,0,Math.PI*2); ctx.fill();
+    // body
+    ctx.fillStyle = cfg.shipColor;
+    ctx.beginPath();
+    ctx.moveTo(0,-s); ctx.lineTo(s*0.45,-s*0.3); ctx.lineTo(s*0.45,s*0.5);
+    ctx.lineTo(0,s*0.75); ctx.lineTo(-s*0.45,s*0.5); ctx.lineTo(-s*0.45,-s*0.3);
+    ctx.closePath(); ctx.fill();
+    // wings
+    ctx.fillStyle = cfg.idx===2 ? '#ff00aa' : cfg.idx===1 ? '#cc8800' : '#882222';
+    ctx.beginPath(); ctx.moveTo(s*0.4,s*0.1); ctx.lineTo(s*0.9,s*0.7); ctx.lineTo(s*0.4,s*0.5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-s*0.4,s*0.1); ctx.lineTo(-s*0.9,s*0.7); ctx.lineTo(-s*0.4,s*0.5); ctx.closePath(); ctx.fill();
+    // cockpit
+    ctx.fillStyle = '#ffffff33';
+    ctx.beginPath(); ctx.ellipse(0,-s*0.3,s*0.2,s*0.25,0,0,Math.PI*2); ctx.fill();
+    // engine flame
+    const fl = ctx.createRadialGradient(0,s*0.8,0,0,s*0.8,s*0.5);
+    fl.addColorStop(0, cfg.idx===2?'#00f5ffcc':cfg.idx===1?'#FFD700cc':'#ff444488');
+    fl.addColorStop(1,'transparent');
+    ctx.fillStyle=fl;
+    ctx.beginPath(); ctx.ellipse(0,s*0.9,s*0.28,s*0.32,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  };
+
+  // ── start game loop ────────────────────────────────────────
+  const startGame = React.useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const W = canvas.width, H = canvas.height;
+    const s = stRef.current;
+    const c = ROUNDS[round];
+    s.score=0; s.lives=3; s.shipX=W/2; s.objects=[];
+    s.running=true; s.time=c.duration;
+    s.bgStars=Array.from({length:45},()=>({
+      x:Math.random()*W,y:Math.random()*H,
+      r:Math.random()*1.5+0.3,op:Math.random()*0.6+0.2,
+      speed:0.1+Math.random()*0.3
+    }));
+    setDispScore(0); setDispLives(3); setDispTime(c.duration);
+    const ctx = canvas.getContext('2d');
+
+    // timer
+    const timerI = setInterval(()=>{
+      s.time--;
+      setDispTime(s.time);
+      if(s.time<=0){ finish(); }
+    },1000);
+
+    // spawn stars/gold
+    const starI = setInterval(()=>{
+      if(!s.running) return;
+      const gold = Math.random()<0.25;
+      s.objects.push({x:20+Math.random()*(W-40),y:-20,
+        speed:c.starSpeedBase+Math.random()*1.5,
+        type:gold?'gold':'star',wobble:(Math.random()-.5)*.3});
+    }, c.starRate);
+
+    // spawn asteroids
+    const astI = setInterval(()=>{
+      if(!s.running) return;
+      s.objects.push({x:20+Math.random()*(W-40),y:-20,
+        speed:2.5+Math.random()*2.5,type:'asteroid',wobble:(Math.random()-.5)*.5});
+    }, c.astRate);
+
+    // touch/mouse
+    const onT = e=>{
+      e.preventDefault();
+      const rect=canvas.getBoundingClientRect();
+      const t=e.touches?(e.touches[0]||e.changedTouches[0]):e;
+      s.shipX=Math.max(26,Math.min(W-26,(t.clientX-rect.left)*(W/rect.width)));
+    };
+    canvas.addEventListener('touchmove',onT,{passive:false});
+    canvas.addEventListener('touchstart',onT,{passive:false});
+    canvas.addEventListener('mousemove',onT);
+
+    const finish = ()=>{
+      if(!s.running) return;
+      s.running=false;
+      clearInterval(timerI); clearInterval(starI); clearInterval(astI);
+      canvas.removeEventListener('touchmove',onT);
+      canvas.removeEventListener('touchstart',onT);
+      canvas.removeEventListener('mousemove',onT);
+      const ns=[...scoresRef.current]; ns[round]=s.score; scoresRef.current=ns; setScores([...ns]);
+      setDispScore(s.score);
+      if(round>=2){ setPhase('final'); } else { setPhase('done'); }
+    };
+
+    let raf;
+    const loop=()=>{
+      if(!s.running) return;
+      // bg
+      ctx.fillStyle='#050510'; ctx.fillRect(0,0,W,H);
+      // bg stars scroll
+      s.bgStars.forEach(bs=>{
+        bs.y+=bs.speed; if(bs.y>H)bs.y=-5;
+        ctx.fillStyle=`rgba(255,255,255,${bs.op})`;
+        ctx.beginPath(); ctx.arc(bs.x,bs.y,bs.r,0,Math.PI*2); ctx.fill();
+      });
+      // objects
+      const shipY=H-44;
+      s.objects=s.objects.filter(obj=>{
+        obj.y+=obj.speed; obj.x+=obj.wobble; obj.wobble+=(Math.random()-.5)*.08;
+        obj.wobble=Math.max(-1,Math.min(1,obj.wobble));
+        // collision
+        if(obj.y>shipY-20&&obj.y<shipY+20&&Math.abs(obj.x-s.shipX)<22){
+          if(obj.type==='asteroid'){
+            s.lives--; setDispLives(s.lives);
+            if(s.lives<=0){finish();}
+          } else {
+            s.score+=(obj.type==='gold'?3:1); setDispScore(s.score);
+          }
+          return false;
+        }
+        if(obj.y>H+20) return false;
+        ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(obj.type==='star'?'⭐':obj.type==='gold'?'💫':'☄️',obj.x,obj.y);
+        return true;
+      });
+      // ship
+      drawShip(ctx,s.shipX,shipY,c);
+      // HUD
+      ctx.fillStyle='rgba(0,0,0,.65)'; ctx.fillRect(0,0,W,30);
+      ctx.font='bold 14px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillStyle=c.color; ctx.fillText('★ '+s.score,8,15);
+      ctx.textAlign='center'; ctx.fillStyle=s.time<=5?'#ff4444':'#fff';
+      ctx.fillText('⏱ '+s.time+'с',W/2,15);
+      ctx.textAlign='right'; ctx.fillStyle='#ff6688';
+      ctx.fillText('♥'.repeat(Math.max(0,s.lives))+'♡'.repeat(Math.max(0,3-s.lives)),W-8,15);
+      // round indicator strip at top
+      ctx.fillStyle=c.color+'44'; ctx.fillRect(0,30,W*((c.duration-s.time)/c.duration),3);
+      raf=requestAnimationFrame(loop);
+    };
+    loop();
+    cleanupRef.current=()=>{
+      s.running=false;
+      clearInterval(timerI); clearInterval(starI); clearInterval(astI);
+      if(raf)cancelAnimationFrame(raf);
+      canvas.removeEventListener('touchmove',onT);
+      canvas.removeEventListener('touchstart',onT);
+      canvas.removeEventListener('mousemove',onT);
+    };
+  },[round]);
+
+  React.useEffect(()=>{
+    if(phase==='playing') startGame();
+    return ()=>{ if(cleanupRef.current){cleanupRef.current(); cleanupRef.current=null;} };
+  },[phase,round]);
+
+  const totalScore = scoresRef.current.reduce((a,b)=>a+b,0);
+
+  // ── BRIEF screen (show prompt before round) ───────────────
+  if(phase==='brief') return /*#__PURE__*/React.createElement('div',{
+    style:{padding:'20px 16px',display:'flex',flexDirection:'column',gap:16,alignItems:'center',animation:'fadeIn .4s ease-out'}
+  },
+    // round counter
+    /*#__PURE__*/React.createElement('div',{style:{display:'flex',gap:8}},
+      ROUNDS.map((r,i)=>/*#__PURE__*/React.createElement('div',{key:i,style:{
+        width:32,height:6,borderRadius:3,
+        background:i<round?'#44cc88':i===round?cfg.color:'#1A2D48',transition:'background .3s'
+      }}))
+    ),
+    /*#__PURE__*/React.createElement('div',{style:{fontSize:18,fontWeight:900,color:cfg.color,textAlign:'center'}},
+      'Раунд '+(round+1)+' / 3'
+    ),
+    /*#__PURE__*/React.createElement('div',{style:{
+      background:'#0D1926',border:'2px solid '+cfg.color+'44',borderRadius:16,padding:'16px 18px',width:'100%'
+    }},
+      /*#__PURE__*/React.createElement('div',{style:{fontSize:12,color:'#8899AA',marginBottom:8,fontWeight:700}},
+        cfg.label+' — твой промпт:'
+      ),
+      /*#__PURE__*/React.createElement('div',{style:{fontSize:15,color:'#CCDDEE',lineHeight:1.5,fontStyle:'italic'}},
+        '"'+cfg.prompt+'"'
+      )
+    ),
+    /*#__PURE__*/React.createElement('div',{style:{
+      background:'#060C1A',borderRadius:12,padding:'10px 14px',width:'100%',fontSize:13,color:'#8899AA',lineHeight:1.4,textAlign:'center'
+    }},
+      '⭐ +1 очко   💫 +3 очка   ☄️ теряешь жизнь\nДвигай пальцем по экрану!'
+    ),
+    /*#__PURE__*/React.createElement('button',{
+      onClick:()=>setPhase('playing'),
+      style:{
+        background:cfg.color,color:'#050510',fontWeight:900,fontSize:18,
+        padding:'15px 50px',borderRadius:16,border:'none',cursor:'pointer',
+        boxShadow:'0 0 24px '+cfg.color+'88',letterSpacing:1
+      }
+    },'▶ ИГРАТЬ!')
+  );
+
+  // ── PLAYING screen (canvas) ────────────────────────────────
+  if(phase==='playing') return /*#__PURE__*/React.createElement('div',{
+    style:{borderRadius:16,overflow:'hidden',touchAction:'none',boxShadow:'0 0 24px '+cfg.color+'33'}
+  },
+    /*#__PURE__*/React.createElement('canvas',{
+      ref:canvasRef,width:320,height:450,
+      style:{display:'block',width:'100%',background:'#050510',borderRadius:16}
+    })
+  );
+
+  // ── DONE screen (end of round 1 or 2) ────────────────────
+  if(phase==='done') return /*#__PURE__*/React.createElement('div',{
+    style:{padding:'20px 16px',display:'flex',flexDirection:'column',gap:14,alignItems:'center',animation:'fadeIn .4s ease-out'}
+  },
+    /*#__PURE__*/React.createElement('div',{style:{fontSize:32}},dispScore>=10?'🔥':dispScore>=5?'⭐':'😅'),
+    /*#__PURE__*/React.createElement('div',{style:{fontSize:22,fontWeight:900,color:cfg.color}},
+      '★ '+dispScore+' звёзд!'
+    ),
+    /*#__PURE__*/React.createElement('div',{style:{
+      background:'#060C1A',border:'1px solid '+cfg.color+'33',borderRadius:12,
+      padding:'12px 16px',fontSize:13,color:'#CCDDEE',lineHeight:1.5,textAlign:'center',width:'100%'
+    }}, cfg.comment),
+    /*#__PURE__*/React.createElement('div',{style:{
+      background:'#0D1926',borderRadius:12,padding:'12px 16px',width:'100%',textAlign:'center'
+    }},
+      /*#__PURE__*/React.createElement('div',{style:{fontSize:12,color:'#8899AA',marginBottom:6}},'Следующий промпт:'),
+      /*#__PURE__*/React.createElement('div',{style:{fontSize:13,color:ROUNDS[round+1].color,fontWeight:700}},
+        ROUNDS[round+1].label
+      ),
+      /*#__PURE__*/React.createElement('div',{style:{fontSize:12,color:'#CCDDEE',fontStyle:'italic',marginTop:4}},
+        '"'+ROUNDS[round+1].prompt.slice(0,60)+(ROUNDS[round+1].prompt.length>60?'…':'')+'"'
+      )
+    ),
+    /*#__PURE__*/React.createElement('button',{
+      onClick:()=>{ setRound(r=>r+1); setPhase('brief'); },
+      style:{
+        background:ROUNDS[round+1].color,color:'#050510',fontWeight:900,fontSize:16,
+        padding:'14px 40px',borderRadius:14,border:'none',cursor:'pointer',
+        boxShadow:'0 0 20px '+ROUNDS[round+1].color+'88'
+      }
+    },'⬆️ Улучшить промпт!')
+  );
+
+  // ── FINAL screen ──────────────────────────────────────────
+  if(phase==='final') {
+    const total=scoresRef.current.reduce((a,b)=>a+b,0);
+    return /*#__PURE__*/React.createElement('div',{
+      style:{padding:'24px 16px',display:'flex',flexDirection:'column',gap:14,alignItems:'center',animation:'fadeIn .4s ease-out'}
+    },
+      /*#__PURE__*/React.createElement('div',{style:{fontSize:40}},total>=30?'🏆':total>=15?'🥈':'🥉'),
+      /*#__PURE__*/React.createElement('div',{style:{fontSize:22,fontWeight:900,color:'#44cc88'}},
+        'Итог: ★ '+total+' звёзд!'
+      ),
+      /*#__PURE__*/React.createElement('div',{style:{width:'100%',display:'flex',flexDirection:'column',gap:8}},
+        ROUNDS.map((r,i)=>/*#__PURE__*/React.createElement('div',{key:i,style:{
+          display:'flex',justifyContent:'space-between',alignItems:'center',
+          background:'#0D1926',borderRadius:10,padding:'10px 14px',
+          border:'1px solid '+r.color+'33'
+        }},
+          /*#__PURE__*/React.createElement('div',{style:{fontSize:13,color:r.color,fontWeight:700}},r.label),
+          /*#__PURE__*/React.createElement('div',{style:{fontSize:15,fontWeight:900,color:'#FFD700'}},'★ '+scoresRef.current[i])
+        ))
+      ),
+      /*#__PURE__*/React.createElement('div',{style:{
+        background:'#051a05',border:'2px solid #44cc8844',borderRadius:12,
+        padding:'12px 16px',fontSize:13,color:'#CCDDEE',lineHeight:1.5,textAlign:'center',width:'100%'
+      }},
+        '💡 Чувствуешь разницу? Лучший промпт = лучший результат!\nТак работает ИИ — он делает ровно то, что ты попросил. Попроси точнее — получишь чудо! ✨'
+      ),
+      /*#__PURE__*/React.createElement('button',{
+        onClick:()=>onDone(total*3+50,100),
+        style:{
+          background:'#44cc88',color:'#050510',fontWeight:900,fontSize:16,
+          padding:'14px 40px',borderRadius:14,border:'none',cursor:'pointer',
+          boxShadow:'0 0 20px #44cc8888'
+        }
+      },'🎉 Отлично! Финиш!')
+    );
+  }
+
+  return null;
+}
+
 // ═══ MECHANIC 5: FAKE DETECTOR ═══════════════════
 function FakeDetectorMech({ room, onDone }) {
   const SIGNALS = [
@@ -7148,12 +7490,8 @@ const MODULES = [{
   },
   rooms: [{
     name: "Сила промпта",
-    type: "prompt_gallery",
-    desc: "Смотри как меняется результат — от плохого промпта к отличному!"
-  }, {
-    name: "Поймай звезду!",
-    type: "space_game",
-    desc: "Управляй кораблём — собирай звёзды, уворачивайся от астероидов!"
+    type: "prompt_game",
+    desc: "3 раунда — от слабого промпта к сильному! Лучший промпт = лучший корабль!"
   }]
 }];
 
@@ -7301,7 +7639,8 @@ function App() {
       mission: MissionMech,
       fake_detector: FakeDetectorMech,
       autopilot: AutopilotMech,
-      space_game: SpaceGameMech
+      space_game: SpaceGameMech,
+      prompt_game: PromptGameMech
     };
     const Comp = map[room.type];
     return Comp ? /*#__PURE__*/React.createElement(Comp, {
