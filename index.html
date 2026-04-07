@@ -5478,717 +5478,410 @@ function PromptLabMech({
 
 // ═══ MECHANIC: PROMPT GALLERY ══════════════════════════════════
 
-function CatchStarGame() {
-  const canvasRef = useRef(null);
+// Нейро-корабль для canvas (рисуем путями)
+function drawNeyroShip(ctx, x, y, size) {
+  const s = size || 22;
+  ctx.save();
+  ctx.translate(x, y);
+  // Корпус — вытянутый шестиугольник
+  ctx.fillStyle = '#00f5ff';
+  ctx.beginPath();
+  ctx.moveTo(0, -s);
+  ctx.lineTo(s*0.45, -s*0.3);
+  ctx.lineTo(s*0.45, s*0.5);
+  ctx.lineTo(0, s*0.8);
+  ctx.lineTo(-s*0.45, s*0.5);
+  ctx.lineTo(-s*0.45, -s*0.3);
+  ctx.closePath();
+  ctx.fill();
+  // Крылья
+  ctx.fillStyle = '#ff00aa';
+  ctx.beginPath();
+  ctx.moveTo(s*0.4, s*0.1);
+  ctx.lineTo(s*0.9, s*0.7);
+  ctx.lineTo(s*0.4, s*0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-s*0.4, s*0.1);
+  ctx.lineTo(-s*0.9, s*0.7);
+  ctx.lineTo(-s*0.4, s*0.5);
+  ctx.closePath();
+  ctx.fill();
+  // Кабина
+  ctx.fillStyle = '#ffffff44';
+  ctx.beginPath();
+  ctx.ellipse(0, -s*0.35, s*0.22, s*0.28, 0, 0, Math.PI*2);
+  ctx.fill();
+  // Двигатель — свечение
+  const grd = ctx.createRadialGradient(0, s*0.8, 0, 0, s*0.8, s*0.5);
+  grd.addColorStop(0, '#ff00aa99');
+  grd.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.ellipse(0, s*0.9, s*0.3, s*0.35, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function SpaceGameMech({ room, onDone }) {
+  const canvasRef = React.useRef(null);
   const [gameScore, setGameScore] = React.useState(0);
+  const [lives, setLives] = React.useState(3);
+  const [timeLeft, setTimeLeft] = React.useState(30);
   const [gameOver, setGameOver] = React.useState(false);
-  const stateRef = useRef({score:0,shipX:120,stars:[],running:true,elapsed:0});
-  useEffect(() => {
+  const [started, setStarted] = React.useState(false);
+  const stRef = React.useRef({
+    score:0, lives:3, shipX:0, objects:[], running:false,
+    elapsed:0, bgStars:[], spawnRate:800, time:30
+  });
+
+  const startGame = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
-    const s = stateRef.current;
-    s.shipX = W/2; s.running = true; s.score = 0; s.elapsed = 0; s.stars = [];
+    const s = stRef.current;
+    // init
+    s.score=0; s.lives=3; s.shipX=W/2; s.objects=[]; s.running=true;
+    s.elapsed=0; s.time=30; s.spawnRate=800;
+    // background stars
+    s.bgStars = Array.from({length:50}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      r: Math.random()*1.5+0.3, op: Math.random()*0.6+0.2
+    }));
+    setGameScore(0); setLives(3); setTimeLeft(30); setGameOver(false); setStarted(true);
+    const ctx = canvas.getContext('2d');
+
+    // timer
     const timerI = setInterval(() => {
-      s.elapsed++;
-      if (s.elapsed >= 15) { clearInterval(timerI); clearInterval(spawnI); s.running = false; setGameOver(true); }
+      s.time--;
+      setTimeLeft(s.time);
+      // speed up every 5 seconds
+      if (s.time % 5 === 0) s.spawnRate = Math.max(300, s.spawnRate - 80);
+      if (s.time <= 0) {
+        s.running = false;
+        clearInterval(timerI);
+        clearInterval(spawnI);
+        setGameOver(true);
+        onDone(Math.max(0, s.score) * 5, 100);
+      }
     }, 1000);
-    const spawnI = setInterval(() => {
+
+    // spawn objects
+    const spawnObj = () => {
       if (!s.running) return;
-      s.stars.push({x:20+Math.random()*(W-40),y:0,speed:1.5+Math.random()*2,golden:Math.random()>0.35,r:9});
-    }, 900);
-    const onT = e => { e.preventDefault(); const rect=canvas.getBoundingClientRect(); const t=e.touches[0]||e.changedTouches[0]; s.shipX=Math.max(18,Math.min(W-18,(t.clientX-rect.left)*(W/rect.width))); };
-    const onC = e => { const rect=canvas.getBoundingClientRect(); s.shipX=Math.max(18,Math.min(W-18,(e.clientX-rect.left)*(W/rect.width))); };
-    canvas.addEventListener('touchmove',onT,{passive:false});
-    canvas.addEventListener('touchstart',onT,{passive:false});
-    canvas.addEventListener('click',onC);
+      const rand = Math.random();
+      // 50% star, 25% golden, 25% asteroid
+      const type = rand < 0.5 ? 'star' : rand < 0.75 ? 'gold' : 'asteroid';
+      s.objects.push({
+        x: 20 + Math.random()*(W-40), y: -20,
+        speed: 2 + Math.random()*3 + (30-s.time)*0.08,
+        type,
+        wobble: (Math.random()-0.5)*0.5
+      });
+    };
+    spawnObj();
+    let spawnI = setInterval(spawnObj, s.spawnRate);
+    // re-schedule spawn to respect changing rate
+    const respawnCheck = setInterval(() => {
+      clearInterval(spawnI);
+      spawnI = setInterval(spawnObj, s.spawnRate);
+    }, 2000);
+
+    // touch / mouse
+    const onT = e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const t = e.touches ? (e.touches[0]||e.changedTouches[0]) : e;
+      s.shipX = Math.max(26, Math.min(W-26, (t.clientX-rect.left)*(W/rect.width)));
+    };
+    canvas.addEventListener('touchmove', onT, {passive:false});
+    canvas.addEventListener('touchstart', onT, {passive:false});
+    canvas.addEventListener('mousemove', onT);
+
+    // render loop
     let raf;
     const loop = () => {
       if (!s.running) return;
-      ctx.fillStyle='#050510'; ctx.fillRect(0,0,W,H);
-      ctx.fillStyle='#00f5ff'; ctx.beginPath(); ctx.moveTo(s.shipX,H-14); ctx.lineTo(s.shipX-14,H-2); ctx.lineTo(s.shipX+14,H-2); ctx.closePath(); ctx.fill();
-      ctx.fillStyle='#ffffff44'; ctx.fillRect(s.shipX-3,H-12,6,5);
-      s.stars = s.stars.filter(st => {
-        st.y += st.speed;
-        if (st.y>H-26 && st.y<H-2 && Math.abs(st.x-s.shipX)<20) { s.score+=st.golden?1:-1; setGameScore(s.score); return false; }
-        if (st.y>H+10) return false;
-        ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(st.golden?'⭐':'💥',st.x,st.y); return true;
+      // bg
+      ctx.fillStyle = '#050510';
+      ctx.fillRect(0, 0, W, H);
+      // bg stars twinkle
+      s.bgStars.forEach(bs => {
+        ctx.fillStyle = `rgba(255,255,255,${bs.op})`;
+        ctx.beginPath();
+        ctx.arc(bs.x, bs.y, bs.r, 0, Math.PI*2);
+        ctx.fill();
+        bs.op += (Math.random()-0.5)*0.05;
+        bs.op = Math.max(0.1, Math.min(0.9, bs.op));
       });
-      ctx.fillStyle='#ffffffcc'; ctx.font='11px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
-      ctx.fillText('Очки: '+s.score,6,6);
-      ctx.textAlign='right'; ctx.fillText('⏱ '+(15-s.elapsed)+'с',W-6,6);
+      // objects
+      s.objects = s.objects.filter(obj => {
+        obj.y += obj.speed;
+        obj.x += obj.wobble;
+        obj.wobble += (Math.random()-0.5)*0.1;
+        obj.wobble = Math.max(-1, Math.min(1, obj.wobble));
+        // collision
+        const shipY = H - 36;
+        if (obj.y > shipY - 18 && obj.y < shipY + 18 && Math.abs(obj.x - s.shipX) < 22) {
+          if (obj.type === 'asteroid') {
+            s.lives--;
+            setLives(s.lives);
+            if (s.lives <= 0) { s.running=false; clearInterval(timerI); clearInterval(spawnI); clearInterval(respawnCheck); setGameOver(true); onDone(Math.max(0,s.score)*5, 100); }
+          } else {
+            const pts = obj.type==='gold' ? 3 : 1;
+            s.score += pts;
+            setGameScore(s.score);
+          }
+          return false;
+        }
+        if (obj.y > H + 20) return false;
+        // draw
+        ctx.font = obj.type==='asteroid' ? '22px sans-serif' : '20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(obj.type==='star'?'⭐':obj.type==='gold'?'💫':'☄️', obj.x, obj.y);
+        return true;
+      });
+      // ship
+      drawNeyroShip(ctx, s.shipX, H-36, 20);
+      // HUD
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, 28);
+      ctx.fillStyle = '#00f5ff';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('★ ' + s.score, 8, 14);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = s.time<=10 ? '#ff4444' : '#ffffff';
+      ctx.fillText('⏱ ' + s.time + 'с', W/2, 14);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#ff6688';
+      ctx.fillText('♥'.repeat(Math.max(0,s.lives)) + '♡'.repeat(Math.max(0,3-s.lives)), W-8, 14);
       raf = requestAnimationFrame(loop);
     };
     loop();
-    return () => { s.running=false; clearInterval(timerI); clearInterval(spawnI); if(raf)cancelAnimationFrame(raf); canvas.removeEventListener('touchmove',onT); canvas.removeEventListener('touchstart',onT); canvas.removeEventListener('click',onC); };
-  }, []);
-  if (gameOver) return /*#__PURE__*/React.createElement("div",{style:{textAlign:'center',padding:20,background:'#0a1020',borderRadius:12}},
-    /*#__PURE__*/React.createElement("div",{style:{fontSize:28,marginBottom:8}},'🏆'),
-    /*#__PURE__*/React.createElement("div",{style:{fontSize:22,color:C.gold,fontWeight:700}},'Счёт: '+gameScore),
-    /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.dim,marginTop:6}},'Вот что значит конкретный промпт!')
+
+    return () => {
+      s.running = false;
+      clearInterval(timerI); clearInterval(spawnI); clearInterval(respawnCheck);
+      if (raf) cancelAnimationFrame(raf);
+      canvas.removeEventListener('touchmove', onT);
+      canvas.removeEventListener('touchstart', onT);
+      canvas.removeEventListener('mousemove', onT);
+    };
+  };
+
+  React.useEffect(() => {
+    if (started) return startGame();
+  }, [started]);
+
+  if (!started) return /*#__PURE__*/React.createElement("div", {
+    style:{padding:24,display:'flex',flexDirection:'column',alignItems:'center',gap:16,textAlign:'center'}
+  },
+    /*#__PURE__*/React.createElement("div", {style:{fontSize:36}}, '🚀'),
+    /*#__PURE__*/React.createElement("div", {style:{fontSize:18,fontWeight:800,color:'#00f5ff'}}, 'Поймай звезду!'),
+    /*#__PURE__*/React.createElement("div", {style:{fontSize:13,color:'#8899AA',lineHeight:1.5}},
+      '⭐ обычная звезда +1 очко\n💫 золотая звезда +3 очка\n☄️ астероид — теряешь жизнь'
+    ),
+    /*#__PURE__*/React.createElement("div", {style:{fontSize:12,color:'#8899AA'}}, 'Двигай пальцем по экрану'),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: () => setStarted(true),
+      style:{background:'#00f5ff',color:'#050510',fontWeight:900,fontSize:16,padding:'14px 40px',borderRadius:16,border:'none',cursor:'pointer',boxShadow:'0 0 20px #00f5ff88'}
+    }, '▶ СТАРТ')
   );
-  return /*#__PURE__*/React.createElement("div",{style:{borderRadius:12,overflow:'hidden',touchAction:'none'}},
-    /*#__PURE__*/React.createElement("canvas",{ref:canvasRef,width:280,height:200,style:{display:'block',width:'100%',background:'#050510',borderRadius:12}})
+
+  if (gameOver) return /*#__PURE__*/React.createElement("div", {
+    style:{padding:24,textAlign:'center',display:'flex',flexDirection:'column',gap:12,alignItems:'center'}
+  },
+    /*#__PURE__*/React.createElement("div", {style:{fontSize:40}}, gameScore >= 20 ? '🏆' : gameScore >= 10 ? '🥈' : '🥉'),
+    /*#__PURE__*/React.createElement("div", {style:{fontSize:22,fontWeight:900,color:'#FFD700'}}, '★ ' + gameScore + ' звёзд!'),
+    /*#__PURE__*/React.createElement("div", {style:{fontSize:13,color:'#8899AA',lineHeight:1.5}},
+      gameScore >= 20 ? 'Невероятно! Ты настоящий пилот Нейро!' :
+      gameScore >= 10 ? 'Отличный результат! Ещё немного — и станешь асом!' :
+      'Хорошее начало! Тренируйся — станешь лучше!'
+    ),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: () => setStarted(false),
+      style:{background:'#1A2D48',color:'#00f5ff',fontWeight:800,fontSize:14,padding:'12px 32px',borderRadius:12,border:'2px solid #00f5ff44',cursor:'pointer',marginTop:8}
+    }, '🔄 Ещё раз')
+  );
+
+  return /*#__PURE__*/React.createElement("div", {style:{borderRadius:16,overflow:'hidden',touchAction:'none',boxShadow:'0 0 24px #00f5ff22'}},
+    /*#__PURE__*/React.createElement("canvas", {
+      ref:canvasRef, width:320, height:420,
+      style:{display:'block',width:'100%',background:'#050510',borderRadius:16}
+    })
   );
 }
 
-function TikTokMock() {
-  const [step, setStep] = React.useState(0);
-  const facts = [
-    {e:'🌍',t:'Земля летит вокруг Солнца со скоростью 107\u00a0000\u00a0км/ч'},
-    {e:'🪐',t:'В Сатурне поместились бы 764 Земли'},
-    {e:'⭐',t:'Свет от Солнца до Земли идёт 8 минут'},
-    {e:'🌌',t:'Во Вселенной больше звёзд чем песчинок на всех пляжах'},
-  ];
-  const showCta = step >= facts.length;
-  useEffect(() => {
-    if (showCta) return;
-    const t = setTimeout(() => setStep(s => s+1), 3000);
-    return () => clearTimeout(t);
-  }, [step, showCta]);
-  const pct = showCta ? 100 : Math.round((step/facts.length)*100);
-  return /*#__PURE__*/React.createElement("div",{style:{position:'relative',background:'#000',borderRadius:16,overflow:'hidden',width:140,margin:'0 auto',height:240,border:'2px solid #333',boxShadow:'0 0 16px #00f5ff44'}},
-    /*#__PURE__*/React.createElement("style",null,'@keyframes warpS{0%{transform:scale(0.1);opacity:.7}100%{transform:scale(3);opacity:0}}@keyframes factIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes ctaGl{0%,100%{text-shadow:0 0 8px #00f5ff}50%{text-shadow:0 0 24px #00f5ff}}'),
-    ...[...Array(16)].map((_,i)=>/*#__PURE__*/React.createElement("div",{key:'ws'+i,style:{position:'absolute',left:`${10+(i*5.7)%80}%`,top:`${10+(i*7.3)%80}%`,width:2,height:2,background:'#fff',borderRadius:'50%',animation:`warpS ${0.8+i*0.25}s ${i*0.12}s infinite`,transformOrigin:'center',pointerEvents:'none'}})),
-    !showCta && /*#__PURE__*/React.createElement("div",{key:'f'+step,style:{position:'absolute',bottom:44,left:0,right:0,padding:'6px 10px',background:'rgba(0,0,0,.78)',animation:'factIn 0.4s both'}},
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:18,textAlign:'center'}},facts[step]&&facts[step].e),
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:9,color:'#eee',textAlign:'center',lineHeight:1.4,marginTop:3}},facts[step]&&facts[step].t)
-    ),
-    showCta && /*#__PURE__*/React.createElement("div",{style:{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',textAlign:'center'}},
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:24}},'🚀'),
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:13,fontWeight:700,color:'#fff',animation:'ctaGl 1.5s infinite'}},'ПОДПИШИСЬ!')
-    ),
-    /*#__PURE__*/React.createElement("div",{style:{position:'absolute',right:5,bottom:44,display:'flex',flexDirection:'column',gap:6,alignItems:'center'}},
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:14}},'❤️'),
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:14}},'💬'),
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:14}},'↗️')
-    ),
-    /*#__PURE__*/React.createElement("div",{style:{position:'absolute',bottom:0,left:0,right:0,height:3,background:'#222'}},
-      /*#__PURE__*/React.createElement("div",{style:{height:'100%',background:'#00f5ff',width:pct+'%',transition:'width 3s linear'}})
-    )
-  );
-}
-
-function PromptGalleryMech({room,onDone}) {
-  const [taskIdx, setTaskIdx] = React.useState(0);
-  const [selPrompt, setSelPrompt] = React.useState(null);
-  const [generating, setGenerating] = React.useState(false);
-  const [showResult, setShowResult] = React.useState(false);
-  const [firstPick, setFirstPick] = React.useState(null);
-  const [viewSet, setViewSet] = React.useState(new Set());
-  const [totalScore, setTotalScore] = React.useState(0);
-
+function PromptGalleryMech({room, onDone}) {
   const TASKS = [{
-    desc:'Нейро хочет написать стих про космос для друга',
-    prompts:[
-      {stars:1,text:'Напиши стих',comment:'Я даже не понял про что писать! Без деталей получается ерунда 😅'},
-      {stars:2,text:'Напиши короткое стихотворение про космос',comment:'Уже лучше! Но это мог написать кто угодно. Нет изюминки.'},
-      {stars:3,text:'Напиши стих про одинокий корабль, который ищет друга среди звёзд. 4 строки, простые слова, грустно-тёплое настроение. Для ребёнка 10 лет',comment:'ВОТ ЭТО ДА! Настроение + аудитория + длина + тема = я точно знал что писать. Чувствуешь разницу?'},
+    desc: 'Нейро хочет написать стих про космос для друга 🌟',
+    prompts: [
+      {stars:1, text:'Напиши стих', emoji:'😅',
+       comment:'Я даже не понял про что писать! Без деталей — получается ерунда.',
+       result:'Розы красные, фиалки синие...\n(скучно, шаблонно, не про космос)'},
+      {stars:2, text:'Напиши короткое стихотворение про космос', emoji:'🤔',
+       comment:'Уже лучше! Но без настроения и аудитории — нет изюминки.',
+       result:'В бескрайнем космосе летим,\nСреди далёких звёзд и тьмы...\n(нормально, но без души)'},
+      {stars:3, text:'Напиши стих про одинокий корабль, который ищет друга среди звёзд. 4 строки, простые слова, грустно-тёплое настроение. Для ребёнка 10 лет', emoji:'🤩',
+       comment:'ВОТ ЭТО ДА! Настроение + аудитория + длина + тема = чудо!',
+       result:'Лечу один среди планет, 🌟\nМой двигатель — как тихий свет. ✨\nНо верю: где-то в тишине 💫\nЕсть тот, кто ждёт меня. 🚀'},
     ]
   },{
-    desc:'Нейро хочет сделать игру для скучающего пилота',
-    prompts:[
-      {stars:1,text:'Сделай игру',comment:'Это разве игра? Даже кнопок нет! Без деталей я не знаю что делать.'},
-      {stars:2,text:'Сделай простую браузерную игру на JavaScript',comment:'Работает! Но «простая игра» — слишком широко. Я не знал что именно делать.'},
-      {stars:3,text:'Сделай игру «Поймай звезду»: звёзды падают сверху, корабль двигается и ловит их. ⭐+1, 💥−1. Таймер 15 секунд',comment:'НЕВЕРОЯТНО! Конкретика + правила + стиль = настоящая игра! Это сила хорошего промпта!'},
+    desc: 'Нейро хочет сделать игру для скучающего пилота 🎮',
+    prompts: [
+      {stars:1, text:'Сделай игру', emoji:'😐',
+       comment:'Это разве игра? Даже кнопок нет! Без деталей — непонятно что делать.',
+       result:'🎮 Угадай число от 1 до 10.\nЯ загадал 7.\n(просто текст, ничего интерактивного)'},
+      {stars:2, text:'Сделай простую браузерную игру на JavaScript', emoji:'🤷',
+       comment:'Работает! Но «простая игра» — слишком широко, непонятно что делать.',
+       result:'👆 Кликер:\n[0] — нажми и счётчик вырастет\n(скучновато...)'},
+      {stars:3, text:'Сделай игру «Поймай звезду»: звёзды падают сверху, корабль двигается стрелками, ⭐+1, 💥−1. Таймер 30 секунд, три жизни', emoji:'🔥',
+       comment:'НЕВЕРОЯТНО! Конкретика + правила + стиль = настоящая игра! Это сила промпта!',
+       result:'🚀 ПОЙМАЙ ЗВЕЗДУ!\n⭐⭐ падают сверху\nКорабль движется — ловишь звёзды\nТаймер: 30с | Жизни: ♥♥♥'},
     ]
   },{
-    desc:'Нейро хочет создать картинку для поста в соцсети про космос',
-    prompts:[
-      {stars:1,text:'Нарисуй картинку',comment:'Картинку ЧЕГО?! Я нарисовал первое что пришло в голову 😅'},
-      {stars:2,text:'Нарисуй красивую космическую картинку с планетами',comment:'Есть тема! Но без стиля и деталей — получился детский рисунок, а не арт.'},
-      {stars:3,text:'Создай атмосферную картинку: маленький светящийся корабль летит к огромной фиолетовой планете с кольцами. Туманность из розовых и голубых облаков, звёзды. Стиль: пиксель-арт, неоновые цвета',comment:'КОСМОС! Композиция + стиль + детали + атмосфера = я нарисовал НАСТОЯЩИЙ арт!'},
-    ]
-  },{
-    desc:'Нейро хочет объяснить младшему брату как работает интернет',
-    prompts:[
-      {stars:1,text:'Объясни интернет',comment:'Я напишу научный текст который никто не поймёт 😴'},
-      {stars:2,text:'Объясни как работает интернет простым языком',comment:'Проще, но «простой язык» — для кого? Для 6-летнего и 16-летнего — разный уровень!'},
-      {stars:3,text:'Объясни как работает интернет ребёнку 7 лет. Аналогия с почтой. Максимум 4 предложения. Добавь эмодзи',comment:'ИДЕАЛЬНО! Аналогия + возраст + формат + лимит = даже 7-летний поймёт!'},
-    ]
-  },{
-    desc:'Нейро хочет сделать короткое видео для TikTok про космос',
-    prompts:[
-      {stars:1,text:'Сделай видео',comment:'Видео про ЧТО? Какое? Для кого? Я даже не знаю с чего начать! 🫠'},
-      {stars:2,text:'Сделай короткое видео про космос для TikTok',comment:'Есть тема и площадка! Но нет динамики, истории, стиля.'},
-      {stars:3,text:'Сделай 15-секундный вертикальный TikTok: камера летит сквозь космос, каждые 3 секунды — факт про космос, финал: «Подпишись 🚀»',comment:'ВИРУСНЫЙ КОНТЕНТ! Хронометраж + формат + стиль + CTA = профессиональный ролик!'},
+    desc: 'Нейро хочет объяснить младшему брату как работает интернет 💡',
+    prompts: [
+      {stars:1, text:'Объясни интернет', emoji:'😴',
+       comment:'Я напишу научный текст который никто не поймёт.',
+       result:'Интернет — это глобальная децентрализованная сеть передачи данных на основе протокола TCP/IP...\n(слишком сложно!)'},
+      {stars:2, text:'Объясни как работает интернет простым языком', emoji:'🤔',
+       comment:'Проще, но «простой язык» — для кого? Для 6-летнего и 16-летнего это разные вещи!',
+       result:'Интернет — это много компьютеров, соединённых кабелями и беспроводными сетями.\nОни обмениваются данными по специальным правилам...'},
+      {stars:3, text:'Объясни как работает интернет ребёнку 7 лет. Аналогия с почтой. Максимум 4 предложения. Добавь эмодзи', emoji:'🤩',
+       comment:'ИДЕАЛЬНО! Аналогия + возраст + формат = даже 7-летний поймёт!',
+       result:'📮 Интернет — как волшебная почта!\nТы пишешь письмо 📝 и оно мгновенно летит другу. ✉️\nКомпьютеры — это почтальоны 👨‍💼 которые передают письма.\nИ всё это за секунду! ⚡'},
     ]
   }];
 
+  const [taskIdx, setTaskIdx] = React.useState(0);
+  const [promptStep, setPromptStep] = React.useState(0); // 0=показываем 1★, 1=показываем 2★, 2=показываем 3★
+  const [phase, setPhase] = React.useState('show'); // show | result | done
+  const [totalScore, setTotalScore] = React.useState(0);
+  const [anim, setAnim] = React.useState(false);
+
   const task = TASKS[taskIdx];
-  const starsLabel = ['','⭐','⭐⭐','⭐⭐⭐'];
-  const starsColor = {1:C.red,2:C.gold,3:C.green};
-  const starsMood = {1:'sad',2:'confused',3:'excited'};
+  const prompt = task.prompts[promptStep];
+  const starsArr = ['','⭐','⭐⭐','⭐⭐⭐'];
+  const starColor = ['','#ff4444','#FFD700','#44cc88'];
+  const isLast = promptStep === 2;
+  const isLastTask = taskIdx === TASKS.length - 1;
 
-  const pickPrompt = i => {
-    if (generating) return;
-    const ns = new Set(viewSet); ns.add(i); setViewSet(ns);
-    if (firstPick===null) setFirstPick(i);
-    setSelPrompt(i); setGenerating(true); setShowResult(false);
-    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-    setTimeout(() => {
-      setGenerating(false); setShowResult(true);
-      if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    }, 1500);
+  const showResult = () => {
+    setAnim(true);
+    setTimeout(() => setAnim(false), 400);
+    setPhase('result');
   };
 
-  const nextTask = () => {
-    const fp = firstPick!==null?firstPick:selPrompt;
-    const stars = task.prompts[fp].stars;
-    const pts = stars===3?30:stars===2?20:10;
-    const bonus = viewSet.size>=3?10:0;
-    const newTotal = totalScore+pts+bonus;
-    if (taskIdx+1<TASKS.length) {
-      setTotalScore(newTotal); setTaskIdx(taskIdx+1); setSelPrompt(null);
-      setGenerating(false); setShowResult(false); setFirstPick(null); setViewSet(new Set());
-    } else { onDone(newTotal,200); }
-  };
-
-  const renderResult = (ti,pi) => {
-    const stars = TASKS[ti].prompts[pi].stars;
-    if (ti===0) {
-      if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#1a1a1a',borderRadius:8,padding:12,color:'#666',fontSize:12,fontStyle:'italic',lineHeight:1.7}},'Розы красные, фиалки синие,\nИИ умный, а я красивый.\n— скучно, шаблонно, не про космос');
-      if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#111820',border:'1px solid #334',borderRadius:8,padding:12,fontSize:12,lineHeight:1.9,color:C.text}},
-        /*#__PURE__*/React.createElement("div",null,'В бескрайнем космосе летим,'),
-        /*#__PURE__*/React.createElement("div",null,'Среди далёких звёзд и тьмы...'),
-        /*#__PURE__*/React.createElement("div",{style:{color:C.dim,fontSize:10,marginTop:4}},'— нормально, но без души')
-      );
-      return /*#__PURE__*/React.createElement("div",{style:{background:'linear-gradient(180deg,#120022,#05000f)',borderRadius:12,padding:16,position:'relative',overflow:'hidden',minHeight:110}},
-        /*#__PURE__*/React.createElement("style",null,'@keyframes pL{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes twk{0%,100%{opacity:.15}50%{opacity:.9}}'),
-        ...[...Array(10)].map((_,i)=>/*#__PURE__*/React.createElement("span",{key:'s'+i,style:{position:'absolute',left:`${8+(i*9.3)%85}%`,top:`${5+(i*11.7)%85}%`,fontSize:i%3?'10px':'14px',animation:`twk ${1+i*.3}s ${i*.2}s infinite`,pointerEvents:'none',opacity:.3}},'✨')),
-        /*#__PURE__*/React.createElement("div",{style:{color:'#e8d5ff',fontSize:15,marginBottom:6,fontStyle:'italic',textAlign:'center',animation:'pL .6s .1s both'}},'Лечу один среди планет, 🌟'),
-        /*#__PURE__*/React.createElement("div",{style:{color:'#d5eeff',fontSize:15,marginBottom:6,fontStyle:'italic',textAlign:'center',animation:'pL .6s .7s both'}},'Мой двигатель — как тихий свет. ✨'),
-        /*#__PURE__*/React.createElement("div",{style:{color:'#ffd5ee',fontSize:15,marginBottom:6,fontStyle:'italic',textAlign:'center',animation:'pL .6s 1.3s both'}},'Но верю: где-то в тишине 💫'),
-        /*#__PURE__*/React.createElement("div",{style:{color:'#d5ffd5',fontSize:15,fontStyle:'italic',textAlign:'center',animation:'pL .6s 1.9s both'}},'Есть кто-то, кто скучал по мне. 🚀')
-      );
-    }
-    if (ti===1) {
-      if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#1a1a1a',borderRadius:8,padding:12,color:'#666',fontSize:11,lineHeight:1.6}},'🎮 Игра: угадай число от 1 до 10.\nЯ загадал 7.\n\n(просто текст, ничего интерактивного)');
-      if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#111820',border:'1px solid #334',borderRadius:8,padding:12,textAlign:'center'}},
-        /*#__PURE__*/React.createElement("div",{style:{fontSize:13,color:C.text,marginBottom:8}},'👆 Кликер'),
-        /*#__PURE__*/React.createElement("div",{style:{fontSize:32,color:C.gold,fontWeight:700,fontFamily:'monospace'}},'0'),
-        /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.dim,marginTop:4}},'нажми — и счётчик вырастет. скучно...')
-      );
-      return /*#__PURE__*/React.createElement("div",null,
-        /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.dim,textAlign:'center',marginBottom:4}},'👆 Тапни по экрану чтобы двигать корабль'),
-        /*#__PURE__*/React.createElement(CatchStarGame,{key:'csg-'+pi})
-      );
-    }
-    if (ti===2) {
-      if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#1a1a1a',borderRadius:8,padding:16,textAlign:'center'}},
-        /*#__PURE__*/React.createElement("div",{style:{width:60,height:60,background:'#2a2a2a',borderRadius:4,margin:'0 auto 8px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28}},'😐'),
-        /*#__PURE__*/React.createElement("div",{style:{fontSize:10,color:'#555'}},'картинка.jpg')
-      );
-      if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#000820',borderRadius:8,overflow:'hidden'}},
-        /*#__PURE__*/React.createElement("svg",{width:'100%',height:110,viewBox:'0 0 280 110'},
-          /*#__PURE__*/React.createElement("rect",{width:280,height:110,fill:'#000820'}),
-          /*#__PURE__*/React.createElement("circle",{cx:70,cy:55,r:34,fill:'#3344aa'}),
-          /*#__PURE__*/React.createElement("circle",{cx:185,cy:45,r:22,fill:'#aa4433'}),
-          /*#__PURE__*/React.createElement("circle",{cx:245,cy:65,r:15,fill:'#44aa44'}),
-          ...[...Array(8)].map((_,i)=>/*#__PURE__*/React.createElement("circle",{key:i,cx:10+(i*34),cy:8+(i*9)%80,r:1.5,fill:'#fff',opacity:.6}))
-        ),
-        /*#__PURE__*/React.createElement("div",{style:{fontSize:10,color:C.dim,padding:'4px 8px'}},'\u2014 цветные кружки... без атмосферы')
-      );
-      return /*#__PURE__*/React.createElement("div",{dangerouslySetInnerHTML:{__html:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 160" style="border-radius:12px;width:100%;display:block"><defs><radialGradient id="bg2" cx="60%" cy="40%"><stop offset="0%" stop-color="#1a0040"/><stop offset="100%" stop-color="#020010"/></radialGradient><radialGradient id="pl2" cx="50%" cy="50%"><stop offset="0%" stop-color="#7722cc"/><stop offset="60%" stop-color="#4400aa"/><stop offset="100%" stop-color="#220055"/></radialGradient><filter id="gl2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><style>@keyframes fly{0%{transform:translateX(-30px)}100%{transform:translateX(260px)}}@keyframes nb{0%,100%{opacity:.2}50%{opacity:.5}}@keyframes st{0%,100%{opacity:.1}50%{opacity:.9}}</style></defs><rect width="280" height="160" fill="url(#bg2)"/>${[...Array(28)].map((_,i)=>`<circle cx="${5+(i*9.7)%270}" cy="${5+(i*5.3)%150}" r="${i%4?1:1.8}" fill="#fff" style="animation:st ${1+i*.2}s ${i*.1}s infinite"/>`).join('')}<ellipse cx="75" cy="95" rx="50" ry="20" fill="#ff88cc" opacity=".22" style="animation:nb 3s infinite"/><ellipse cx="210" cy="55" rx="38" ry="15" fill="#8899ff" opacity=".22" style="animation:nb 4s 1.2s infinite"/><circle cx="200" cy="85" r="42" fill="url(#pl2)"/><ellipse cx="200" cy="85" rx="66" ry="11" fill="none" stroke="#9944ff" stroke-width="5" opacity=".65" transform="rotate(-18 200 85)"/><ellipse cx="200" cy="85" rx="74" ry="14" fill="none" stroke="#7722cc" stroke-width="3" opacity=".4" transform="rotate(-18 200 85)"/><g style="animation:fly 5s linear infinite" filter="url(#gl2)"><polygon points="10,0 0,16 20,16" fill="#00f5ff" opacity=".95"/><polygon points="10,12 6,16 14,16" fill="#ff00aa"/><line x1="10" y1="16" x2="3" y2="24" stroke="#00f5ff" stroke-width="1.5" opacity=".5"/><line x1="10" y1="16" x2="17" y2="24" stroke="#00f5ff" stroke-width="1.5" opacity=".5"/></g></svg>`}});
-    }
-    if (ti===3) {
-      if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#1a1a1a',borderRadius:8,padding:12,color:'#666',fontSize:11,lineHeight:1.6}},'Интернет — глобальная система объединённых компьютерных сетей для хранения и передачи информации, использующая протоколы TCP/IP... [и ещё 300 слов]');
-      if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#111820',border:'1px solid #334',borderRadius:8,padding:12,fontSize:12,lineHeight:1.7,color:C.text}},'Интернет — это когда компьютеры по всему миру соединены проводами и обмениваются данными... нормально, но скучновато и длинно.');
-      return /*#__PURE__*/React.createElement("div",{style:{background:'#060e1a',borderRadius:10,padding:'10px 6px'}},
-        /*#__PURE__*/React.createElement("style",null,'@keyframes sU{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}'),
-        ...[
-          {e:'📬',t:'Интернет — это волшебная почта!',d:.1},
-          {e:'✉️',t:'Ты пишешь письмо (запрос) и кладёшь в ящик (браузер)',d:.6},
-          {e:'🏃',t:'Быстрый почтальон (роутер) несёт его по адресу (URL)',d:1.1},
-          {e:'📦',t:'Через секунду тебе приходит ответ — видео, картинка или игра!',d:1.6},
-        ].map((item,i)=>/*#__PURE__*/React.createElement("div",{key:i,style:{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',background:'rgba(0,245,255,.06)',borderRadius:8,marginBottom:5,animation:`sU .5s ${item.d}s both`}},
-          /*#__PURE__*/React.createElement("div",{style:{fontSize:20,flexShrink:0}},item.e),
-          /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.text,lineHeight:1.4}},item.t)
-        ))
-      );
-    }
-    // ti===4 video/tiktok
-    if (stars===1) return /*#__PURE__*/React.createElement("div",{style:{background:'#111',borderRadius:8,padding:20,textAlign:'center'}},
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:32,opacity:.25}},'▶️'),
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:10,color:'#555',marginTop:4}},'video.mp4 — 0:00')
-    );
-    if (stars===2) return /*#__PURE__*/React.createElement("div",{style:{background:'#000',borderRadius:8,padding:20,textAlign:'center',border:'1px solid #333'}},
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:22,color:'#fff',fontWeight:700,letterSpacing:4}},'КОСМОС'),
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:10,color:'#555',marginTop:8}},'0:05 | статичный слайд')
-    );
-    return /*#__PURE__*/React.createElement(TikTokMock,{key:'ttm-'+pi});
-  };
-
-  return /*#__PURE__*/React.createElement("div",null,
-    /*#__PURE__*/React.createElement("div",{style:{textAlign:'center',color:C.dim,fontSize:12,marginBottom:8}},'Задача '+(taskIdx+1)+' из '+TASKS.length),
-    /*#__PURE__*/React.createElement("div",{style:{background:C.card,border:`1px solid ${C.cardBorder}`,borderRadius:12,padding:14,marginBottom:12,fontSize:13,color:C.text,lineHeight:1.5}},'📋 ',task.desc),
-    ...task.prompts.map((p,i)=>/*#__PURE__*/React.createElement("div",{key:i,onClick:()=>pickPrompt(i),style:{background:C.card,border:`1px solid ${selPrompt===i?starsColor[p.stars]:C.cardBorder}`,borderRadius:10,padding:'10px 12px',marginBottom:8,cursor:generating?'wait':'pointer',boxShadow:selPrompt===i?`0 0 14px ${starsColor[p.stars]}44`:'none',transition:'all .2s',opacity:generating&&selPrompt!==i?.6:1}},
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:13,marginBottom:3}},starsLabel[p.stars]),
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:11,color:C.dim,fontStyle:'italic',lineHeight:1.4}},'\u201c'+p.text+'\u201d')
-    )),
-    generating&&/*#__PURE__*/React.createElement("div",{style:{textAlign:'center',padding:'14px 0',color:C.dim,fontSize:13}},
-      /*#__PURE__*/React.createElement("div",{style:{fontSize:22,marginBottom:6}},'⚡'),'Нейро думает...'
-    ),
-    showResult&&selPrompt!==null&&/*#__PURE__*/React.createElement("div",null,
-      /*#__PURE__*/React.createElement("div",{style:{marginBottom:10}},renderResult(taskIdx,selPrompt)),
-      /*#__PURE__*/React.createElement(Talk,{mood:starsMood[task.prompts[selPrompt].stars],text:task.prompts[selPrompt].comment}),
-      viewSet.size<3&&/*#__PURE__*/React.createElement("div",{style:{textAlign:'center',fontSize:11,color:C.dim,marginTop:4,marginBottom:6}},'☝️ Попробуй другие варианты для сравнения (+10 бонус за любопытство!)'),
-      viewSet.size>=3&&/*#__PURE__*/React.createElement("div",{style:{textAlign:'center',fontSize:12,color:C.gold,marginTop:4,marginBottom:6}},'🌟 +10 бонус за любопытство!'),
-      /*#__PURE__*/React.createElement(Btn,{onClick:nextTask,full:true,style:{marginTop:8},color:C.gold},taskIdx+1<TASKS.length?'ДАЛЬШЕ →':'ГОТОВО')
-    )
-  );
-}
-
-// ═══ СТУДИЯ: ПОЙМАЙ СТРОКУ (улучшенная) ════════════════════
-function CatchLineMech({room, onDone}) {
-  const LINES = [
-    "Лечу один среди планет, 🌟",
-    "Мой двигатель — как тихий свет. ✨",
-    "Но верю: где-то в тишине 💫",
-    "Есть кто-то, кто скучал по мне. 🚀",
-    "Сигнал лети сквозь пустоту 📡",
-    "Найди меня — я жду тебя! 💙",
-  ];
-  const DURATIONS = [3800, 3200, 2700, 2200, 1800, 1500];
-  const [lineIdx, setLineIdx] = React.useState(0);
-  const [falling, setFalling] = React.useState(false);
-  const [fallY, setFallY] = React.useState(0);
-  const [caught, setCaught] = React.useState([]);
-  const [flash, setFlash] = React.useState(null);
-  const [flashMsg, setFlashMsg] = React.useState('');
-  const [done, setDone] = React.useState(false);
-  const [combo, setCombo] = React.useState(0);
-  const st = useRef({idx:0,falling:false,caught:[],score:0,raf:null,startT:null,dur:3800,combo:0});
-
-  const startLine = (idx) => {
-    const s = st.current;
-    const dur = DURATIONS[Math.min(idx, DURATIONS.length-1)];
-    s.dur = dur;
-    s.idx = idx; s.falling = true; s.startT = performance.now();
-    setLineIdx(idx); setFalling(true); setFallY(0); setFlash(null); setFlashMsg('');
-    const tick = (now) => {
-      if (!s.falling) return;
-      const p = Math.min((now - s.startT) / s.dur, 1);
-      setFallY(p * 85);
-      if (p < 1) { s.raf = requestAnimationFrame(tick); }
-      else {
-        s.falling = false; setFalling(false); setFlash('missed');
-        s.combo = 0; setCombo(0);
-        setTimeout(() => { setFlash(null); advance(s.idx, false); }, 1200);
+  const nextStep = () => {
+    if (isLast) {
+      // конец задачи
+      const pts = 30 + taskIdx * 10;
+      const newTotal = totalScore + pts;
+      if (isLastTask) {
+        onDone(newTotal, 150);
+      } else {
+        setTotalScore(newTotal);
+        setTaskIdx(t => t + 1);
+        setPromptStep(0);
+        setPhase('show');
       }
-    };
-    s.raf = requestAnimationFrame(tick);
-  };
-
-  const advance = (idx, wasCaught) => {
-    const next = idx + 1;
-    if (next < LINES.length) { setTimeout(() => startLine(next), 300); }
-    else { setDone(true); setTimeout(() => onDone(st.current.score, 150), 1800); }
-  };
-
-  useEffect(() => {
-    const t = setTimeout(() => startLine(0), 700);
-    return () => {
-      clearTimeout(t);
-      st.current.falling = false;
-      if (st.current.raf) cancelAnimationFrame(st.current.raf);
-    };
-  }, []);
-
-  const catchIt = () => {
-    const s = st.current;
-    if (!s.falling) return;
-    const elapsed = performance.now() - s.startT;
-    const pct = elapsed / s.dur;
-    let pts, ftype, fmsg;
-    if (pct < 0.33) { pts = 50; ftype = 'fast'; fmsg = '⚡ БЫСТРО! +50'; }
-    else if (pct < 0.70) { pts = 30; ftype = 'ok'; fmsg = '✅ ПОЙМАЛ! +30'; }
-    else { pts = 15; ftype = 'late'; fmsg = '😅 ВПРИТЫК! +15'; }
-    s.falling = false;
-    if (s.raf) cancelAnimationFrame(s.raf);
-    setFalling(false); setFlash(ftype); setFlashMsg(fmsg);
-    s.combo++;
-    setCombo(s.combo);
-    s.score += pts + (s.combo >= 3 ? 20 : s.combo >= 2 ? 10 : 0);
-    const nc = [...s.caught, LINES[s.idx]];
-    s.caught = nc; setCaught([...nc]);
-    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
-    setTimeout(() => { setFlash(null); advance(s.idx, true); }, 1000);
-  };
-
-  const fColor = {fast:'#ffd700', ok:'#00f5ff', late:'#ff88cc'};
-  const borderC = flash==='missed' ? C.red : flash && flash!=='missed' ? (fColor[flash]||C.cardBorder) : C.cardBorder;
-
-  if (done) return React.createElement("div", {style:{textAlign:'center',padding:'20px 0'}},
-    React.createElement("div", {style:{fontSize:44,marginBottom:10}}, '🎉'),
-    React.createElement("div", {style:{fontSize:22,color:C.gold,fontWeight:700,marginBottom:16}}, 'Стих собран!'),
-    React.createElement("div", {style:{background:'linear-gradient(180deg,#120022,#05000f)',borderRadius:14,padding:'16px 14px'}},
-      ...LINES.map((l,i) => React.createElement("div", {key:i, style:{
-        color:i%2===0?'#e8d5ff':'#d5eeff', fontSize:17, fontStyle:'italic',
-        textAlign:'center', marginBottom:10, lineHeight:1.6
-      }}, l))
-    )
-  );
-
-  return React.createElement("div", {style:{userSelect:'none'}},
-    React.createElement("style", null,
-      '@keyframes shakeCL{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}' +
-      '@keyframes popCL{from{opacity:0;transform:scale(.5) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}'
-    ),
-    React.createElement("div", {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}},
-      React.createElement("div", {style:{fontSize:16,color:C.dim}}, '📜 ' + caught.length + ' / ' + LINES.length),
-      combo >= 2 && React.createElement("div", {style:{fontSize:14,color:C.gold,fontWeight:700,animation:'popCL .3s both'}},
-        '🔥 Комбо x' + combo + '!')
-    ),
-    React.createElement("div", {
-      onClick: catchIt,
-      style:{position:'relative',height:200,background:'#050510',borderRadius:14,
-        overflow:'hidden',marginBottom:10,cursor:'pointer',
-        border:`1px solid ${borderC}`,transition:'border-color .15s'}
-    },
-      ...[...Array(10)].map((_,i) => React.createElement("div", {
-        key:'bg'+i, style:{position:'absolute',left:`${6+(i*9.3)%88}%`,
-          top:`${4+(i*13.7)%88}%`,fontSize:'10px',opacity:.2,pointerEvents:'none',color:'#fff'}
-      }, '·')),
-      falling && React.createElement("div", {
-        style:{position:'absolute',left:'50%',top:`${fallY}%`,
-          transform:'translateX(-50%)',
-          background:'rgba(100,40,180,.25)',
-          border:`2px solid ${C.gold}`,
-          borderRadius:12, padding:'12px 18px',
-          fontSize:18, color:'#fff', fontStyle:'italic', fontWeight:600,
-          whiteSpace:'nowrap', textAlign:'center',
-          boxShadow:'0 0 20px #9944ff66'}
-      }, LINES[lineIdx]),
-      flash==='missed' && React.createElement("div", {
-        style:{position:'absolute',top:'38%',left:'50%',transform:'translateX(-50%)',
-          fontSize:28, textAlign:'center', animation:'shakeCL .4s'}
-      },
-        React.createElement("div", null, '💨'),
-        React.createElement("div", {style:{fontSize:16,color:C.red,marginTop:4}}, 'Улетела!')
-      ),
-      flash && flash!=='missed' && React.createElement("div", {
-        style:{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',
-          textAlign:'center',whiteSpace:'nowrap',animation:'popCL .3s both',
-          fontSize:20,color:fColor[flash]||'#fff',fontWeight:800}
-      }, flashMsg),
-      !falling && !flash && caught.length < LINES.length && React.createElement("div", {
-        style:{position:'absolute',top:'50%',left:'50%',
-          transform:'translate(-50%,-50%)',color:C.dim,fontSize:17,textAlign:'center'}
-      }, '⏳ Жди строку...')
-    ),
-    React.createElement("div", {
-      onClick: catchIt,
-      style:{
-        background: falling ? C.gold : '#1a1a2e',
-        borderRadius:14, padding:'20px 0',
-        textAlign:'center', fontSize:24, fontWeight:700,
-        color: falling ? '#000' : '#444',
-        cursor: falling ? 'pointer' : 'not-allowed',
-        transition:'all .15s',
-        boxShadow: falling ? '0 0 24px rgba(255,215,0,.5)' : 'none',
-        marginBottom:12
-      }
-    }, falling ? '👋  ПОЙМАТЬ!' : '⏳  Жди...'),
-    caught.length > 0 && React.createElement("div", {
-      style:{background:'rgba(100,40,180,.15)',borderRadius:12,padding:'12px 14px',
-        border:'1px solid rgba(153,68,255,.3)'}
-    },
-      React.createElement("div", {style:{fontSize:14,color:C.dim,marginBottom:8}}, '📜 Пойманные строки:'),
-      ...caught.map((l,i) => React.createElement("div", {key:i, style:{
-        fontSize:16, color:i%2===0?'#e8d5ff':'#d5eeff',
-        fontStyle:'italic', marginBottom:6, lineHeight:1.6
-      }}, l))
-    )
-  );
-}
-// ═══ КОММ: BUILD SCENE ═══════════════════════════════════════
-function BuildSceneMech({room, onDone}) {
-  const [added, setAdded] = React.useState([]);
-  const [lastAdded, setLastAdded] = React.useState(null);
-  const [complete, setComplete] = React.useState(false);
-  const ELEMS = [
-    {key:'stars',  emoji:'⭐', label:'Звёзды',    color:'#ffd700', desc:'Усыпь небо звёздами!'},
-    {key:'nebula', emoji:'🌸', label:'Туманность', color:'#ff88cc', desc:'Добавь розовые облака!'},
-    {key:'planet', emoji:'🪐', label:'Планета',   color:'#9944ff', desc:'Большая планета с кольцами!'},
-    {key:'ship',   emoji:'🚀', label:'Корабль',   color:'#00f5ff', desc:'Запусти светящийся корабль!'},
-    {key:'glow',   emoji:'✨', label:'Свечение',  color:'#ffffaa', desc:'Включи неоновый свет!'},
-  ];
-  const has = k => added.includes(k);
-
-  const add = k => {
-    if (has(k)) return;
-    const na = [...added, k];
-    setAdded(na); setLastAdded(k);
-    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-    if (na.length >= ELEMS.length) {
-      setComplete(true);
-      setTimeout(() => onDone(na.length * 20, 100), 2500);
-    }
-  };
-
-  return /*#__PURE__*/React.createElement("div", null,
-    /*#__PURE__*/React.createElement("style", null,
-      '@keyframes popIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}' +
-      '@keyframes sk{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:.9;transform:scale(1.2)}}' +
-      '@keyframes flyship{0%{left:-30px}100%{left:110%}}' +
-      '@keyframes nb{0%,100%{opacity:.25}50%{opacity:.55}}'
-    ),
-    /*#__PURE__*/React.createElement("div", {style:{textAlign:'center',fontSize:16,color:C.dim,marginBottom:8}},
-      '🎨 Добавлено ' + added.length + ' из ' + ELEMS.length
-    ),
-    // scene canvas
-    /*#__PURE__*/React.createElement("div", {
-      style:{position:'relative',height:175,background:'#020010',borderRadius:14,
-        overflow:'hidden',marginBottom:12,
-        border:`1px solid ${complete?C.gold:C.cardBorder}`,
-        transition:'border-color .4s'}
-    },
-      // stars
-      ...(has('stars') ? [...Array(24)].map((_,i) => /*#__PURE__*/React.createElement("div", {
-        key:'st'+i,
-        style:{position:'absolute',
-          left:`${3+(i*4.1)%93}%`, top:`${2+(i*7.3)%91}%`,
-          color:'#fff', fontSize:i%5===0?'11px':'7px',
-          animation:`sk ${1+i*.2}s ${i*.08}s infinite`, opacity:.6,
-          pointerEvents:'none'}
-      }, i%7===0?'✦':'·')) : []),
-      // nebula
-      ...(has('nebula') ? [
-        /*#__PURE__*/React.createElement("div", {key:'neb1', style:{position:'absolute',left:'5%',top:'28%',
-          width:'42%',height:'45%',animation:'popIn .5s both',pointerEvents:'none',
-          background:'radial-gradient(ellipse,rgba(255,100,180,.28),transparent)',
-          borderRadius:'50%',filter:'blur(5px)',animationFillMode:'both'}}),
-        /*#__PURE__*/React.createElement("div", {key:'neb2', style:{position:'absolute',right:'12%',top:'8%',
-          width:'32%',height:'38%',animation:'popIn .5s .2s both',pointerEvents:'none',
-          background:'radial-gradient(ellipse,rgba(80,120,255,.22),transparent)',
-          borderRadius:'50%',filter:'blur(4px)'}})
-      ] : []),
-      // planet
-      ...(has('planet') ? [
-        /*#__PURE__*/React.createElement("div", {key:'pl', style:{
-          position:'absolute',right:'6%',top:'8%',width:70,height:70,
-          background:'radial-gradient(circle at 30% 30%,#aa66ff,#4400aa,#1a0044)',
-          borderRadius:'50%',animation:'popIn .6s both',
-          boxShadow:'0 0 18px #9944ff88'
-        }},
-          /*#__PURE__*/React.createElement("div", {style:{position:'absolute',top:'48%',left:'-22%',right:'-22%',height:9,
-            background:'rgba(120,60,200,.5)',borderRadius:'50%',
-            transform:'rotate(-18deg) translateY(-50%)'}})
-        )
-      ] : []),
-      // ship
-      ...(has('ship') ? [
-        /*#__PURE__*/React.createElement("div", {key:'ship', style:{
-          position:'absolute',top:'56%',animation:'flyship 4s linear infinite',
-          filter:'drop-shadow(0 0 8px #00f5ff)',fontSize:22
-        }}, '🚀')
-      ] : []),
-      // glow overlay
-      ...(has('glow') ? [
-        /*#__PURE__*/React.createElement("div", {key:'glow', style:{
-          position:'absolute',inset:0,pointerEvents:'none',animation:'popIn .8s both',
-          background:'radial-gradient(ellipse at 75% 25%,rgba(255,230,100,.07),transparent 55%)'
-        }})
-      ] : []),
-      // empty state
-      added.length===0 && /*#__PURE__*/React.createElement("div", {
-        style:{position:'absolute',inset:0,display:'flex',alignItems:'center',
-          justifyContent:'center',flexDirection:'column',gap:6,color:C.dim}
-      },
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:28}}, '🌌'),
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:16}}, 'Пустое небо...')
-      ),
-      // "added" toast
-      lastAdded && /*#__PURE__*/React.createElement("div", {key:'toast'+lastAdded,
-        style:{position:'absolute',bottom:8,left:'50%',transform:'translateX(-50%)',
-          fontSize:14,color:'#fff',background:'rgba(0,200,255,.25)',
-          borderRadius:10,padding:'5px 14px',animation:'popIn .35s both',whiteSpace:'nowrap'}
-      }, (ELEMS.find(e=>e.key===lastAdded)||{}).emoji + ' ' + (ELEMS.find(e=>e.key===lastAdded)||{label:''}).label + ' добавлено!'),
-      // complete overlay
-      complete && /*#__PURE__*/React.createElement("div", {
-        style:{position:'absolute',inset:0,display:'flex',alignItems:'center',
-          justifyContent:'center',background:'rgba(0,0,0,.55)',flexDirection:'column',gap:8}
-      },
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:34}}, '🎨'),
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:19,color:C.gold,fontWeight:700}}, 'Шедевр создан!')
-      )
-    ),
-    // element buttons — 2 columns
-    /*#__PURE__*/React.createElement("div", {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}},
-      ...ELEMS.map(el => /*#__PURE__*/React.createElement("div", {
-        key:el.key, onClick: () => add(el.key),
-        style:{
-          background: has(el.key) ? el.color+'22' : C.card,
-          border:`2px solid ${has(el.key) ? el.color : C.cardBorder}`,
-          borderRadius:14, padding:'14px 8px', textAlign:'center',
-          cursor: has(el.key) ? 'default' : 'pointer',
-          opacity: has(el.key) ? .7 : 1, transition:'all .2s'
-        }
-      },
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:28,marginBottom:4}}, has(el.key) ? '✅' : el.emoji),
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:15,color:C.text,fontWeight:600}}, el.label),
-        !has(el.key) && /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:C.dim,marginTop:3,lineHeight:1.3}}, el.desc)
-      ))
-    )
-  );
-}
-
-// ═══ СТУДИЯ: КОСМО-ТИК — свайп-игра ════════════════════════
-function TikTokRoomMech({room, onDone}) {
-  return React.createElement(SwipeTikMech, {room, onDone});
-}
-
-function SwipeTikMech({room, onDone}) {
-  const POSTS = [
-    {emoji:'🌍', title:'Факт про Землю',   text:'Земля летит вокруг Солнца со скоростью 107 000 км/ч!',         isReal:true,  msg:'Правда! Земля невероятно быстрая — но мы этого не чувствуем 🌟'},
-    {emoji:'🧀', title:'Открытие учёных',  text:'Учёные доказали: Луна сделана из лунного сыра!',               isReal:false, msg:'Фейк! Луна из камня и реголита — никакого сыра 😄'},
-    {emoji:'⭐', title:'Размер галактики', text:'В нашей галактике от 200 до 400 миллиардов звёзд',             isReal:true,  msg:'Факт! Млечный Путь огромен — и мы лишь крошечная точка в нём 🌌'},
-    {emoji:'💨', title:'Про ракеты',       text:'Ракеты летят медленно — воздух в космосе их тормозит',         isReal:false, msg:'Фейк! В космосе нет воздуха. Ракеты летят без сопротивления 🚀'},
-    {emoji:'🪐', title:'Кольца Сатурна',   text:'Кольца Сатурна состоят из частиц льда и камней',              isReal:true,  msg:'Факт! Красивые кольца — это миллиарды кусочков космического льда ✨'},
-  ];
-
-  const [postIdx, setPostIdx] = React.useState(0);
-  const [choice, setChoice] = React.useState(null);
-  const [feedback, setFeedback] = React.useState(null);
-  const [score, setScore] = React.useState(0);
-  const [correctCount, setCorrectCount] = React.useState(0);
-  const [done, setDone] = React.useState(false);
-  const [animKey, setAnimKey] = React.useState(0);
-  const scoreRef = React.useRef(0);
-  const correctRef = React.useRef(0);
-
-  const decide = (action) => {
-    if (choice !== null) return;
-    const post = POSTS[postIdx];
-    const isCorrect = (action==='like' && post.isReal) || (action==='skip' && !post.isReal);
-    const pts = action==='like' ? (post.isReal?30:0) : (post.isReal?5:25);
-    setChoice(action);
-    setFeedback({isCorrect, msg:post.msg, pts});
-    scoreRef.current += pts;
-    setScore(scoreRef.current);
-    if (isCorrect) { correctRef.current++; setCorrectCount(correctRef.current); }
-    if (window.Telegram?.WebApp?.HapticFeedback)
-      window.Telegram.WebApp.HapticFeedback.impactOccurred(isCorrect?'heavy':'light');
-  };
-
-  const next = () => {
-    if (postIdx + 1 < POSTS.length) {
-      setPostIdx(i => i+1);
-      setChoice(null);
-      setFeedback(null);
-      setAnimKey(k => k+1);
     } else {
-      setDone(true);
-      const bonus = correctRef.current >= 4 ? 25 : 0;
-      setTimeout(() => onDone(scoreRef.current + bonus, 100), 1800);
+      setPromptStep(s => s + 1);
+      setPhase('show');
     }
   };
 
-  if (done) return React.createElement("div", {style:{textAlign:'center',padding:'24px 16px'}},
-    React.createElement("div", {style:{fontSize:44,marginBottom:8}}, correctCount >= 4 ? '🏆' : '📱'),
-    React.createElement("div", {style:{fontSize:22,color:C.gold,fontWeight:700,marginBottom:6}},
-      correctCount >= 4 ? 'Детектор фейков!' : 'Лента проверена!'),
-    React.createElement("div", {style:{fontSize:16,color:C.text,lineHeight:1.7,marginBottom:8}},
-      'Правильно: ' + correctCount + ' из ' + POSTS.length),
-    React.createElement("div", {style:{fontSize:15,color:C.dim,lineHeight:1.6}},
-      'Отличать факты от фейков — суперсила в мире ИИ! 🧠')
-  );
+  const stepsLabel = ['Плохой промпт', 'Средний промпт', 'Отличный промпт!'];
+  const stepsBg = ['#1a0505', '#1a1505', '#051a05'];
+  const stepsBorder = ['#ff444440', '#FFD70040', '#44cc8840'];
 
-  const post = POSTS[postIdx];
-  return React.createElement("div", {style:{userSelect:'none'}},
-    React.createElement("style", null,
-      '@keyframes slidePost{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}' +
-      '@keyframes warpP{0%{transform:scale(.1);opacity:.7}100%{transform:scale(3);opacity:0}}' +
-      '@keyframes fbSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}'
+  return /*#__PURE__*/React.createElement("div", {
+    style:{padding:'14px 12px', display:'flex', flexDirection:'column', gap:12}
+  },
+    /* прогресс задачи */
+    /*#__PURE__*/React.createElement("div", {style:{display:'flex',gap:6,justifyContent:'center'}},
+      TASKS.map((_, i) => /*#__PURE__*/React.createElement("div", {key:i, style:{
+        flex:1, height:5, borderRadius:3,
+        background: i < taskIdx ? '#44cc88' : i===taskIdx ? '#00f5ff' : '#1A2D48',
+        transition:'background .3s'
+      }}))
     ),
-    React.createElement("div", {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}},
-      React.createElement("div", {style:{fontSize:15,color:C.dim}}, '📱 ' + (postIdx+1) + ' / ' + POSTS.length),
-      React.createElement("div", {style:{fontSize:14,color:C.gold,fontWeight:700}}, '⭐ ' + score + ' очков')
+    /* заголовок */
+    /*#__PURE__*/React.createElement("div", {style:{textAlign:'center'}},
+      /*#__PURE__*/React.createElement("div", {style:{
+        fontSize:11, fontWeight:700, color: starColor[promptStep+1],
+        background: stepsBg[promptStep], border:'1px solid '+stepsBorder[promptStep],
+        borderRadius:20, padding:'4px 12px', display:'inline-block', marginBottom:6
+      }}, stepsLabel[promptStep]),
+      /*#__PURE__*/React.createElement("div", {style:{fontSize:15,fontWeight:800,color:'#CCDDEE',lineHeight:1.4}}, task.desc)
     ),
-    React.createElement("div", {style:{display:'flex',justifyContent:'center',marginBottom:10}},
-      React.createElement("div", {
-        key:'p'+animKey,
-        style:{position:'relative',background:'#000',borderRadius:22,overflow:'hidden',
-          width:170,height:288,
-          border:`3px solid ${choice===null?'#444':feedback?.isCorrect?'#00e066':'#ff4444'}`,
-          boxShadow:`0 0 20px ${choice===null?'#c44dff33':feedback?.isCorrect?'#00e03322':'#ff444422'}`,
-          animation:'slidePost .35s both',transition:'border-color .3s,box-shadow .3s'}
-      },
-        ...[...Array(14)].map((_,i) => React.createElement("div", {
-          key:'wp'+i,
-          style:{position:'absolute',left:`${8+(i*6.1)%82}%`,top:`${8+(i*7.3)%82}%`,
-            width:2,height:2,background:'#fff',borderRadius:'50%',
-            animation:`warpP ${.7+i*.22}s ${i*.11}s infinite`,
-            transformOrigin:'center',pointerEvents:'none',opacity:.55}
-        })),
-        React.createElement("div", {
-          style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',
-            alignItems:'center',justifyContent:'center',padding:18}
-        },
-          React.createElement("div", {style:{fontSize:10,color:'#888',marginBottom:4,letterSpacing:1,textTransform:'uppercase'}},
-            post.title),
-          React.createElement("div", {style:{fontSize:46,marginBottom:12}}, post.emoji),
-          React.createElement("div", {style:{fontSize:14,color:'#eee',textAlign:'center',lineHeight:1.65,fontWeight:600}},
-            post.text)
+    /* промпт */
+    /*#__PURE__*/React.createElement("div", {style:{
+      background:'#0D1926', border:'2px solid '+starColor[promptStep+1]+'44',
+      borderRadius:12, padding:'12px 14px'
+    }},
+      /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:'#8899AA',marginBottom:6,fontWeight:700}}, '📝 Промпт:'),
+      /*#__PURE__*/React.createElement("div", {style:{fontSize:14,color:'#CCDDEE',lineHeight:1.5,fontStyle:'italic'}},
+        '"' + prompt.text + '"'
+      )
+    ),
+    /* кнопка — посмотреть результат */
+    phase === 'show' &&
+      /*#__PURE__*/React.createElement("button", {
+        onClick: showResult,
+        style:{
+          background: starColor[promptStep+1], color:'#050510',
+          fontWeight:900, fontSize:15, padding:'13px 0',
+          borderRadius:14, border:'none', cursor:'pointer',
+          boxShadow:'0 0 16px '+starColor[promptStep+1]+'66',
+          animation: anim ? 'pop .35s ease-out' : 'none'
+        }
+      }, '👀 Что получилось?'),
+    /* результат */
+    phase === 'result' &&
+      /*#__PURE__*/React.createElement("div", {style:{display:'flex',flexDirection:'column',gap:10,animation:'fadeIn .4s ease-out'}},
+        /* ответ ИИ */
+        /*#__PURE__*/React.createElement("div", {style:{
+          background: stepsBg[promptStep], border:'1px solid '+stepsBorder[promptStep],
+          borderRadius:12, padding:'12px 14px'
+        }},
+          /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:'#8899AA',marginBottom:6,fontWeight:700}}, '🤖 Ответ ИИ:'),
+          /*#__PURE__*/React.createElement("div", {style:{
+            fontSize:13, color:'#CCDDEE', lineHeight:1.6,
+            whiteSpace:'pre-line', fontFamily:'monospace'
+          }}, prompt.result)
         ),
-        React.createElement("div", {style:{position:'absolute',right:8,top:'32%',display:'flex',flexDirection:'column',gap:12,alignItems:'center'}},
-          React.createElement("div", {style:{fontSize:20,
-            color:choice==='like'?'#ff4466':'#555',
-            filter:choice==='like'?'drop-shadow(0 0 6px red)':'none',
-            transition:'all .2s'}}, choice==='like'?'❤️':'🤍'),
-          React.createElement("div", {style:{fontSize:17,color:'#444'}}, '💬'),
-          React.createElement("div", {style:{fontSize:17,color:'#444'}}, '↗️')
+        /* комментарий Нейро */
+        /*#__PURE__*/React.createElement("div", {style:{
+          display:'flex', gap:10, alignItems:'flex-start',
+          background:'#060C1A', borderRadius:10, padding:'10px 12px'
+        }},
+          /*#__PURE__*/React.createElement("div", {style:{fontSize:22, flexShrink:0}}, prompt.emoji),
+          /*#__PURE__*/React.createElement("div", {style:{fontSize:13,color:'#CCDDEE',lineHeight:1.5}}, prompt.comment)
         ),
-        React.createElement("div", {style:{position:'absolute',bottom:0,left:0,right:0,height:3,background:'#111'}},
-          React.createElement("div", {style:{height:'100%',
-            width:`${((postIdx+1)/POSTS.length)*100}%`,
-            background:'#c44dff',transition:'width .4s'}})
+        /* кнопка далее */
+        /*#__PURE__*/React.createElement("button", {
+          onClick: nextStep,
+          style:{
+            background: isLast ? '#44cc88' : '#1A2D48',
+            color: isLast ? '#050510' : '#00f5ff',
+            fontWeight:900, fontSize:14, padding:'13px 0',
+            borderRadius:14, border: isLast ? 'none' : '2px solid #00f5ff44',
+            cursor:'pointer',
+            boxShadow: isLast ? '0 0 16px #44cc8866' : 'none'
+          }
+        }, isLast
+            ? (isLastTask ? '🎉 Молодец! Финиш!' : '➡️ Следующая задача')
+            : '⬆️ Попробовать лучший промпт'
         )
       )
-    ),
-    feedback && React.createElement("div", {style:{
-      background:feedback.isCorrect?'rgba(0,200,100,.12)':'rgba(255,50,50,.12)',
-      border:`1px solid ${feedback.isCorrect?'#00c864':C.red}`,
-      borderRadius:12,padding:'10px 14px',marginBottom:10,
-      animation:'fbSlide .3s both'
-    }},
-      React.createElement("div", {style:{fontSize:15,fontWeight:700,marginBottom:3,
-        color:feedback.isCorrect?'#00e066':C.red}},
-        feedback.isCorrect ? '✅ Верно! +' + feedback.pts + ' очков' : '❌ Упс! +' + feedback.pts),
-      React.createElement("div", {style:{fontSize:13,color:C.text,lineHeight:1.5}}, feedback.msg)
-    ),
-    !choice && React.createElement("div", {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}},
-      React.createElement("div", {
-        onClick:()=>decide('skip'),
-        style:{background:C.card,border:`1px solid ${C.cardBorder}`,borderRadius:14,
-          padding:'16px 8px',textAlign:'center',cursor:'pointer',transition:'all .15s'}
-      },
-        React.createElement("div", {style:{fontSize:30,marginBottom:4}}, '⏭️'),
-        React.createElement("div", {style:{fontSize:15,color:C.dim,fontWeight:700}}, 'ПРОПУСТИТЬ'),
-        React.createElement("div", {style:{fontSize:11,color:C.dim,marginTop:3}}, 'если фейк')
-      ),
-      React.createElement("div", {
-        onClick:()=>decide('like'),
-        style:{background:'rgba(196,77,255,.18)',border:'2px solid #c44dff',borderRadius:14,
-          padding:'16px 8px',textAlign:'center',cursor:'pointer',
-          boxShadow:'0 0 16px rgba(196,77,255,.35)',transition:'all .15s'}
-      },
-        React.createElement("div", {style:{fontSize:30,marginBottom:4}}, '❤️'),
-        React.createElement("div", {style:{fontSize:15,color:'#c44dff',fontWeight:700}}, 'ЛАЙК!'),
-        React.createElement("div", {style:{fontSize:11,color:C.dim,marginTop:3}}, 'если факт')
-      )
-    ),
-    choice && React.createElement("button", {
-      onClick:next,
-      style:{width:'100%',padding:'17px',background:C.gold,color:'#000',
-        border:'none',borderRadius:14,fontSize:18,fontWeight:800,cursor:'pointer',marginTop:4}
-    }, postIdx+1 < POSTS.length ? 'СЛЕДУЮЩИЙ →' : '🏁 ФИНИШ!')
   );
 }
-
 
 // ═══ MECHANIC 5: FAKE DETECTOR ═══════════════════
 function FakeDetectorMech({ room, onDone }) {
@@ -7454,9 +7147,13 @@ const MODULES = [{
     complete: "Коммуникатор настроен идеально! Теперь ты знаешь главный секрет ИИ — всё решает промпт. Говори чётко — получай чудеса!"
   },
   rooms: [{
-    name: "Промпт-галерея",
+    name: "Сила промпта",
     type: "prompt_gallery",
-    desc: "Выбери лучший промпт — и увидишь на что я способен!"
+    desc: "Смотри как меняется результат — от плохого промпта к отличному!"
+  }, {
+    name: "Поймай звезду!",
+    type: "space_game",
+    desc: "Управляй кораблём — собирай звёзды, уворачивайся от астероидов!"
   }]
 }];
 
@@ -7607,7 +7304,8 @@ function App() {
       hallucination: HallucinationMech,
       mission: MissionMech,
       fake_detector: FakeDetectorMech,
-      autopilot: AutopilotMech
+      autopilot: AutopilotMech,
+      space_game: SpaceGameMech
     };
     const Comp = map[room.type];
     return Comp ? /*#__PURE__*/React.createElement(Comp, {
