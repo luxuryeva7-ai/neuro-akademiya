@@ -5741,35 +5741,42 @@ function PromptGalleryMech({room,onDone}) {
   );
 }
 
-// ═══ КОММ: CATCH LINE ═══════════════════════════════════════
+// ═══ СТУДИЯ: ПОЙМАЙ СТРОКУ (улучшенная) ════════════════════
 function CatchLineMech({room, onDone}) {
   const LINES = [
     "Лечу один среди планет, 🌟",
     "Мой двигатель — как тихий свет. ✨",
     "Но верю: где-то в тишине 💫",
     "Есть кто-то, кто скучал по мне. 🚀",
+    "Сигнал лети сквозь пустоту 📡",
+    "Найди меня — я жду тебя! 💙",
   ];
+  const DURATIONS = [3800, 3200, 2700, 2200, 1800, 1500];
   const [lineIdx, setLineIdx] = React.useState(0);
   const [falling, setFalling] = React.useState(false);
   const [fallY, setFallY] = React.useState(0);
   const [caught, setCaught] = React.useState([]);
   const [flash, setFlash] = React.useState(null);
+  const [flashMsg, setFlashMsg] = React.useState('');
   const [done, setDone] = React.useState(false);
-  const st = useRef({idx:0,falling:false,caught:[],score:0,raf:null,startT:null});
-  const DURATION = 3800;
+  const [combo, setCombo] = React.useState(0);
+  const st = useRef({idx:0,falling:false,caught:[],score:0,raf:null,startT:null,dur:3800,combo:0});
 
   const startLine = (idx) => {
     const s = st.current;
+    const dur = DURATIONS[Math.min(idx, DURATIONS.length-1)];
+    s.dur = dur;
     s.idx = idx; s.falling = true; s.startT = performance.now();
-    setLineIdx(idx); setFalling(true); setFallY(0); setFlash(null);
+    setLineIdx(idx); setFalling(true); setFallY(0); setFlash(null); setFlashMsg('');
     const tick = (now) => {
       if (!s.falling) return;
-      const p = Math.min((now - s.startT) / DURATION, 1);
+      const p = Math.min((now - s.startT) / s.dur, 1);
       setFallY(p * 85);
       if (p < 1) { s.raf = requestAnimationFrame(tick); }
       else {
         s.falling = false; setFalling(false); setFlash('missed');
-        setTimeout(() => { setFlash(null); advance(s.idx, false); }, 1300);
+        s.combo = 0; setCombo(0);
+        setTimeout(() => { setFlash(null); advance(s.idx, false); }, 1200);
       }
     };
     s.raf = requestAnimationFrame(tick);
@@ -5777,8 +5784,8 @@ function CatchLineMech({room, onDone}) {
 
   const advance = (idx, wasCaught) => {
     const next = idx + 1;
-    if (next < LINES.length) { setTimeout(() => startLine(next), 200); }
-    else { setDone(true); setTimeout(() => onDone(st.current.score, 100), 1800); }
+    if (next < LINES.length) { setTimeout(() => startLine(next), 300); }
+    else { setDone(true); setTimeout(() => onDone(st.current.score, 150), 1800); }
   };
 
   useEffect(() => {
@@ -5793,80 +5800,86 @@ function CatchLineMech({room, onDone}) {
   const catchIt = () => {
     const s = st.current;
     if (!s.falling) return;
+    const elapsed = performance.now() - s.startT;
+    const pct = elapsed / s.dur;
+    let pts, ftype, fmsg;
+    if (pct < 0.33) { pts = 50; ftype = 'fast'; fmsg = '⚡ БЫСТРО! +50'; }
+    else if (pct < 0.70) { pts = 30; ftype = 'ok'; fmsg = '✅ ПОЙМАЛ! +30'; }
+    else { pts = 15; ftype = 'late'; fmsg = '😅 ВПРИТЫК! +15'; }
     s.falling = false;
     if (s.raf) cancelAnimationFrame(s.raf);
-    setFalling(false); setFlash('caught');
-    s.score += 25;
+    setFalling(false); setFlash(ftype); setFlashMsg(fmsg);
+    s.combo++;
+    setCombo(s.combo);
+    s.score += pts + (s.combo >= 3 ? 20 : s.combo >= 2 ? 10 : 0);
     const nc = [...s.caught, LINES[s.idx]];
-    s.caught = nc;
-    setCaught([...nc]);
+    s.caught = nc; setCaught([...nc]);
     if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
-    setTimeout(() => { setFlash(null); advance(s.idx, true); }, 900);
+    setTimeout(() => { setFlash(null); advance(s.idx, true); }, 1000);
   };
 
-  if (done) return /*#__PURE__*/React.createElement("div", {style:{textAlign:'center',padding:'20px 0'}},
-    /*#__PURE__*/React.createElement("div", {style:{fontSize:44,marginBottom:10}}, '🎉'),
-    /*#__PURE__*/React.createElement("div", {style:{fontSize:22,color:C.gold,fontWeight:700,marginBottom:16}}, 'Стих собран!'),
-    /*#__PURE__*/React.createElement("div", {style:{background:'linear-gradient(180deg,#120022,#05000f)',borderRadius:14,padding:'16px 14px'}},
-      ...LINES.map((l,i) => /*#__PURE__*/React.createElement("div", {key:i, style:{
-        color:i%2===0?'#e8d5ff':'#d5eeff', fontSize:18, fontStyle:'italic',
+  const fColor = {fast:'#ffd700', ok:'#00f5ff', late:'#ff88cc'};
+  const borderC = flash==='missed' ? C.red : flash && flash!=='missed' ? (fColor[flash]||C.cardBorder) : C.cardBorder;
+
+  if (done) return React.createElement("div", {style:{textAlign:'center',padding:'20px 0'}},
+    React.createElement("div", {style:{fontSize:44,marginBottom:10}}, '🎉'),
+    React.createElement("div", {style:{fontSize:22,color:C.gold,fontWeight:700,marginBottom:16}}, 'Стих собран!'),
+    React.createElement("div", {style:{background:'linear-gradient(180deg,#120022,#05000f)',borderRadius:14,padding:'16px 14px'}},
+      ...LINES.map((l,i) => React.createElement("div", {key:i, style:{
+        color:i%2===0?'#e8d5ff':'#d5eeff', fontSize:17, fontStyle:'italic',
         textAlign:'center', marginBottom:10, lineHeight:1.6
       }}, l))
     )
   );
 
-  return /*#__PURE__*/React.createElement("div", {style:{userSelect:'none'}},
-    /*#__PURE__*/React.createElement("style", null,
-      '@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}' +
-      '@keyframes popGreen{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}'
+  return React.createElement("div", {style:{userSelect:'none'}},
+    React.createElement("style", null,
+      '@keyframes shakeCL{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}' +
+      '@keyframes popCL{from{opacity:0;transform:scale(.5) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}'
     ),
-    /*#__PURE__*/React.createElement("div", {style:{textAlign:'center',fontSize:16,color:C.dim,marginBottom:8}},
-      '📜 Поймано ' + caught.length + ' из ' + LINES.length
+    React.createElement("div", {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}},
+      React.createElement("div", {style:{fontSize:16,color:C.dim}}, '📜 ' + caught.length + ' / ' + LINES.length),
+      combo >= 2 && React.createElement("div", {style:{fontSize:14,color:C.gold,fontWeight:700,animation:'popCL .3s both'}},
+        '🔥 Комбо x' + combo + '!')
     ),
-    // falling zone
-    /*#__PURE__*/React.createElement("div", {
+    React.createElement("div", {
       onClick: catchIt,
       style:{position:'relative',height:200,background:'#050510',borderRadius:14,
         overflow:'hidden',marginBottom:10,cursor:'pointer',
-        border:`1px solid ${flash==='caught'?'#00f5ff':flash==='missed'?C.red:C.cardBorder}`}
+        border:`1px solid ${borderC}`,transition:'border-color .15s'}
     },
-      ...[...Array(10)].map((_,i) => /*#__PURE__*/React.createElement("div", {
+      ...[...Array(10)].map((_,i) => React.createElement("div", {
         key:'bg'+i, style:{position:'absolute',left:`${6+(i*9.3)%88}%`,
           top:`${4+(i*13.7)%88}%`,fontSize:'10px',opacity:.2,pointerEvents:'none',color:'#fff'}
       }, '·')),
-      falling && /*#__PURE__*/React.createElement("div", {
+      falling && React.createElement("div", {
         style:{position:'absolute',left:'50%',top:`${fallY}%`,
           transform:'translateX(-50%)',
           background:'rgba(100,40,180,.25)',
           border:`2px solid ${C.gold}`,
-          borderRadius:12, padding:'12px 20px',
-          fontSize:19, color:'#fff', fontStyle:'italic', fontWeight:600,
+          borderRadius:12, padding:'12px 18px',
+          fontSize:18, color:'#fff', fontStyle:'italic', fontWeight:600,
           whiteSpace:'nowrap', textAlign:'center',
-          boxShadow:'0 0 20px #9944ff66',
-          transition:'border-color .1s'
-        }
+          boxShadow:'0 0 20px #9944ff66'}
       }, LINES[lineIdx]),
-      flash==='missed' && /*#__PURE__*/React.createElement("div", {
+      flash==='missed' && React.createElement("div", {
         style:{position:'absolute',top:'38%',left:'50%',transform:'translateX(-50%)',
-          fontSize:30, textAlign:'center', animation:'shake .4s'}
+          fontSize:28, textAlign:'center', animation:'shakeCL .4s'}
       },
-        /*#__PURE__*/React.createElement("div", null, '💨'),
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:16,color:C.red,marginTop:4}}, 'Упустил!')
+        React.createElement("div", null, '💨'),
+        React.createElement("div", {style:{fontSize:16,color:C.red,marginTop:4}}, 'Улетела!')
       ),
-      flash==='caught' && /*#__PURE__*/React.createElement("div", {
+      flash && flash!=='missed' && React.createElement("div", {
         style:{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',
-          textAlign:'center', animation:'popGreen .3s both'}
-      },
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:36}}, '✅'),
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:18,color:'#00f5ff',marginTop:4,fontWeight:700}}, '+25 очков!')
-      ),
-      !falling && !flash && caught.length < LINES.length && /*#__PURE__*/React.createElement("div", {
+          textAlign:'center',whiteSpace:'nowrap',animation:'popCL .3s both',
+          fontSize:20,color:fColor[flash]||'#fff',fontWeight:800}
+      }, flashMsg),
+      !falling && !flash && caught.length < LINES.length && React.createElement("div", {
         style:{position:'absolute',top:'50%',left:'50%',
           transform:'translate(-50%,-50%)',color:C.dim,fontSize:17,textAlign:'center'}
       }, '⏳ Жди строку...')
     ),
-    // CATCH BUTTON
-    /*#__PURE__*/React.createElement("div", {
+    React.createElement("div", {
       onClick: catchIt,
       style:{
         background: falling ? C.gold : '#1a1a2e',
@@ -5879,20 +5892,18 @@ function CatchLineMech({room, onDone}) {
         marginBottom:12
       }
     }, falling ? '👋  ПОЙМАТЬ!' : '⏳  Жди...'),
-    // collected
-    caught.length > 0 && /*#__PURE__*/React.createElement("div", {
+    caught.length > 0 && React.createElement("div", {
       style:{background:'rgba(100,40,180,.15)',borderRadius:12,padding:'12px 14px',
         border:'1px solid rgba(153,68,255,.3)'}
     },
-      /*#__PURE__*/React.createElement("div", {style:{fontSize:14,color:C.dim,marginBottom:8}}, '📜 Пойманные строки:'),
-      ...caught.map((l,i) => /*#__PURE__*/React.createElement("div", {key:i, style:{
-        fontSize:17, color:i%2===0?'#e8d5ff':'#d5eeff',
+      React.createElement("div", {style:{fontSize:14,color:C.dim,marginBottom:8}}, '📜 Пойманные строки:'),
+      ...caught.map((l,i) => React.createElement("div", {key:i, style:{
+        fontSize:16, color:i%2===0?'#e8d5ff':'#d5eeff',
         fontStyle:'italic', marginBottom:6, lineHeight:1.6
       }}, l))
     )
   );
 }
-
 // ═══ КОММ: BUILD SCENE ═══════════════════════════════════════
 function BuildSceneMech({room, onDone}) {
   const [added, setAdded] = React.useState([]);
@@ -6025,101 +6036,159 @@ function BuildSceneMech({room, onDone}) {
   );
 }
 
-// ═══ КОММ: TIKTOK ROOM ═══════════════════════════════════════
+// ═══ СТУДИЯ: КОСМО-ТИК — свайп-игра ════════════════════════
 function TikTokRoomMech({room, onDone}) {
-  const [liked, setLiked] = React.useState(false);
-  const [done, setDone] = React.useState(false);
-  const [step, setStep] = React.useState(0);
-  const facts = [
-    {e:'🌍', t:'Земля летит вокруг Солнца со скоростью 107 000 км/ч!'},
-    {e:'🪐', t:'В Сатурне поместились бы 764 Земли!'},
-    {e:'⭐', t:'Свет от Солнца до Земли летит 8 минут!'},
-    {e:'🌌', t:'Во Вселенной больше звёзд чем песчинок на всех пляжах!'},
+  return React.createElement(SwipeTikMech, {room, onDone});
+}
+
+function SwipeTikMech({room, onDone}) {
+  const POSTS = [
+    {emoji:'🌍', title:'Факт про Землю',   text:'Земля летит вокруг Солнца со скоростью 107 000 км/ч!',         isReal:true,  msg:'Правда! Земля невероятно быстрая — но мы этого не чувствуем 🌟'},
+    {emoji:'🧀', title:'Открытие учёных',  text:'Учёные доказали: Луна сделана из лунного сыра!',               isReal:false, msg:'Фейк! Луна из камня и реголита — никакого сыра 😄'},
+    {emoji:'⭐', title:'Размер галактики', text:'В нашей галактике от 200 до 400 миллиардов звёзд',             isReal:true,  msg:'Факт! Млечный Путь огромен — и мы лишь крошечная точка в нём 🌌'},
+    {emoji:'💨', title:'Про ракеты',       text:'Ракеты летят медленно — воздух в космосе их тормозит',         isReal:false, msg:'Фейк! В космосе нет воздуха. Ракеты летят без сопротивления 🚀'},
+    {emoji:'🪐', title:'Кольца Сатурна',   text:'Кольца Сатурна состоят из частиц льда и камней',              isReal:true,  msg:'Факт! Красивые кольца — это миллиарды кусочков космического льда ✨'},
   ];
-  const showCta = step >= facts.length;
-  const pct = showCta ? 100 : Math.round((step / facts.length) * 100);
 
-  useEffect(() => {
-    if (showCta || done) return;
-    const t = setTimeout(() => setStep(s => s + 1), 3000);
-    return () => clearTimeout(t);
-  }, [step, showCta, done]);
+  const [postIdx, setPostIdx] = React.useState(0);
+  const [choice, setChoice] = React.useState(null);
+  const [feedback, setFeedback] = React.useState(null);
+  const [score, setScore] = React.useState(0);
+  const [correctCount, setCorrectCount] = React.useState(0);
+  const [done, setDone] = React.useState(false);
+  const [animKey, setAnimKey] = React.useState(0);
+  const scoreRef = React.useRef(0);
+  const correctRef = React.useRef(0);
 
-  const handleLike = () => {
-    if (liked) return;
-    setLiked(true);
-    if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  const decide = (action) => {
+    if (choice !== null) return;
+    const post = POSTS[postIdx];
+    const isCorrect = (action==='like' && post.isReal) || (action==='skip' && !post.isReal);
+    const pts = action==='like' ? (post.isReal?30:0) : (post.isReal?5:25);
+    setChoice(action);
+    setFeedback({isCorrect, msg:post.msg, pts});
+    scoreRef.current += pts;
+    setScore(scoreRef.current);
+    if (isCorrect) { correctRef.current++; setCorrectCount(correctRef.current); }
+    if (window.Telegram?.WebApp?.HapticFeedback)
+      window.Telegram.WebApp.HapticFeedback.impactOccurred(isCorrect?'heavy':'light');
   };
 
-  const handleDone = () => {
-    setDone(true);
-    onDone(liked ? 100 : 70, 100);
+  const next = () => {
+    if (postIdx + 1 < POSTS.length) {
+      setPostIdx(i => i+1);
+      setChoice(null);
+      setFeedback(null);
+      setAnimKey(k => k+1);
+    } else {
+      setDone(true);
+      const bonus = correctRef.current >= 4 ? 25 : 0;
+      setTimeout(() => onDone(scoreRef.current + bonus, 100), 1800);
+    }
   };
 
-  return /*#__PURE__*/React.createElement("div", {style:{textAlign:'center'}},
-    /*#__PURE__*/React.createElement("style", null,
-      '@keyframes warpT{0%{transform:scale(.1);opacity:.8}100%{transform:scale(3);opacity:0}}' +
-      '@keyframes factT{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}' +
-      '@keyframes ctaT{0%,100%{text-shadow:0 0 10px #00f5ff}50%{text-shadow:0 0 32px #00f5ff,0 0 50px #fff}}' +
-      '@keyframes heartPop{0%{transform:scale(1)}50%{transform:scale(1.5)}100%{transform:scale(1)}}'
+  if (done) return React.createElement("div", {style:{textAlign:'center',padding:'24px 16px'}},
+    React.createElement("div", {style:{fontSize:44,marginBottom:8}}, correctCount >= 4 ? '🏆' : '📱'),
+    React.createElement("div", {style:{fontSize:22,color:C.gold,fontWeight:700,marginBottom:6}},
+      correctCount >= 4 ? 'Детектор фейков!' : 'Лента проверена!'),
+    React.createElement("div", {style:{fontSize:16,color:C.text,lineHeight:1.7,marginBottom:8}},
+      'Правильно: ' + correctCount + ' из ' + POSTS.length),
+    React.createElement("div", {style:{fontSize:15,color:C.dim,lineHeight:1.6}},
+      'Отличать факты от фейков — суперсила в мире ИИ! 🧠')
+  );
+
+  const post = POSTS[postIdx];
+  return React.createElement("div", {style:{userSelect:'none'}},
+    React.createElement("style", null,
+      '@keyframes slidePost{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}' +
+      '@keyframes warpP{0%{transform:scale(.1);opacity:.7}100%{transform:scale(3);opacity:0}}' +
+      '@keyframes fbSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}'
     ),
-    /*#__PURE__*/React.createElement("div", {style:{fontSize:16,color:C.dim,marginBottom:10}}, '📱 TikTok ролик про космос'),
-    // phone frame
-    /*#__PURE__*/React.createElement("div", {
-      style:{position:'relative',display:'inline-block',background:'#000',borderRadius:22,overflow:'hidden',
-        width:160,height:268,border:'3px solid #333',boxShadow:'0 0 24px #00f5ff44',marginBottom:14}
-    },
-      ...[...Array(16)].map((_,i) => /*#__PURE__*/React.createElement("div", {
-        key:'w'+i,
-        style:{position:'absolute',left:`${10+(i*5.7)%80}%`,top:`${10+(i*7.3)%80}%`,
-          width:2,height:2,background:'#fff',borderRadius:'50%',
-          animation:`warpT ${.8+i*.25}s ${i*.12}s infinite`,
-          transformOrigin:'center',pointerEvents:'none'}
-      })),
-      !showCta && step < facts.length && /*#__PURE__*/React.createElement("div", {
-        key:'fact'+step,
-        style:{position:'absolute',bottom:46,left:0,right:0,padding:'10px 14px',
-          background:'rgba(0,0,0,.82)',animation:'factT .4s both'}
+    React.createElement("div", {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}},
+      React.createElement("div", {style:{fontSize:15,color:C.dim}}, '📱 ' + (postIdx+1) + ' / ' + POSTS.length),
+      React.createElement("div", {style:{fontSize:14,color:C.gold,fontWeight:700}}, '⭐ ' + score + ' очков')
+    ),
+    React.createElement("div", {style:{display:'flex',justifyContent:'center',marginBottom:10}},
+      React.createElement("div", {
+        key:'p'+animKey,
+        style:{position:'relative',background:'#000',borderRadius:22,overflow:'hidden',
+          width:170,height:288,
+          border:`3px solid ${choice===null?'#444':feedback?.isCorrect?'#00e066':'#ff4444'}`,
+          boxShadow:`0 0 20px ${choice===null?'#c44dff33':feedback?.isCorrect?'#00e03322':'#ff444422'}`,
+          animation:'slidePost .35s both',transition:'border-color .3s,box-shadow .3s'}
       },
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:26,textAlign:'center'}}, facts[step].e),
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:12,color:'#eee',textAlign:'center',lineHeight:1.5,marginTop:5}}, facts[step].t)
-      ),
-      showCta && /*#__PURE__*/React.createElement("div", {
-        style:{position:'absolute',top:'42%',left:'50%',transform:'translate(-50%,-50%)',textAlign:'center'}
-      },
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:30}}, '🚀'),
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:16,fontWeight:700,color:'#fff',marginTop:4,animation:'ctaT 1.5s infinite'}}, 'ПОДПИШИСЬ!')
-      ),
-      // side icons
-      /*#__PURE__*/React.createElement("div", {
-        onClick: handleLike,
-        style:{position:'absolute',right:6,bottom:50,display:'flex',flexDirection:'column',gap:8,
-          alignItems:'center',cursor:'pointer'}
-      },
-        /*#__PURE__*/React.createElement("div", {
-          style:{fontSize:22,animation:liked?'heartPop .4s':'none',
-            filter:liked?'drop-shadow(0 0 8px red)':'none',transition:'filter .2s'}
-        }, liked ? '❤️' : '🤍'),
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:18}}, '💬'),
-        /*#__PURE__*/React.createElement("div", {style:{fontSize:18}}, '↗️')
-      ),
-      // progress bar
-      /*#__PURE__*/React.createElement("div", {style:{position:'absolute',bottom:0,left:0,right:0,height:4,background:'#222'}},
-        /*#__PURE__*/React.createElement("div", {style:{height:'100%',background:'#00f5ff',width:pct+'%',transition:'width 3s linear'}})
+        ...[...Array(14)].map((_,i) => React.createElement("div", {
+          key:'wp'+i,
+          style:{position:'absolute',left:`${8+(i*6.1)%82}%`,top:`${8+(i*7.3)%82}%`,
+            width:2,height:2,background:'#fff',borderRadius:'50%',
+            animation:`warpP ${.7+i*.22}s ${i*.11}s infinite`,
+            transformOrigin:'center',pointerEvents:'none',opacity:.55}
+        })),
+        React.createElement("div", {
+          style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',
+            alignItems:'center',justifyContent:'center',padding:18}
+        },
+          React.createElement("div", {style:{fontSize:10,color:'#888',marginBottom:4,letterSpacing:1,textTransform:'uppercase'}},
+            post.title),
+          React.createElement("div", {style:{fontSize:46,marginBottom:12}}, post.emoji),
+          React.createElement("div", {style:{fontSize:14,color:'#eee',textAlign:'center',lineHeight:1.65,fontWeight:600}},
+            post.text)
+        ),
+        React.createElement("div", {style:{position:'absolute',right:8,top:'32%',display:'flex',flexDirection:'column',gap:12,alignItems:'center'}},
+          React.createElement("div", {style:{fontSize:20,
+            color:choice==='like'?'#ff4466':'#555',
+            filter:choice==='like'?'drop-shadow(0 0 6px red)':'none',
+            transition:'all .2s'}}, choice==='like'?'❤️':'🤍'),
+          React.createElement("div", {style:{fontSize:17,color:'#444'}}, '💬'),
+          React.createElement("div", {style:{fontSize:17,color:'#444'}}, '↗️')
+        ),
+        React.createElement("div", {style:{position:'absolute',bottom:0,left:0,right:0,height:3,background:'#111'}},
+          React.createElement("div", {style:{height:'100%',
+            width:`${((postIdx+1)/POSTS.length)*100}%`,
+            background:'#c44dff',transition:'width .4s'}})
+        )
       )
     ),
-    // like hint / bonus
-    !liked && !done && /*#__PURE__*/React.createElement("div", {style:{fontSize:16,color:C.dim,marginBottom:12}},
-      '❤️ Нажми лайк если понравилось!'
+    feedback && React.createElement("div", {style:{
+      background:feedback.isCorrect?'rgba(0,200,100,.12)':'rgba(255,50,50,.12)',
+      border:`1px solid ${feedback.isCorrect?'#00c864':C.red}`,
+      borderRadius:12,padding:'10px 14px',marginBottom:10,
+      animation:'fbSlide .3s both'
+    }},
+      React.createElement("div", {style:{fontSize:15,fontWeight:700,marginBottom:3,
+        color:feedback.isCorrect?'#00e066':C.red}},
+        feedback.isCorrect ? '✅ Верно! +' + feedback.pts + ' очков' : '❌ Упс! +' + feedback.pts),
+      React.createElement("div", {style:{fontSize:13,color:C.text,lineHeight:1.5}}, feedback.msg)
     ),
-    liked && !done && /*#__PURE__*/React.createElement("div", {style:{fontSize:16,color:C.green,marginBottom:12,fontWeight:600}},
-      '🎉 +25 бонус за лайк!'
+    !choice && React.createElement("div", {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}},
+      React.createElement("div", {
+        onClick:()=>decide('skip'),
+        style:{background:C.card,border:`1px solid ${C.cardBorder}`,borderRadius:14,
+          padding:'16px 8px',textAlign:'center',cursor:'pointer',transition:'all .15s'}
+      },
+        React.createElement("div", {style:{fontSize:30,marginBottom:4}}, '⏭️'),
+        React.createElement("div", {style:{fontSize:15,color:C.dim,fontWeight:700}}, 'ПРОПУСТИТЬ'),
+        React.createElement("div", {style:{fontSize:11,color:C.dim,marginTop:3}}, 'если фейк')
+      ),
+      React.createElement("div", {
+        onClick:()=>decide('like'),
+        style:{background:'rgba(196,77,255,.18)',border:'2px solid #c44dff',borderRadius:14,
+          padding:'16px 8px',textAlign:'center',cursor:'pointer',
+          boxShadow:'0 0 16px rgba(196,77,255,.35)',transition:'all .15s'}
+      },
+        React.createElement("div", {style:{fontSize:30,marginBottom:4}}, '❤️'),
+        React.createElement("div", {style:{fontSize:15,color:'#c44dff',fontWeight:700}}, 'ЛАЙК!'),
+        React.createElement("div", {style:{fontSize:11,color:C.dim,marginTop:3}}, 'если факт')
+      )
     ),
-    showCta && !done && /*#__PURE__*/React.createElement(Btn, {
-      onClick: handleDone, full:true, color:C.gold, style:{marginTop:4}
-    }, 'ГОТОВО →')
+    choice && React.createElement("button", {
+      onClick:next,
+      style:{width:'100%',padding:'17px',background:C.gold,color:'#000',
+        border:'none',borderRadius:14,fontSize:18,fontWeight:800,cursor:'pointer',marginTop:4}
+    }, postIdx+1 < POSTS.length ? 'СЛЕДУЮЩИЙ →' : '🏁 ФИНИШ!')
   );
 }
+
 
 // ═══ MECHANIC 4: HALLUCINATION ═══════════════════
 function HallucinationMech({
@@ -6940,7 +7009,7 @@ const MODULES = [{
   xp: 80,
   narrative: {
     intro: "Двигатель работает на данных! Но не на любых — плохие данные делают меня тупее. Помоги отфильтровать: какие данные мне нужны для обучения?",
-    complete: "Двигатель запущен! Ты понял главный секрет ИИ: мусор на входе = мусор на выходе. Курс — на навигацию!"
+    complete: "Двигатель запущен! Ты понял главный секрет ИИ: мусор на входе = мусор на выходе. Теперь Нейро хочет найти свой голос — открываем Студию!"
   },
   rooms: [{
     name: "Фильтр данных для Нейро",
@@ -6998,12 +7067,36 @@ const MODULES = [{
   xp: 150,
   narrative: {
     intro: "Время применить всё что ты знаешь! Три испытания: отсортируй данные, построй нейросеть и запусти обучение. Поехали!",
-    complete: "🚀 МИССИЯ ВЫПОЛНЕНА! Ты прошёл три испытания и знаешь как работает ИИ. Хочешь узнать всё остальное? Открывай следующие уровни!"
+    complete: "🚀 МИССИЯ ВЫПОЛНЕНА! Ты прошёл три испытания. Теперь помоги Нейро найти свой голос — открываем Студию!"
   },
   rooms: [{
     name: "Запусти свой ИИ",
     type: "mission",
     desc: "8 паттернов с нарастающей сложностью. Угадай — узнай факт про ИИ!"
+  }]
+}, {
+  id: "studio",
+  title: "СТУДИЯ",
+  subtitle: "Нейро учится творить",
+  icon: "🎨",
+  color: "#c44dff",
+  xp: 90,
+  narrative: {
+    intro: "Отлично, пилот! Ты уже знаешь как работает ИИ. Теперь Нейро хочет найти свой голос — писать стихи, рисовать картины, разобраться в контенте. Помоги мне стать творцом!",
+    complete: "Я нашёл свой голос! Умею писать стихи, создавать картины и понимать контент. Теперь пора заглянуть внутрь — как работает мой мозг?"
+  },
+  rooms: [{
+    name: "Поймай строку",
+    type: "catch_line",
+    desc: "Лови строки стиха — чем быстрее поймаешь, тем больше очков!"
+  }, {
+    name: "Собери сцену",
+    type: "build_scene",
+    desc: "Создай космическую картину по шагам!"
+  }, {
+    name: "Космо-тик",
+    type: "swipe_tik",
+    desc: "Свайпай ролики — лайкай факты, пропускай фейки!"
   }]
 }, {
   id: "nav",
@@ -7059,17 +7152,9 @@ const MODULES = [{
     complete: "Коммуникатор настроен идеально! Теперь ты знаешь главный секрет ИИ — всё решает промпт. Говори чётко — получай чудеса!"
   },
   rooms: [{
-    name: "Поймай строку",
-    type: "catch_line",
-    desc: "Лови строки стиха — тапни пока не улетели!"
-  }, {
-    name: "Собери сцену",
-    type: "build_scene",
-    desc: "Создай космическую картину по шагам!"
-  }, {
-    name: "Космо-тик",
-    type: "tiktok_room",
-    desc: "Смотри TikTok ролик и ставь лайки!"
+    name: "Промпт-галерея",
+    type: "prompt_gallery",
+    desc: "Выбери лучший промпт — и увидишь на что я способен!"
   }]
 }, {
   id: "shield",
@@ -7127,10 +7212,10 @@ function App() {
     try {
       const s = localStorage.getItem('aiq5_gs');
       const parsed = s ? JSON.parse(s) : {xp:0,modules:[],score:0};
-      // DEV: unlock comms for testing
-      if (!parsed.modules.includes('nav')) {
-        parsed.modules = [...new Set([...parsed.modules,'core','nav'])];
-        parsed.xp = Math.max(parsed.xp, 150);
+      // DEV: unlock studio+nav for testing
+      if (!parsed.modules.includes('studio')) {
+        parsed.modules = [...new Set([...parsed.modules,'core','engine','mission','studio','nav'])];
+        parsed.xp = Math.max(parsed.xp, 350);
       }
       return parsed;
     } catch (e) {
@@ -7266,6 +7351,7 @@ function App() {
       catch_line: CatchLineMech,
       build_scene: BuildSceneMech,
       tiktok_room: TikTokRoomMech,
+      swipe_tik: SwipeTikMech,
       hallucination: HallucinationMech,
       mission: MissionMech
     };
