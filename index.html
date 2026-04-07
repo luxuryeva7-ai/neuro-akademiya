@@ -5716,7 +5716,10 @@ function SpaceGameMech({ room, onDone }) {
   );
 }
 
-function PromptGalleryMech({room, onDone}) {
+// PromptGalleryMech removed — replaced by PromptGameMech
+function PromptGalleryMech({room, onDone}) { return null; }
+/*REMOVED_START
+function PromptGalleryMech_OLD({room, onDone}) {
   const TASKS = [{
     desc: 'Нейро хочет написать стих про космос для друга 🌟',
     prompts: [
@@ -5882,6 +5885,7 @@ function PromptGalleryMech({room, onDone}) {
       )
   );
 }
+REMOVED_END*/
 
 // ═══ PROMPT GAME — 3 раунда ═══════════════════════════════
 
