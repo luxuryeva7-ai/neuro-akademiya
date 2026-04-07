@@ -5850,11 +5850,15 @@ function PromptGameMech({ room, onDone }) {
     const c = ROUNDS[round];
     s.score=0; s.lives=3; s.shipX=W/2; s.objects=[];
     s.running=true; s.time=c.duration;
-    s.bgStars=Array.from({length:45},()=>({
-      x:Math.random()*W,y:Math.random()*H,
-      r:Math.random()*1.5+0.3,op:Math.random()*0.6+0.2,
-      speed:0.1+Math.random()*0.3
-    }));
+    const _bgC=['rgba(255,255,255)','rgba(0,245,255)','rgba(255,215,0)','rgba(255,100,200)','rgba(160,160,255)'];
+    s.bgStars=Array.from({length:c.idx===2?90:45},()=>{
+      const _op=Math.random()*0.65+0.2;
+      const _cb=c.idx===2?_bgC[Math.floor(Math.random()*_bgC.length)]:'rgba(255,255,255)';
+      return{x:Math.random()*W,y:Math.random()*H,
+        r:Math.random()*(c.idx===2?3:1.5)+0.3,op:_op,
+        speed:0.1+Math.random()*(c.idx===2?0.7:0.3),
+        fs:_cb.replace(')',`,${_op.toFixed(2)}`)+')'};
+    });
     setDispScore(0); setDispLives(3); setDispTime(c.duration);
     const ctx = canvas.getContext('2d');
 
@@ -5912,7 +5916,7 @@ function PromptGameMech({ room, onDone }) {
       // bg stars scroll
       s.bgStars.forEach(bs=>{
         bs.y+=bs.speed; if(bs.y>H)bs.y=-5;
-        ctx.fillStyle=`rgba(255,255,255,${bs.op})`;
+        ctx.fillStyle=bs.fs||`rgba(255,255,255,${bs.op})`;
         ctx.beginPath(); ctx.arc(bs.x,bs.y,bs.r,0,Math.PI*2); ctx.fill();
       });
       // objects
@@ -5931,8 +5935,27 @@ function PromptGameMech({ room, onDone }) {
           return false;
         }
         if(obj.y>H+20) return false;
-        ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(obj.type==='star'?'⭐':obj.type==='gold'?'💫':'☄️',obj.x,obj.y);
+        if(c.idx===2&&obj.type!=='asteroid'){
+          const _iG=obj.type==='gold';
+          const _oR=_iG?16:11,_iR=_oR*0.42,_gR=_iG?28:19;
+          const _cl=_iG?'#FFD700':'#00f5ff';
+          const _gr=ctx.createRadialGradient(obj.x,obj.y,0,obj.x,obj.y,_gR);
+          _gr.addColorStop(0,_iG?'rgba(255,215,0,0.92)':'rgba(0,245,255,0.92)');
+          _gr.addColorStop(0.5,_iG?'rgba(255,215,0,0.28)':'rgba(0,245,255,0.28)');
+          _gr.addColorStop(1,'rgba(0,0,0,0)');
+          ctx.beginPath();ctx.arc(obj.x,obj.y,_gR,0,Math.PI*2);ctx.fillStyle=_gr;ctx.fill();
+          ctx.save();ctx.translate(obj.x,obj.y);
+          ctx.shadowColor=_cl;ctx.shadowBlur=16;
+          ctx.beginPath();
+          for(let _k=0;_k<10;_k++){const _a=(_k*Math.PI/5)-Math.PI/2;const _r=_k%2===0?_oR:_iR;_k===0?ctx.moveTo(Math.cos(_a)*_r,Math.sin(_a)*_r):ctx.lineTo(Math.cos(_a)*_r,Math.sin(_a)*_r);}
+          ctx.closePath();ctx.fillStyle=_iG?'#FFE030':'#cfffff';ctx.fill();
+          ctx.shadowBlur=0;
+          ctx.beginPath();ctx.arc(0,0,_oR*0.3,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.95)';ctx.fill();
+          ctx.restore();
+        } else {
+          ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText(obj.type==='star'?'⭐':obj.type==='gold'?'💫':'☄️',obj.x,obj.y);
+        }
         return true;
       });
       // ship
