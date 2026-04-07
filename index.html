@@ -6738,34 +6738,18 @@ function App() {
   const [gs, setGs] = useState(() => {
     try {
       const s = localStorage.getItem('aiq5_gs');
-      return s ? JSON.parse(s) : {
-        xp: 0,
-        modules: [],
-        score: 0
-      };
+      const parsed = s ? JSON.parse(s) : {xp:0,modules:[],score:0};
+      // DEV: unlock comms for testing
+      if (!parsed.modules.includes('nav')) {
+        parsed.modules = [...new Set([...parsed.modules,'core','nav'])];
+        parsed.xp = Math.max(parsed.xp, 150);
+      }
+      return parsed;
     } catch (e) {
-      return {
-        xp: 0,
-        modules: [],
-        score: 0
-      };
+      return {xp:150,modules:['core','nav'],score:0};
     }
   });
-  // DEV: unlock comms for testing
-  useEffect(() => {
-    const saved = localStorage.getItem('aiq5_gs');
-    const gs0 = saved ? JSON.parse(saved) : null;
-    const needsUnlock = !gs0 || !gs0.modules || !gs0.modules.includes('nav');
-    if (needsUnlock) {
-      const updated = gs0 || {xp:0,modules:[],score:0};
-      if (!updated.modules.includes('core')) updated.modules.push('core');
-      if (!updated.modules.includes('nav')) updated.modules.push('nav');
-      localStorage.setItem('aiq5_gs', JSON.stringify(updated));
-      localStorage.setItem('aiq5_paid', '1');
-      window.location.reload();
-    }
-  }, []);
-  const [paid, setPaid] = useState(() => localStorage.getItem('aiq5_paid') === '1');
+  const [paid, setPaid] = useState(true); // DEV: always paid for comms testing
   const [curMod, setCurMod] = useState(null);
   const [roomIdx, setRoomIdx] = useState(0);
   const [roomScores, setRoomScores] = useState([]);
