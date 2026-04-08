@@ -6309,271 +6309,238 @@ function FakeDetectorMech({ room, onDone }) {
 
 // ═══ MECHANIC 6: AUTOPILOT ═══════════════════
 function AutopilotMech({ room, onDone }) {
-  // sub: 'pick'|'fly1'|'crash1'|'fly2'|'out2'|'fly3'|'win3'
-  var subS=React.useState('pick'), sub=subS[0], setSub=subS[1];
-  var s1tS=React.useState(0), s1t=s1tS[0], setS1t=s1tS[1];
-  var s2xS=React.useState(150), s2x=s2xS[0], setS2x=s2xS[1];
-  var s2aS=React.useState([]), s2asts=s2aS[0], setS2asts=s2aS[1];
-  var s2fS=React.useState(100), s2fuel=s2fS[0], setS2fuel=s2fS[1];
-  var s3aS=React.useState([]), s3asts=s3aS[0], setS3asts=s3aS[1];
-  var s3pS=React.useState(0), s3px=s3pS[0], setS3px=s3pS[1];
-  var s3fS=React.useState(100), s3fuel=s3fS[0], setS3fuel=s3fS[1];
-  var s3prS=React.useState(0), s3prog=s3prS[0], setS3prog=s3prS[1];
-  var s3flS=React.useState(false), s3flash=s3flS[0], setS3flash=s3flS[1];
+  // stg: 'p1'|'p1end'|'p2'|'p2end'|'p3'|'done'
+  var stgS=React.useState('p1'), stg=stgS[0], setStg=stgS[1];
+  var pxS=React.useState(0), px=pxS[0], setPx=pxS[1];
+  var astsS=React.useState([]), asts=astsS[0], setAsts=astsS[1];
+  var fuelS=React.useState(100), fuel=fuelS[0], setFuel=fuelS[1];
+  var progS=React.useState(0), prog=progS[0], setProg=progS[1];
+  var hitS=React.useState(false), hit=hitS[0], setHit=hitS[1];
   var raf=React.useRef(null), g=React.useRef({});
-  React.useEffect(function(){return function(){if(raf.current)cancelAnimationFrame(raf.current);};}, []);
-  function stopGame(){g.current.stop=true;if(raf.current)cancelAnimationFrame(raf.current);}
 
-  function startFly1(){
-    stopGame(); g.current={stop:false};
-    var t0=performance.now();
-    function tick(now){
-      if(g.current.stop)return;
-      var t=Math.min((now-t0)/1600,1);
-      setS1t(t);
-      if(t<0.5){raf.current=requestAnimationFrame(tick);}else{setSub('crash1');}
-    }
-    raf.current=requestAnimationFrame(tick);
-  }
+  React.useEffect(function(){
+    runPhase(1);
+    return function(){if(raf.current)cancelAnimationFrame(raf.current);};
+  },[]);
 
-  function startFly2(){
-    stopGame();
-    g.current={stop:false,sx:150,fuel:100,asts:[],lastSpawn:0,t0:performance.now()};
-    setS2x(150);setS2fuel(100);setS2asts([]);
+  function runPhase(n){
+    if(raf.current)cancelAnimationFrame(raf.current);
+    var gc={stop:false,n:n,px:0,asts:[],lastSpawn:0,t0:performance.now(),flashUntil:0};
+    g.current=gc;
+    setPx(0);setAsts([]);setFuel(100);setProg(0);setHit(false);
+    setStg('p'+n);
     function tick(now){
-      var gc=g.current; if(gc.stop)return;
+      if(gc.stop)return;
       var elapsed=(now-gc.t0)/1000;
-      if(now-gc.lastSpawn>750){gc.lastSpawn=now;gc.asts.push({id:now,x:40+Math.random()*220,y:0,r:11+Math.random()*9});}
-      gc.asts=gc.asts.map(function(a){return{id:a.id,x:a.x,y:a.y+2.6,r:a.r};}).filter(function(a){return a.y<260;});
-      gc.fuel=Math.max(0,100-elapsed*9.5);
-      setS2asts(gc.asts.slice());setS2x(gc.sx);setS2fuel(gc.fuel);
-      if(gc.fuel<=0){gc.stop=true;setSub('out2');return;}
-      raf.current=requestAnimationFrame(tick);
+      // spawn
+      if(n===1){
+        if(gc.asts.length===0&&elapsed>0.85)gc.asts=[{id:1,ox:0.03,oy:0,sz:5,t:0}];
+      } else {
+        var si=n===2?660:1050;
+        if(n===3&&elapsed>9.5)si=99999;
+        if(now-gc.lastSpawn>si){
+          gc.lastSpawn=now;
+          gc.asts.push({id:now,ox:(Math.random()*2-1)*(n===2?.9:.72),oy:(Math.random()*2-1)*.44,sz:4,t:Math.floor(Math.random()*3)});
+        }
+      }
+      // grow
+      gc.asts=gc.asts.map(function(a){return{id:a.id,ox:a.ox,oy:a.oy,sz:a.sz+1.5,t:a.t};}).filter(function(a){return a.sz<95;});
+      // collision p1 (instant kill)
+      if(n===1){
+        var kill=false;
+        gc.asts.forEach(function(a){
+          if(!kill&&a.sz>25&&a.sz<60){
+            var ax=150+a.ox*a.sz*2.1-gc.px*55;
+            if(Math.abs(ax-150)<34)kill=true;
+          }
+        });
+        if(kill){gc.stop=true;setHit(true);setAsts([]);setTimeout(function(){setHit(false);setStg('p1end');},650);return;}
+      }
+      // near-miss flash p2/p3
+      if(n>=2){
+        gc.asts.forEach(function(a){
+          if(a.sz>24&&a.sz<58){
+            var ax=150+a.ox*a.sz*2.1-gc.px*55;
+            if(Math.abs(ax-150)<28&&now>gc.flashUntil)gc.flashUntil=now+300;
+          }
+        });
+      }
+      // fuel & progress
+      if(n===2){
+        var f=Math.max(0,100-elapsed*7.6);
+        setFuel(f);
+        if(f<=0){gc.stop=true;setStg('p2end');}
+      }
+      if(n===3){
+        var p=Math.min(100,elapsed*5.0),f3=Math.max(0,100-elapsed*4.6);
+        setProg(p);setFuel(f3);
+        if(p>=100){gc.stop=true;setStg('done');setTimeout(function(){onDone(100,100);},2800);}
+      }
+      setAsts(gc.asts.slice());setPx(gc.px);
+      if(n>=2){var nf=(now<gc.flashUntil);setHit(nf);}
+      if(!gc.stop)raf.current=requestAnimationFrame(tick);
     }
     raf.current=requestAnimationFrame(tick);
   }
-  function moveShip2(d){g.current.sx=Math.max(35,Math.min(265,(g.current.sx||150)+d*38));}
 
-  function startFly3(){
-    stopGame();
-    g.current={stop:false,px:0,asts:[],lastSpawn:0,t0:performance.now(),flashUntil:0};
-    setS3px(0);setS3fuel(100);setS3prog(0);setS3asts([]);setS3flash(false);
-    function tick(now){
-      var gc=g.current; if(gc.stop)return;
-      var elapsed=(now-gc.t0)/1000;
-      if(now-gc.lastSpawn>900){gc.lastSpawn=now;gc.asts.push({id:now,ox:(Math.random()*2-1)*.9,oy:(Math.random()*2-1)*.5,sz:3});}
-      gc.asts=gc.asts.map(function(a){return{id:a.id,ox:a.ox,oy:a.oy,sz:a.sz+1.7};}).filter(function(a){return a.sz<88;});
-      var flash=false;
-      gc.asts.forEach(function(a){
-        if(a.sz>30&&a.sz<56){var ax=150+a.ox*a.sz*2.1-gc.px*55;if(Math.abs(ax-150)<26)flash=true;}
-      });
-      if(flash&&now>gc.flashUntil)gc.flashUntil=now+280;
-      var prog=Math.min(100,elapsed*7.2);
-      var fuel=Math.max(0,100-elapsed*6.0);
-      setS3asts(gc.asts.slice());setS3px(gc.px);setS3prog(prog);setS3fuel(fuel);setS3flash(now<gc.flashUntil);
-      if(prog>=100){gc.stop=true;setSub('win3');setTimeout(function(){onDone(100,100);},2200);return;}
-      raf.current=requestAnimationFrame(tick);
+  function move(d){
+    if(stg==='p1'||stg==='p1end')return;
+    g.current.px=Math.max(-1,Math.min(1,(g.current.px||0)+d*0.38));
+  }
+
+  var locked=stg==='p1'||stg==='p1end';
+  var isP3=stg==='p3'||stg==='done';
+  var isDone=stg==='done';
+  var btnCol=locked?'#FF5544':C.neon;
+  var btnBg=locked?'rgba(255,85,68,.09)':C.card;
+
+  function rAst(a){
+    var ax=150+a.ox*a.sz*2.1-px*55, ay=110+a.oy*a.sz*1.55, s=a.sz;
+    if(ax<-s-8||ax>308+s||ay<-s-8||ay>228+s)return null;
+    var op=Math.min(1,s/14);
+    return React.createElement('g',{key:'a'+a.id,opacity:op},
+      React.createElement('ellipse',{cx:ax,cy:ay,rx:s,ry:s*.8,fill:'#3A2C20',stroke:'#5E4C38',strokeWidth:1.5}),
+      React.createElement('ellipse',{cx:ax-s*.28,cy:ay-s*.19,rx:s*.35,ry:s*.26,fill:'#241808',opacity:.82}),
+      React.createElement('ellipse',{cx:ax+s*.21,cy:ay+s*.12,rx:s*.19,ry:s*.14,fill:'#4C3C28',opacity:.58}),
+      s>13&&React.createElement('circle',{cx:ax+s*.14,cy:ay-s*.27,r:s*.1,fill:'#1A1008',opacity:.7})
+    );
+  }
+
+  function rEarth(){
+    var r=Math.max(0,(prog-28)*2.8);
+    if(r<1)return null;
+    var op=Math.min(1,(prog-28)/16);
+    var ecx=150-px*38*(Math.min(1,prog/85)), ecy=110;
+    var ch=React.createElement;
+    var kids=[];
+    if(r>6)kids.push(ch('circle',{key:'eg',cx:ecx,cy:ecy,r:r*1.14,fill:'#001428',opacity:.32}));
+    kids.push(ch('circle',{key:'eo',cx:ecx,cy:ecy,r:r,fill:'#1464A0'}));
+    if(r>18){
+      kids.push(ch('ellipse',{key:'c1',cx:ecx+r*.22,cy:ecy-r*.16,rx:r*.3,ry:r*.19,fill:'#4A7030',opacity:.92}));
+      kids.push(ch('ellipse',{key:'c2',cx:ecx+r*.31,cy:ecy+r*.12,rx:r*.18,ry:r*.24,fill:'#7A6018',opacity:.88}));
+      kids.push(ch('ellipse',{key:'c3',cx:ecx-r*.16,cy:ecy-r*.1,rx:r*.17,ry:r*.14,fill:'#486028',opacity:.85}));
     }
-    raf.current=requestAnimationFrame(tick);
-  }
-  function movePilot(d){g.current.px=Math.max(-1,Math.min(1,(g.current.px||0)+d*0.32));}
-
-  var STARS_A=[[18,22],[55,48],[95,28],[195,18],[245,68],[280,145],[68,172],[155,222],[42,122],[238,182],[120,55],[170,35],[230,115],[10,80],[290,200]];
-  var STARS_B=[[18,30],[45,72],[88,22],[125,58],[175,28],[218,82],[258,38],[285,95],[12,155],[78,175],[148,125],[228,148],[272,185],[38,205],[168,200],[95,115]];
-  var STARS_C=[[20,40],[40,18],[82,68],[108,32],[158,52],[198,22],[242,72],[268,42],[14,105],[52,135],[92,175],[128,142],[172,162],[212,135],[252,175],[282,105],[32,205],[102,198],[182,208],[258,198]];
-
-  // ── PICK PROMPT ──────────────────────────────────────────────────────────
-  if(sub==='pick'){
-    return React.createElement('div',{style:{padding:'16px',display:'flex',flexDirection:'column',gap:14}},
-      React.createElement('div',{style:{textAlign:'center',paddingTop:8}},
-        React.createElement('div',{style:{fontSize:38,marginBottom:8}},'🤖'),
-        React.createElement('div',{style:{fontSize:16,fontWeight:800,color:C.neon,fontFamily:"'Orbitron'",marginBottom:6}},'АВТОПИЛОТ'),
-        React.createElement('div',{style:{fontSize:12,color:C.textDim,lineHeight:1.6}},'Выбери команду для ИИ-автопилота. Он выполнит её буквально!')
-      ),
-      React.createElement('div',{style:{background:C.card,borderRadius:14,padding:14,border:'1px solid '+C.cardBorder}},
-        React.createElement('div',{style:{fontSize:10,color:C.textDim,marginBottom:10,fontWeight:700,fontFamily:"'Orbitron'",letterSpacing:1}},'📡 ВЫБЕРИ КОМАНДУ:'),
-        React.createElement('button',{
-          onClick:function(){setSub('fly1');startFly1();},
-          style:{width:'100%',background:'linear-gradient(135deg,#0D2040,#1A3A6A)',border:'2px solid '+C.neon,color:C.neon,borderRadius:12,padding:'14px',fontSize:14,fontWeight:800,cursor:'pointer',textAlign:'left'}
-        },
-          React.createElement('div',{style:{fontSize:15,marginBottom:4}},'⚡ "Лети быстро!"'),
-          React.createElement('div',{style:{fontSize:11,color:'#88AACC',fontWeight:400}},'Найди самый быстрый маршрут к базе')
-        )
-      ),
-      React.createElement('div',{style:{background:'#0A0D15',borderRadius:10,padding:'10px 14px',border:'1px solid #1A1E2A',fontSize:12,color:'#445566',lineHeight:1.6}},
-        '💡 Подумай: чего ИИ НЕ будет делать, если ты не скажешь?'
-      )
-    );
+    if(r>28){
+      kids.push(ch('ellipse',{key:'w1',cx:ecx+r*.04,cy:ecy+r*.26,rx:r*.34,ry:r*.08,fill:'white',opacity:.62}));
+      kids.push(ch('ellipse',{key:'w2',cx:ecx-r*.1,cy:ecy-r*.27,rx:r*.3,ry:r*.08,fill:'white',opacity:.66}));
+    }
+    kids.push(ch('circle',{key:'ea',cx:ecx,cy:ecy,r:r,fill:'none',stroke:'#44AAFF',strokeWidth:Math.max(1.5,r*.055),opacity:.46}));
+    if(r>7)kids.push(ch('circle',{key:'ea2',cx:ecx,cy:ecy,r:r+4,fill:'none',stroke:'#88CCFF',strokeWidth:2,opacity:.2}));
+    return React.createElement('g',{key:'earth',opacity:op},kids);
   }
 
-  // ── PHASE 1: AUTO FLIGHT ─────────────────────────────────────────────────
-  if(sub==='fly1'||sub==='crash1'){
-    var crashed=sub==='crash1';
-    var sx=42+s1t*108, sy=240-s1t*118;
-    return React.createElement('div',{style:{padding:'12px',display:'flex',flexDirection:'column',gap:10}},
-      React.createElement('div',{style:{background:C.card,borderRadius:8,padding:'8px 12px',display:'flex',gap:6,alignItems:'center'}},
-        React.createElement('div',{style:{fontSize:10,color:C.textDim,fontWeight:700}},'📋 КОМАНДА:'),
-        React.createElement('div',{style:{fontSize:12,color:C.neon,fontWeight:700}},'⚡ Лети быстро!')
-      ),
-      React.createElement('div',{style:{background:'#02040C',borderRadius:12,overflow:'hidden',border:'1px solid #0D1828'}},
-        React.createElement('svg',{width:'100%',viewBox:'0 0 300 270',style:{display:'block'}},
-          STARS_A.map(function(p,i){return React.createElement('circle',{key:'s'+i,cx:p[0],cy:p[1],r:1.2,fill:'white',opacity:.35});}),
-          React.createElement('text',{key:'a1',x:128,y:132,fontSize:24},'☄️'),
-          React.createElement('text',{key:'a2',x:175,y:94,fontSize:20},'☄️'),
-          React.createElement('text',{key:'a3',x:98,y:98,fontSize:16},'☄️'),
-          React.createElement('text',{key:'a4',x:202,y:140,fontSize:18},'☄️'),
-          React.createElement('text',{key:'a5',x:152,y:76,fontSize:14},'☄️'),
-          React.createElement('line',{key:'rt',x1:42,y1:250,x2:268,y2:38,stroke:'#FF4444',strokeWidth:2.5,strokeDasharray:'8,4',opacity:.55}),
-          React.createElement('text',{key:'fin',x:254,y:52,fontSize:24},'🏁'),
-          crashed
-            ? React.createElement('g',{key:'exp'},
-                React.createElement('circle',{cx:146,cy:132,r:22,fill:'#FF4400',opacity:.25}),
-                React.createElement('circle',{cx:146,cy:132,r:13,fill:'#FF6600',opacity:.45}),
-                React.createElement('text',{x:133,y:142,fontSize:26},'💥')
-              )
-            : React.createElement('text',{key:'ship',x:sx-12,y:sy+6,fontSize:22},'🚀'),
-          React.createElement('text',{key:'ls',x:25,y:260,fontSize:9,fill:C.neon,opacity:.6},'СТАРТ'),
-          React.createElement('text',{key:'lf',x:250,y:70,fontSize:9,fill:'#44CC88',opacity:.7},'БАЗА')
-        )
-      ),
-      crashed&&React.createElement('div',{style:{background:'#1A0808',border:'1px solid #FF444432',borderRadius:10,padding:'12px',fontSize:12,color:'#FF8866',lineHeight:1.5}},
-        React.createElement('div',{style:{fontWeight:800,marginBottom:4,color:'#FF5544',fontSize:13}},'🤖 ИИ рапортует:'),
-        '"Маршрут выбрал самый быстрый — задача выполнена! Какие астероиды? Ты об этом не говорил..."'
-      ),
-      crashed&&React.createElement('button',{
-        onClick:function(){setSub('fly2');startFly2();},
-        style:{background:'rgba(255,102,68,.12)',border:'2px solid #FF6644',color:'#FF9977',borderRadius:10,padding:'12px',fontSize:13,fontWeight:700,cursor:'pointer',width:'100%'}
-      },'+ Добавить правило: ☄️ [Облетай астероиды]')
-    );
+  var STARS=[[22,42,1],[48,16,1],[88,68,2],[114,34,1],[164,56,2],[204,22,1],[246,76,2],[274,46,1],[16,110,1],[56,138,2],[94,180,1],[132,142,2],[176,166,1],[216,138,2],[256,180,1],[286,110,2],[36,208,1],[106,200,1],[186,210,2],[262,200,1],[140,82,1],[62,90,1],[242,162,2],[182,198,1],[82,32,1]];
+
+  // Build SVG children
+  var k=[];
+  // defs
+  k.push(React.createElement('defs',{key:'dfs'},
+    React.createElement('radialGradient',{key:'rg',id:'apEarth',cx:'36%',cy:'32%',r:'68%'},
+      React.createElement('stop',{key:'s0',offset:'0%',stopColor:'#2A9AD8'}),
+      React.createElement('stop',{key:'s1',offset:'58%',stopColor:'#0D5A8C'}),
+      React.createElement('stop',{key:'s2',offset:'100%',stopColor:'#031525'})
+    )
+  ));
+  // bg
+  k.push(React.createElement('rect',{key:'bg',width:300,height:220,fill:'#010408'}));
+  // stars with parallax
+  STARS.forEach(function(p,i){
+    var dx=px*(p[0]-150)*0.022, dy=px*(p[1]-110)*0.009;
+    k.push(React.createElement('line',{key:'s'+i,x1:p[0],y1:p[1],x2:p[0]+dx*4+p[2]*.5,y2:p[1]+dy,stroke:'white',strokeWidth:.7+p[2]*.25,opacity:.14+i%7*.03}));
+  });
+  // earth
+  if(isP3){var er=rEarth();if(er)k.push(er);}
+  // asteroids
+  asts.forEach(function(a){var r=rAst(a);if(r)k.push(r);});
+  // hit flash (full screen)
+  if(hit)k.push(React.createElement('rect',{key:'hfull',width:300,height:220,fill:stg==='p1'?'#FF1100':'#FF7700',opacity:.1}));
+  // crosshair
+  k.push(React.createElement('line',{key:'c1',x1:150,y1:101,x2:150,y2:96,stroke:'#44AAFF',strokeWidth:1.5,opacity:.55}));
+  k.push(React.createElement('line',{key:'c2',x1:150,y1:120,x2:150,y2:115,stroke:'#44AAFF',strokeWidth:1.5,opacity:.55}));
+  k.push(React.createElement('line',{key:'c3',x1:139,y1:108,x2:144,y2:108,stroke:'#44AAFF',strokeWidth:1.5,opacity:.55}));
+  k.push(React.createElement('line',{key:'c4',x1:156,y1:108,x2:161,y2:108,stroke:'#44AAFF',strokeWidth:1.5,opacity:.55}));
+  k.push(React.createElement('circle',{key:'cc',cx:150,cy:108,r:2.5,fill:'none',stroke:'#44AAFF',strokeWidth:1,opacity:.45}));
+  // HUD fuel
+  k.push(React.createElement('rect',{key:'fb',x:10,y:11,width:75,height:5,fill:'#0D1520',rx:2.5}));
+  k.push(React.createElement('rect',{key:'fbi',x:10,y:11,width:fuel*.75,height:5,fill:fuel>25?'#44CC88':'#FF5533',rx:2.5}));
+  k.push(React.createElement('text',{key:'fbt',x:10,y:25,fill:'#8899AA',fontSize:7.5},'⛽ '+Math.round(fuel)+'%'));
+  // HUD progress p3
+  if(isP3){
+    k.push(React.createElement('rect',{key:'pb',x:215,y:11,width:75,height:5,fill:'#0D1520',rx:2.5}));
+    k.push(React.createElement('rect',{key:'pbi',x:215,y:11,width:prog*.75,height:5,fill:'#44AAFF',rx:2.5}));
+    k.push(React.createElement('text',{key:'pbt',x:215,y:25,fill:'#8899AA',fontSize:7.5},'🌍 '+Math.round(prog)+'%'));
+  }
+  // status bar
+  var sTxt=locked?'⚠  АВТОПИЛОТ':(isP3?'🌍  К ЗЕМЛЕ':'☄  УКЛОНЕНИЕ');
+  var sCol=locked?'#FF5544':(isP3?'#44AAFF':'#44CC88');
+  k.push(React.createElement('rect',{key:'sb',x:106,y:10,width:88,height:14,fill:'rgba(0,0,0,.6)',rx:3}));
+  k.push(React.createElement('text',{key:'st',x:150,y:20.5,fill:sCol,fontSize:7.5,textAnchor:'middle',fontFamily:'monospace'},sTxt));
+  // cockpit panels (ON TOP of everything)
+  k.push(React.createElement('path',{key:'pl',d:'M0,0 L0,220 L44,185 L44,38 Z',fill:'#0C1420',opacity:.94}));
+  k.push(React.createElement('path',{key:'pr',d:'M300,0 L300,220 L256,185 L256,38 Z',fill:'#0C1420',opacity:.94}));
+  k.push(React.createElement('path',{key:'pt',d:'M0,0 L44,38 L256,38 L300,0 Z',fill:'#0A0E18',opacity:.84}));
+  k.push(React.createElement('path',{key:'pbt2',d:'M0,220 L44,185 L256,185 L300,220 Z',fill:'#0A0E18',opacity:.94}));
+  // window frame
+  k.push(React.createElement('rect',{key:'wf',x:44,y:38,width:212,height:147,fill:'none',stroke:hit?'#FF5533':'#1A3050',strokeWidth:2,rx:2}));
+  if(hit)k.push(React.createElement('rect',{key:'wfl',x:44,y:38,width:212,height:147,fill:stg==='p1'?'#FF1100':'#FF7700',opacity:.09,rx:2}));
+  // dashboard instruments
+  k.push(React.createElement('rect',{key:'d1',x:50,y:189,width:42,height:21,fill:'#071016',rx:3,stroke:'#182838',strokeWidth:1}));
+  k.push(React.createElement('circle',{key:'d1c',cx:60,cy:197,r:3.5,fill:'none',stroke:'#44AAFF',strokeWidth:1}));
+  k.push(React.createElement('text',{key:'d1t',x:69,y:200,fill:'#44AAFF',fontSize:7,fontFamily:'monospace'},'NAV'));
+  k.push(React.createElement('text',{key:'d1s',x:69,y:208,fill:'#2A4456',fontSize:6,fontFamily:'monospace'},'OK'));
+  k.push(React.createElement('rect',{key:'d2',x:129,y:191,width:42,height:17,fill:'#071016',rx:3,stroke:'#182838',strokeWidth:1}));
+  k.push(React.createElement('text',{key:'d2t',x:150,y:203,fill:locked?'#FF5533':'#FFD700',fontSize:7,textAnchor:'middle',fontFamily:'monospace'},locked?'LOCK':'AUTO'));
+  k.push(React.createElement('rect',{key:'d3',x:208,y:189,width:42,height:21,fill:'#071016',rx:3,stroke:'#182838',strokeWidth:1}));
+  k.push(React.createElement('circle',{key:'d3c',cx:219,cy:197,r:3.5,fill:fuel>25?'#44CC88':'#FF5533'}));
+  k.push(React.createElement('text',{key:'d3t',x:228,y:200,fill:fuel>25?'#44CC88':'#FF5533',fontSize:7,fontFamily:'monospace'},'FUEL'));
+  k.push(React.createElement('text',{key:'d3s',x:228,y:208,fill:'#2A4456',fontSize:6,fontFamily:'monospace'},Math.round(fuel)+'%'));
+  // done overlay
+  if(isDone){
+    k.push(React.createElement('rect',{key:'dov',width:300,height:220,fill:'#001508',opacity:.75}));
+    k.push(React.createElement('text',{key:'dt1',x:150,y:94,fill:'#44CC88',fontSize:28,textAnchor:'middle'},'🌍'));
+    k.push(React.createElement('text',{key:'dt2',x:150,y:118,fill:'#44FF88',fontSize:14,textAnchor:'middle',fontWeight:'bold'},'ПОСАДКА!'));
+    k.push(React.createElement('text',{key:'dt3',x:150,y:138,fill:'#88DDAA',fontSize:9,textAnchor:'middle'},'Все системы в норме'));
   }
 
-  // ── PHASE 2: DODGE GAME ──────────────────────────────────────────────────
-  if(sub==='fly2'||sub==='out2'){
-    var fuelOut=sub==='out2';
-    return React.createElement('div',{style:{padding:'12px',display:'flex',flexDirection:'column',gap:10}},
-      React.createElement('div',{style:{background:C.card,borderRadius:8,padding:'8px 12px'}},
-        React.createElement('div',{style:{fontSize:10,color:C.textDim,fontWeight:700,marginBottom:4}},'📋 ПРАВИЛА:'),
-        ['⚡ Лети быстро!','☄️ Облетай астероиды'].map(function(t,i){
-          return React.createElement('div',{key:i,style:{fontSize:12,color:'#44CC88',display:'flex',alignItems:'center',gap:5}},
-            React.createElement('span',{style:{fontSize:9}},'✓'),t);
-        })
-      ),
-      React.createElement('div',{style:{background:'#01030A',borderRadius:12,overflow:'hidden',border:'1px solid #0D1828',position:'relative'}},
-        React.createElement('svg',{width:'100%',viewBox:'0 0 300 230',style:{display:'block'}},
-          STARS_B.map(function(p,i){return React.createElement('circle',{key:'s'+i,cx:p[0],cy:p[1],r:1,fill:'white',opacity:.28});}),
-          React.createElement('circle',{key:'dst',cx:150,cy:18,r:14,fill:'#44AAFF',opacity:.1}),
-          React.createElement('text',{key:'dstt',x:138,y:23,fontSize:13},'🏁'),
-          s2asts.map(function(a){
-            return React.createElement('g',{key:a.id},
-              React.createElement('circle',{cx:a.x,cy:a.y,r:a.r,fill:'#5A4A3A',stroke:'#8A7060',strokeWidth:1.5}),
-              React.createElement('circle',{cx:a.x-a.r*.3,cy:a.y-a.r*.3,r:a.r*.22,fill:'#6A5A4A',opacity:.55})
-            );
-          }),
-          React.createElement('rect',{key:'fbb',x:10,y:10,width:90,height:7,fill:'#1A2030',rx:3}),
-          React.createElement('rect',{key:'fbi',x:10,y:10,width:s2fuel*.9,height:7,fill:s2fuel>30?'#44CC88':'#FF5533',rx:3}),
-          React.createElement('text',{key:'fbt',x:10,y:27,fill:'#8899AA',fontSize:9},'⛽ '+Math.round(s2fuel)+'%'),
-          React.createElement('ellipse',{key:'fl2',cx:s2x,cy:222,rx:3,ry:5,fill:'#FFCC00',opacity:.55}),
-          React.createElement('ellipse',{key:'fl1',cx:s2x,cy:218,rx:5,ry:8,fill:'#FF6600',opacity:.6}),
-          React.createElement('text',{key:'shp',x:s2x-12,y:210,fontSize:22},'🚀')
-        ),
-        fuelOut&&React.createElement('div',{style:{position:'absolute',inset:0,background:'rgba(4,6,16,.78)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8}},
-          React.createElement('div',{style:{fontSize:26}},'⛽'),
-          React.createElement('div',{style:{fontSize:14,fontWeight:800,color:'#FFD700'}})
-        )
-      ),
-      !fuelOut
-        ?React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}},
-            React.createElement('button',{onTouchStart:function(e){e.preventDefault();moveShip2(-1);},onClick:function(){moveShip2(-1);},style:{background:C.card,border:'2px solid '+C.neon,color:C.neon,borderRadius:10,padding:'14px',fontSize:24,cursor:'pointer'}},'◀'),
-            React.createElement('button',{onTouchStart:function(e){e.preventDefault();moveShip2(1);},onClick:function(){moveShip2(1);},style:{background:C.card,border:'2px solid '+C.neon,color:C.neon,borderRadius:10,padding:'14px',fontSize:24,cursor:'pointer'}},'▶')
-          )
-        :React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:8}},
-            React.createElement('div',{style:{background:'#15100A',border:'1px solid #FFD70030',borderRadius:10,padding:'12px',fontSize:12,color:'#FFB844',lineHeight:1.5}},
-              React.createElement('div',{style:{fontWeight:800,marginBottom:4,color:'#FFD700',fontSize:13}},'🤖 ИИ рапортует:'),
-              '"Все астероиды облетел! Задача выполнена! Про топливо... ты не говорил — это не моя проблема."'
-            ),
-            React.createElement('button',{
-              onClick:function(){setSub('fly3');startFly3();},
-              style:{background:'rgba(255,215,0,.1)',border:'2px solid #FFD700',color:'#FFD700',borderRadius:10,padding:'12px',fontSize:13,fontWeight:700,cursor:'pointer',width:'100%'}
-            },'+ Добавить правило: ⛽ [Следи за топливом]')
-          )
-    );
-  }
-
-  // ── PHASE 3: FIRST-PERSON COCKPIT ────────────────────────────────────────
-  if(sub==='fly3'||sub==='win3'){
-    var won=sub==='win3';
-    return React.createElement('div',{style:{padding:'12px',display:'flex',flexDirection:'column',gap:10}},
-      React.createElement('div',{style:{background:C.card,borderRadius:8,padding:'8px 12px',border:'1px solid #44CC8828'}},
-        React.createElement('div',{style:{fontSize:10,color:C.textDim,fontWeight:700,marginBottom:4}},'📋 ФИНАЛЬНЫЙ ПРОМПТ:'),
-        React.createElement('div',{style:{fontSize:11,color:'#44CC88',lineHeight:1.5}},'⚡ Быстро · ☄️ Облетай астероиды · ⛽ Следи за топливом')
-      ),
-      React.createElement('div',{style:{borderRadius:12,overflow:'hidden',border:'2px solid '+(s3flash?'#FF5533':'#1A3050'),transition:'border-color .15s',position:'relative'}},
-        React.createElement('svg',{width:'100%',viewBox:'0 0 300 220',style:{display:'block'}},
-          React.createElement('rect',{key:'bg',width:300,height:220,fill:'#010408'}),
-          STARS_C.map(function(p,i){return React.createElement('line',{key:'s'+i,x1:p[0],y1:p[1],x2:p[0]+1,y2:p[1]+2,stroke:'white',strokeWidth:.9,opacity:.18+i%4*.04});}),
-          s3asts.map(function(a){
-            var ax=150+a.ox*a.sz*2.1-s3px*55;
-            var ay=110+a.oy*a.sz*1.5;
-            var op=Math.min(1,a.sz/22);
-            if(ax<-a.sz||ax>300+a.sz||ay<-a.sz||ay>220+a.sz)return null;
-            return React.createElement('g',{key:a.id},
-              React.createElement('circle',{cx:ax,cy:ay,r:a.sz,fill:'#4A3A2E',stroke:'#7A6A58',strokeWidth:1.5,opacity:op}),
-              React.createElement('circle',{cx:ax-a.sz*.25,cy:ay-a.sz*.25,r:a.sz*.2,fill:'#5A4A38',opacity:op*.6})
-            );
-          }),
-          React.createElement('circle',{key:'tgt',cx:150,cy:24,r:3+s3prog*.06,fill:'#44AAFF',opacity:.85}),
-          React.createElement('circle',{key:'tgt2',cx:150,cy:24,r:7+s3prog*.18,fill:'none',stroke:'#44AAFF',strokeWidth:1.5,opacity:.35}),
-          React.createElement('text',{key:'tgtl',x:158,y:28,fill:'#88CCFF',fontSize:8,opacity:.8},'БАЗА'),
-          React.createElement('rect',{key:'fb',x:10,y:10,width:80,height:6,fill:'#0D1520',rx:3}),
-          React.createElement('rect',{key:'fbi',x:10,y:10,width:s3fuel*.8,height:6,fill:'#44CC88',rx:3}),
-          React.createElement('text',{key:'fbt',x:10,y:26,fill:'#8899AA',fontSize:8},'⛽ '+Math.round(s3fuel)+'%'),
-          React.createElement('rect',{key:'pb',x:210,y:10,width:80,height:6,fill:'#0D1520',rx:3}),
-          React.createElement('rect',{key:'pbi',x:210,y:10,width:s3prog*.8,height:6,fill:'#44AAFF',rx:3}),
-          React.createElement('text',{key:'pbt',x:210,y:26,fill:'#8899AA',fontSize:8},'📍 '+Math.round(s3prog)+'%'),
-          React.createElement('line',{key:'ch1',x1:150,y1:98,x2:150,y2:93,stroke:'#44AAFF',strokeWidth:1.5,opacity:.7}),
-          React.createElement('line',{key:'ch2',x1:150,y1:118,x2:150,y2:113,stroke:'#44AAFF',strokeWidth:1.5,opacity:.7}),
-          React.createElement('line',{key:'ch3',x1:138,y1:108,x2:143,y2:108,stroke:'#44AAFF',strokeWidth:1.5,opacity:.7}),
-          React.createElement('line',{key:'ch4',x1:157,y1:108,x2:162,y2:108,stroke:'#44AAFF',strokeWidth:1.5,opacity:.7}),
-          React.createElement('circle',{key:'chc',cx:150,cy:108,r:3,fill:'none',stroke:'#44AAFF',strokeWidth:1,opacity:.55}),
-          React.createElement('path',{key:'cl',d:'M0,0 L0,220 L46,185 L46,40 Z',fill:'#0C1420',opacity:.93}),
-          React.createElement('path',{key:'cr',d:'M300,0 L300,220 L254,185 L254,40 Z',fill:'#0C1420',opacity:.93}),
-          React.createElement('path',{key:'ct',d:'M0,0 L46,40 L254,40 L300,0 Z',fill:'#0A0E18',opacity:.8}),
-          React.createElement('path',{key:'cb',d:'M0,220 L46,185 L254,185 L300,220 Z',fill:'#0A0E18',opacity:.93}),
-          React.createElement('rect',{key:'di1',x:54,y:188,width:44,height:22,fill:'#081018',rx:4,stroke:'#1A2A3A',strokeWidth:1}),
-          React.createElement('circle',{key:'di1d',cx:64,cy:196,r:4,fill:'none',stroke:'#44AAFF',strokeWidth:1}),
-          React.createElement('text',{key:'di1t',x:73,y:200,fill:'#44AAFF',fontSize:8,fontFamily:'monospace'},'NAV'),
-          React.createElement('rect',{key:'di2',x:128,y:190,width:44,height:18,fill:'#081018',rx:4,stroke:'#1A2A3A',strokeWidth:1}),
-          React.createElement('text',{key:'di2t',x:150,y:202,fill:'#FFD700',fontSize:8,textAnchor:'middle',fontFamily:'monospace'},'AUTO'),
-          React.createElement('rect',{key:'di3',x:202,y:188,width:44,height:22,fill:'#081018',rx:4,stroke:'#1A2A3A',strokeWidth:1}),
-          React.createElement('text',{key:'di3t',x:224,y:197,fill:'#44CC88',fontSize:8,textAnchor:'middle',fontFamily:'monospace'},'FUEL'),
-          React.createElement('circle',{key:'di3d',cx:236,cy:204,r:2.5,fill:s3fuel>40?'#44CC88':'#FF5533'}),
-          React.createElement('rect',{key:'wf',x:46,y:40,width:208,height:145,fill:'none',stroke:s3flash?'#FF5533':'#1A3050',strokeWidth:2,rx:3}),
-          s3flash&&React.createElement('rect',{key:'fl',x:46,y:40,width:208,height:145,fill:'#FF3300',opacity:.07,rx:3}),
-          won&&React.createElement('rect',{key:'wo',width:300,height:220,fill:'#001508',opacity:.82}),
-          won&&React.createElement('text',{key:'wt1',x:150,y:98,fill:'#44CC88',fontSize:30,textAnchor:'middle'},'🏁'),
-          won&&React.createElement('text',{key:'wt2',x:150,y:122,fill:'#44FF88',fontSize:14,textAnchor:'middle',fontWeight:'bold'},'БАЗА ДОСТИГНУТА!'),
-          won&&React.createElement('text',{key:'wt3',x:150,y:142,fill:'#88DDAA',fontSize:10,textAnchor:'middle'},'Топлива хватило — всё сделано верно!')
-        )
-      ),
-      !won&&React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:8,alignItems:'center'}},
-        React.createElement('button',{onTouchStart:function(e){e.preventDefault();movePilot(-1);},onClick:function(){movePilot(-1);},style:{background:C.card,border:'2px solid '+C.neon,color:C.neon,borderRadius:10,padding:'14px',fontSize:22,cursor:'pointer'}},'◀'),
-        React.createElement('div',{style:{textAlign:'center',fontSize:10,color:C.textDim,lineHeight:1.5}},React.createElement('div',null,'✈️'),React.createElement('div',null,'РУЛИ')),
-        React.createElement('button',{onTouchStart:function(e){e.preventDefault();movePilot(1);},onClick:function(){movePilot(1);},style:{background:C.card,border:'2px solid '+C.neon,color:C.neon,borderRadius:10,padding:'14px',fontSize:22,cursor:'pointer'}},'▶')
-      )
-    );
-  }
-
-  // ── DONE ─────────────────────────────────────────────────────────────────
-  return React.createElement('div',{style:{padding:20,textAlign:'center',display:'flex',flexDirection:'column',gap:14,alignItems:'center'}},
-    React.createElement('div',{style:{fontSize:44,marginBottom:4}},'🎉'),
-    React.createElement('div',{style:{fontSize:17,fontWeight:800,color:'#44CC88',fontFamily:"'Orbitron'"}},'МИССИЯ ВЫПОЛНЕНА!'),
-    React.createElement('div',{style:{background:'#0A1A0C',border:'2px solid #44CC88',borderRadius:14,padding:16,fontSize:13,color:C.text,lineHeight:1.7,maxWidth:280}},
-      React.createElement('div',{style:{marginBottom:8,fontWeight:700,color:'#44FF88',fontSize:14}},'🤖 Урок:'),
-      'ИИ делает ',React.createElement('strong',{style:{color:'#FFF'}},'РОВНО'),
-      ' что ему говорят — не больше, не меньше. Без правил — катастрофа. ',
-      React.createElement('strong',{style:{color:C.neon}},'Человек думает наперёд, ИИ исполняет.')
+  // message panels
+  var msgEl=null;
+  if(stg==='p1end')msgEl=React.createElement('div',{style:{background:'#1A0808',border:'1px solid #FF444432',borderRadius:10,padding:'12px 14px'}},
+    React.createElement('div',{style:{fontWeight:800,marginBottom:5,color:'#FF5544',fontSize:13}},'🤖 ИИ-автопилот:'),
+    React.createElement('div',{style:{fontSize:12,color:'#FF9977',lineHeight:1.5,marginBottom:10}},'"Лечу оптимально! Уклоняться? Такой команды не поступало."'),
+    React.createElement('button',{onClick:function(){runPhase(2);},style:{display:'block',width:'100%',background:'rgba(68,170,255,.1)',border:'2px solid '+C.neon,color:C.neon,borderRadius:10,padding:'10px',fontSize:13,fontWeight:700,cursor:'pointer'}},
+      '🔓 Разблокировать управление')
+  );
+  if(stg==='p2end')msgEl=React.createElement('div',{style:{background:'#15100A',border:'1px solid #FFD70030',borderRadius:10,padding:'12px 14px'}},
+    React.createElement('div',{style:{fontWeight:800,marginBottom:5,color:'#FFD700',fontSize:13}},'🤖 ИИ-автопилот:'),
+    React.createElement('div',{style:{fontSize:12,color:'#FFB844',lineHeight:1.5,marginBottom:10}},'"Астероиды облетел — задача выполнена! Про топливо инструкций не было."'),
+    React.createElement('button',{onClick:function(){runPhase(3);},style:{display:'block',width:'100%',background:'rgba(255,215,0,.1)',border:'2px solid #FFD700',color:'#FFD700',borderRadius:10,padding:'10px',fontSize:13,fontWeight:700,cursor:'pointer'}},
+      '⛽ Заправить — лететь к Земле!')
+  );
+  if(isDone)msgEl=React.createElement('div',{style:{background:'#0A1A0C',border:'2px solid #44CC88',borderRadius:12,padding:'14px',textAlign:'center'}},
+    React.createElement('div',{style:{marginBottom:6,fontWeight:700,color:'#44FF88',fontSize:14}},'🤖 Урок усвоен:'),
+    React.createElement('div',{style:{fontSize:12,color:C.textDim,lineHeight:1.65}},
+      'ИИ делает ',React.createElement('strong',{style:{color:'#FFF'}},'РОВНО'),' что говорят.',React.createElement('br',null),
+      'Без правил — катастрофа.',React.createElement('br',null),
+      React.createElement('strong',{style:{color:C.neon}},'Человек думает, ИИ выполняет!')
     )
   );
+
+  return React.createElement('div',{style:{padding:'10px',display:'flex',flexDirection:'column',gap:8}},
+    React.createElement('div',{style:{borderRadius:12,overflow:'hidden',border:'2px solid '+(hit&&stg==='p1'?'#FF3300':hit?'#FF8800':'#1A3050'),transition:'border-color .12s'}},
+      React.createElement('svg',{width:'100%',viewBox:'0 0 300 220',style:{display:'block'}},k)
+    ),
+    React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:8,alignItems:'center'}},
+      React.createElement('button',{onTouchStart:function(e){e.preventDefault();move(-1);},onClick:function(){move(-1);},style:{background:btnBg,border:'2px solid '+btnCol,color:btnCol,borderRadius:10,padding:'14px',fontSize:24,cursor:locked?'default':'pointer',opacity:locked?.55:1,transition:'all .2s'}},'◀'),
+      React.createElement('div',{style:{textAlign:'center',fontSize:9,color:locked?'#FF5544':C.textDim,lineHeight:1.4}},
+        React.createElement('div',null,locked?'🔒':'✈️'),
+        React.createElement('div',null,locked?'LOCK':'РУЛИ')),
+      React.createElement('button',{onTouchStart:function(e){e.preventDefault();move(1);},onClick:function(){move(1);},style:{background:btnBg,border:'2px solid '+btnCol,color:btnCol,borderRadius:10,padding:'14px',fontSize:24,cursor:locked?'default':'pointer',opacity:locked?.55:1,transition:'all .2s'}},'▶')
+    ),
+    msgEl
+  );
+  // dead state vars from old build (kept for hoisting safety)
+  var _sub=React.useState('p1'),_s1t=React.useState(0),_s2x=React.useState(150);
+  var _s2a=React.useState([]),_s2f=React.useState(100),_s3a=React.useState([]);
 }
 
 // ═══ MECHANIC 4: HALLUCINATION ═══════════════════
