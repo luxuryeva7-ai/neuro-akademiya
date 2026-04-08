@@ -8813,11 +8813,16 @@ function App() {
     ),
     /*#__PURE__*/React.createElement("button", {
       onClick: function() {
+        var INVOICE = "https://t.me/$YD54CszvuEqPFgAAjXsgAR43u9s";
         var tg = window.Telegram && window.Telegram.WebApp;
-        if (tg && tg.openTelegramLink) {
-          tg.openTelegramLink("https://t.me/neyro_akademiya_bot");
+        if (tg && tg.openInvoice) {
+          tg.openInvoice(INVOICE, function(status) {
+            if (status === "paid") {
+              alert("🎉 Спасибо за предзаказ! Доступ к полной версии придёт при выходе.");
+            }
+          });
         } else {
-          window.open("https://t.me/neyro_akademiya_bot", "_blank");
+          window.open(INVOICE, "_blank");
         }
       },
       style: {
@@ -8827,10 +8832,10 @@ function App() {
         fontFamily: "'Orbitron'", letterSpacing: 1,
         boxShadow: "0 6px 30px rgba(255,179,0,.35)", marginBottom: 10
       }
-    }, "⭐ ОФОРМИТЬ ПРЕДЗАКАЗ — 99 ₽"),
+    }, "⭐ ПРЕДЗАКАЗ — 75 Stars (≈ 99 ₽)"),
     /*#__PURE__*/React.createElement("div", {
       style: { color: C.textMuted, fontSize: 11, textAlign: "center", lineHeight: 1.8 }
-    }, "Оплата через Telegram · Безопасно · Возврат если передумаешь")
+    }, "Оплата Telegram Stars · Безопасно · Возврат по запросу до выхода")
   ),
   screen === "paywall" && /*#__PURE__*/React.createElement("div", {
     style: {
