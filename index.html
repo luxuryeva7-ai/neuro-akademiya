@@ -7264,6 +7264,20 @@ var RADAR_SCENES=[
    isFake:true,
    lesson:'На руке 6 пальцев! ИИ не умеет рисовать руки — всегда считай пальцы на ИИ-изображениях. Это самый частый признак дипфейка.',
    svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
+     React.createElement('defs',{key:'defs'},[
+       React.createElement('radialGradient',{key:'sg1',id:'suitGrad',cx:'40%',cy:'35%',r:'65%'},[
+         React.createElement('stop',{key:'s0',offset:'0%',stopColor:'#FF8C30'}),
+         React.createElement('stop',{key:'s1',offset:'100%',stopColor:'#AA3300'}),
+       ]),
+       React.createElement('radialGradient',{key:'hg1',id:'helmGrad',cx:'35%',cy:'30%',r:'60%'},[
+         React.createElement('stop',{key:'s0',offset:'0%',stopColor:'#E8E8E8'}),
+         React.createElement('stop',{key:'s1',offset:'100%',stopColor:'#A0A4A8'}),
+       ]),
+       React.createElement('radialGradient',{key:'gg1',id:'gloveGrad',cx:'40%',cy:'30%',r:'65%'},[
+         React.createElement('stop',{key:'s0',offset:'0%',stopColor:'#E0E4E6'}),
+         React.createElement('stop',{key:'s1',offset:'100%',stopColor:'#888C90'}),
+       ]),
+     ]),
      // Космос + туманность фоном
      React.createElement('rect',{key:'bg',width:340,height:220,fill:'#030818'}),
      React.createElement('ellipse',{key:'nb1',cx:60,cy:50,rx:90,ry:60,fill:'#1A0840',opacity:.7}),
@@ -7392,51 +7406,88 @@ var RADAR_SCENES=[
    isFake:false,
    lesson:'Всё в порядке! Земля выглядит нормально — океаны, материки, облака на месте. Не каждое изображение фейк. Проверяй, но не подозревай всё подряд!',
    svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
-     // Космос
+     React.createElement('defs',{key:'defs3'},[
+       React.createElement('radialGradient',{key:'eog',id:'r3ocean',cx:'36%',cy:'33%',r:'68%'},[
+         React.createElement('stop',{key:'s0',offset:'0%',stopColor:'#2A9AD8'}),
+         React.createElement('stop',{key:'s1',offset:'55%',stopColor:'#0D5A8C'}),
+         React.createElement('stop',{key:'s2',offset:'100%',stopColor:'#03152A'}),
+       ]),
+       React.createElement('radialGradient',{key:'nsg',id:'r3night',cx:'75%',cy:'68%',r:'52%'},[
+         React.createElement('stop',{key:'s0',offset:'0%',stopColor:'#010408',stopOpacity:.95}),
+         React.createElement('stop',{key:'s1',offset:'85%',stopColor:'#010408',stopOpacity:0}),
+       ]),
+       React.createElement('radialGradient',{key:'sng',id:'r3shine',cx:'30%',cy:'26%',r:'44%'},[
+         React.createElement('stop',{key:'s0',offset:'0%',stopColor:'white',stopOpacity:.22}),
+         React.createElement('stop',{key:'s1',offset:'100%',stopColor:'white',stopOpacity:0}),
+       ]),
+       React.createElement('radialGradient',{key:'atg',id:'r3atm',cx:'50%',cy:'50%',r:'50%'},[
+         React.createElement('stop',{key:'s0',offset:'80%',stopColor:'transparent'}),
+         React.createElement('stop',{key:'s1',offset:'100%',stopColor:'#44AAFF',stopOpacity:.65}),
+       ]),
+     ]),
+     // Космос + звёзды
      React.createElement('rect',{key:'bg',width:340,height:220,fill:'#020508'}),
      _rStars(55,33333),
      React.createElement('circle',{key:'bs1',cx:18,cy:14,r:2,fill:'white',opacity:.9}),
      React.createElement('circle',{key:'bs2',cx:322,cy:200,r:2.5,fill:'#AADDFF',opacity:.9}),
      React.createElement('circle',{key:'bs3',cx:10,cy:205,r:1.5,fill:'white',opacity:.85}),
      React.createElement('circle',{key:'bs4',cx:330,cy:18,r:2,fill:'#FFEEAA',opacity:.9}),
-     // Солнечный блик сверху-справа
-     React.createElement('circle',{key:'sungl',cx:310,cy:10,r:40,fill:'#FFFFFF',opacity:.04}),
-     // Тень космоса за планетой
-     React.createElement('circle',{key:'shadow',cx:185,cy:118,r:99,fill:'#010305'}),
-     // Земля — основной шар (синий океан)
-     React.createElement('circle',{key:'earth',cx:170,cy:112,r:96,fill:'#1464A0'}),
-     // Более тёмные глубины океана
-     React.createElement('circle',{key:'edeep',cx:170,cy:112,r:96,fill:'#0A3A70',opacity:.4}),
-     // Атмосферный ободок — голубой
-     React.createElement('circle',{key:'atm',cx:170,cy:112,r:96,fill:'none',stroke:'#55AAFF',strokeWidth:5,opacity:.35}),
-     React.createElement('circle',{key:'atm2',cx:170,cy:112,r:96,fill:'none',stroke:'#88CCFF',strokeWidth:2,opacity:.2}),
-     // Материки — зелёно-коричневые
-     // Европа + Азия (правый центр)
-     React.createElement('ellipse',{key:'eu',cx:200,cy:90,rx:38,ry:26,fill:'#4A7A30',opacity:.9}),
-     React.createElement('ellipse',{key:'as',cx:230,cy:105,rx:48,ry:30,fill:'#5A8A38',opacity:.85}),
-     React.createElement('ellipse',{key:'as2',cx:218,cy:118,rx:30,ry:18,fill:'#6A9040',opacity:.7}),
-     // Африка (правый низ)
-     React.createElement('ellipse',{key:'af',cx:198,cy:138,rx:22,ry:32,fill:'#7A7020',opacity:.9}),
-     React.createElement('ellipse',{key:'af2',cx:202,cy:148,rx:16,ry:20,fill:'#8A8028',opacity:.8}),
-     // Америка (левый центр)
-     React.createElement('ellipse',{key:'na',cx:120,cy:88,rx:28,ry:22,fill:'#4A6A28',opacity:.85}),
-     React.createElement('ellipse',{key:'sa',cx:128,cy:128,rx:18,ry:26,fill:'#5A7030',opacity:.8}),
-     // Антарктида (низ)
-     React.createElement('ellipse',{key:'ant',cx:170,cy:200,rx:45,ry:14,fill:'#E8EEF0',opacity:.8}),
-     // Облака — белые патчи
-     React.createElement('ellipse',{key:'cl1',cx:148,cy:75,rx:32,ry:10,fill:'white',opacity:.7,transform:'rotate(-15 148 75)'}),
-     React.createElement('ellipse',{key:'cl2',cx:210,cy:72,rx:28,ry:9,fill:'white',opacity:.65,transform:'rotate(10 210 72)'}),
-     React.createElement('ellipse',{key:'cl3',cx:140,cy:145,rx:35,ry:11,fill:'white',opacity:.6,transform:'rotate(-8 140 145)'}),
-     React.createElement('ellipse',{key:'cl4',cx:185,cy:162,rx:22,ry:8,fill:'white',opacity:.55}),
-     React.createElement('ellipse',{key:'cl5',cx:115,cy:110,rx:18,ry:7,fill:'white',opacity:.5,transform:'rotate(20 115 110)'}),
-     React.createElement('ellipse',{key:'cl6',cx:245,cy:130,rx:20,ry:7,fill:'white',opacity:.55,transform:'rotate(-12 245 130)'}),
-     // Тень (ночная сторона) — справа
-     React.createElement('circle',{key:'nightmask',cx:205,cy:112,r:96,fill:'#010305',opacity:.55}),
+     // Далёкая галактика
+     React.createElement('ellipse',{key:'gal',cx:295,cy:185,rx:18,ry:7,fill:'#334466',opacity:.4,transform:'rotate(-25 295 185)'}),
+     // Земля — океан с градиентом
+     React.createElement('circle',{key:'earth',cx:170,cy:112,r:96,fill:'url(#r3ocean)'}),
+     // Евразия
+     React.createElement('ellipse',{key:'eu1',cx:196,cy:88,rx:40,ry:20,fill:'#4A7030',opacity:.95}),
+     React.createElement('ellipse',{key:'eu2',cx:220,cy:82,rx:26,ry:13,fill:'#5C8238',opacity:.9}),
+     React.createElement('ellipse',{key:'eu3',cx:238,cy:96,rx:30,ry:17,fill:'#507A32',opacity:.88}),
+     React.createElement('ellipse',{key:'eu4',cx:248,cy:110,rx:20,ry:13,fill:'#4A6E2C',opacity:.82}),
+     // Индия
+     React.createElement('ellipse',{key:'ind',cx:218,cy:112,rx:10,ry:14,fill:'#5A7828',opacity:.85}),
+     // Африка
+     React.createElement('ellipse',{key:'af1',cx:196,cy:134,rx:17,ry:28,fill:'#8A6C20',opacity:.95}),
+     React.createElement('ellipse',{key:'af2',cx:198,cy:148,rx:12,ry:16,fill:'#7C5C18',opacity:.85}),
+     // Северная Америка
+     React.createElement('ellipse',{key:'na1',cx:110,cy:80,rx:28,ry:20,fill:'#486828',opacity:.92}),
+     React.createElement('ellipse',{key:'na2',cx:116,cy:94,rx:20,ry:13,fill:'#527030',opacity:.87}),
+     // Центральная Америка
+     React.createElement('ellipse',{key:'ca',cx:118,cy:108,rx:8,ry:6,fill:'#487020',opacity:.8}),
+     // Южная Америка
+     React.createElement('ellipse',{key:'sa1',cx:122,cy:130,rx:13,ry:24,fill:'#3E6818',opacity:.92}),
+     React.createElement('ellipse',{key:'sa2',cx:126,cy:144,rx:9,ry:14,fill:'#487020',opacity:.8}),
+     // Антарктида
+     React.createElement('ellipse',{key:'ant',cx:170,cy:202,rx:48,ry:12,fill:'#E0ECF4',opacity:.9}),
+     React.createElement('ellipse',{key:'ant2',cx:155,cy:204,rx:20,ry:6,fill:'white',opacity:.7}),
+     // Гренландия — ледяная
+     React.createElement('ellipse',{key:'gl',cx:140,cy:55,rx:11,ry:7,fill:'#D4E4EE',opacity:.85,transform:'rotate(-20 140 55)'}),
+     // Облака — завитки циклонов
+     React.createElement('ellipse',{key:'cl1a',cx:144,cy:68,rx:36,ry:8,fill:'white',opacity:.78,transform:'rotate(-22 144 68)'}),
+     React.createElement('ellipse',{key:'cl1b',cx:130,cy:74,rx:26,ry:6,fill:'white',opacity:.55,transform:'rotate(-16 130 74)'}),
+     React.createElement('ellipse',{key:'cl2',cx:212,cy:63,rx:29,ry:8,fill:'white',opacity:.72,transform:'rotate(14 212 63)'}),
+     React.createElement('ellipse',{key:'cl2b',cx:224,cy:70,rx:18,ry:5,fill:'white',opacity:.5,transform:'rotate(8 224 70)'}),
+     React.createElement('ellipse',{key:'cl3a',cx:136,cy:146,rx:34,ry:8,fill:'white',opacity:.68,transform:'rotate(-12 136 146)'}),
+     React.createElement('ellipse',{key:'cl3b',cx:150,cy:154,rx:22,ry:6,fill:'white',opacity:.5}),
+     React.createElement('ellipse',{key:'cl4',cx:248,cy:140,rx:20,ry:6,fill:'white',opacity:.62,transform:'rotate(10 248 140)'}),
+     React.createElement('ellipse',{key:'cl5',cx:106,cy:106,rx:16,ry:6,fill:'white',opacity:.52,transform:'rotate(18 106 106)'}),
+     // Ураган — белая спираль
+     React.createElement('ellipse',{key:'h1',cx:166,cy:162,rx:20,ry:9,fill:'white',opacity:.62,transform:'rotate(-35 166 162)'}),
+     React.createElement('ellipse',{key:'h2',cx:170,cy:157,rx:13,ry:5,fill:'white',opacity:.56,transform:'rotate(-55 170 157)'}),
+     React.createElement('ellipse',{key:'h3',cx:173,cy:153,rx:7,ry:3,fill:'white',opacity:.5,transform:'rotate(-75 173 153)'}),
+     // Ночная сторона (правая) — затемнение
+     React.createElement('circle',{key:'night',cx:170,cy:112,r:96,fill:'url(#r3night)'}),
      // Огни городов на ночной стороне
-     React.createElement('circle',{key:'city1',cx:218,cy:95,r:1.5,fill:'#FFCC44',opacity:.7}),
-     React.createElement('circle',{key:'city2',cx:228,cy:102,r:1,fill:'#FFDD66',opacity:.6}),
-     React.createElement('circle',{key:'city3',cx:222,cy:108,r:1.5,fill:'#FFCC44',opacity:.65}),
-     React.createElement('circle',{key:'city4',cx:235,cy:118,r:1,fill:'#FFDD66',opacity:.55}),
+     React.createElement('circle',{key:'ct1',cx:232,cy:98,r:1.5,fill:'#FFDD44',opacity:.78}),
+     React.createElement('circle',{key:'ct2',cx:240,cy:108,r:1,fill:'#FFEE66',opacity:.68}),
+     React.createElement('circle',{key:'ct3',cx:237,cy:92,r:1,fill:'#FFCC44',opacity:.62}),
+     React.createElement('circle',{key:'ct4',cx:244,cy:116,r:1.5,fill:'#FFD844',opacity:.72}),
+     React.createElement('circle',{key:'ct5',cx:250,cy:102,r:1,fill:'#FFEE66',opacity:.58}),
+     React.createElement('circle',{key:'ct6',cx:246,cy:128,r:1,fill:'#FFCC44',opacity:.55}),
+     // Атмосфера — многослойный голубой ободок
+     React.createElement('circle',{key:'atm',cx:170,cy:112,r:96,fill:'url(#r3atm)'}),
+     React.createElement('circle',{key:'atmr1',cx:170,cy:112,r:96,fill:'none',stroke:'#55BBFF',strokeWidth:4,opacity:.45}),
+     React.createElement('circle',{key:'atmr2',cx:170,cy:112,r:98,fill:'none',stroke:'#88CCFF',strokeWidth:2.5,opacity:.25}),
+     React.createElement('circle',{key:'atmr3',cx:170,cy:112,r:100,fill:'none',stroke:'#BBDDFF',strokeWidth:1.5,opacity:.13}),
+     // Солнечный блик
+     React.createElement('circle',{key:'shine',cx:170,cy:112,r:96,fill:'url(#r3shine)'}),
      // Метка спутника
      React.createElement('rect',{key:'lbg',x:7,y:7,width:118,height:18,fill:'rgba(0,0,0,.75)',rx:3}),
      React.createElement('text',{key:'lbt',x:66,y:19,fill:'#88CCFF',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'ISS-CAM • EARTH-3'),
@@ -7949,6 +8000,23 @@ const MODULES = [{
     type: "radar_lupa",
     desc: "4 снимка — изучи ИИ-лупой и реши: доверять или нет?"
   }]
+},{
+// ─── УРОВЕНЬ 6: АВТОПИЛОТ (платный) ─────────────────────────────────────────
+  id: "autopilot",
+  title: "АВТОПИЛОТ",
+  subtitle: "Глупый автопилот",
+  icon: "🤖",
+  color: C.neon,
+  xp: 130,
+  narrative: {
+    intro: "Бортовой ИИ-автопилот готов к полёту! Он считает себя гением... Дай ему задачу и посмотри что произойдёт. Спойлер: ИИ делает РОВНО что ему говорят — не больше, не меньше!",
+    complete: "🤖 Урок усвоен! ИИ не думает сам — он исполняет. Человек обязан думать наперёд и контролировать машину. Ты настоящий пилот!"
+  },
+  rooms: [{
+    name: "Глупый автопилот",
+    type: "autopilot",
+    desc: "Помоги ИИ-пилоту долететь до базы. Добавляй правила и учись контролировать ИИ!"
+  }]
 }];
 
 // ═══ MAIN APP ════════════════════════════════════
@@ -8109,7 +8177,7 @@ function App() {
       }
     }, "\u041C\u0435\u0445\u0430\u043D\u0438\u043A\u0430 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u0430: ", room.type);
   };
-  const hubMood = gs.modules.length === 5 ? "excited" : gs.modules.length >= 3 ? "happy" : gs.modules.length >= 1 ? "learning" : "confused";
+  const hubMood = gs.modules.length === 6 ? "excited" : gs.modules.length >= 3 ? "happy" : gs.modules.length >= 1 ? "learning" : "confused";
   const modCount = gs.modules.length;
   return /*#__PURE__*/React.createElement("div", {
     style: {
