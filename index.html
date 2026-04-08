@@ -6344,7 +6344,7 @@ function AutopilotMech({ room, onDone }) {
         }
       }
       // grow
-      var growRate=n===1?0.95:n===2?0.42:0.30;
+      var growRate=n===1?0.52:n===2?0.42:0.30;
       var maxSz=n===1?95:n===2?30:24;
       gc.asts=gc.asts.map(function(a){return{id:a.id,ox:a.ox,oy:a.oy,sz:Math.min(a.sz+growRate,maxSz+4),t:a.t};}).filter(function(a){return a.sz<maxSz+4;});
       // collision p1 (instant kill — no steering!)
@@ -6478,16 +6478,24 @@ function AutopilotMech({ room, onDone }) {
   if(isP3){var er3=rEarth(3);if(er3)k.push(er3);}
   // asteroids
   asts.forEach(function(a){var ra=rAst(a);if(ra)k.push(ra);});
-  // hit flash p1
-  if(hit&&stg==='p1')k.push(React.createElement('rect',{key:'hfull',width:300,height:220,fill:'#FF1100',opacity:.12}));
+  // hit flash p1 — RED danger
+  if(hit&&stg==='p1')k.push(React.createElement('rect',{key:'hfull',width:300,height:220,fill:'#FF1100',opacity:.13}));
+  // dodge flash p2/p3 — GREEN = AI уклоняется!
+  if(hit&&stg!=='p1')k.push(React.createElement('rect',{key:'hgrn',width:300,height:220,fill:'#00FF88',opacity:.06}));
   // cockpit panels (ON TOP of space scene)
   k.push(React.createElement('path',{key:'pl',d:'M0,0 L0,220 L44,185 L44,38 Z',fill:'#0C1420',opacity:.95}));
   k.push(React.createElement('path',{key:'pr',d:'M300,0 L300,220 L256,185 L256,38 Z',fill:'#0C1420',opacity:.95}));
   k.push(React.createElement('path',{key:'pt',d:'M0,0 L44,38 L256,38 L300,0 Z',fill:'#0A0E18',opacity:.86}));
   k.push(React.createElement('path',{key:'pb2',d:'M0,220 L44,185 L256,185 L300,220 Z',fill:'#0A0E18',opacity:.95}));
-  // window frame
-  k.push(React.createElement('rect',{key:'wf',x:44,y:38,width:212,height:147,fill:'none',stroke:hit?'#FF5533':'#1A3050',strokeWidth:2,rx:2}));
-  if(hit&&stg!=='p1')k.push(React.createElement('rect',{key:'wfl',x:44,y:38,width:212,height:147,fill:'#FF7700',opacity:.09,rx:2}));
+  // window frame — RED в p1, GREEN при уклонении в p2/p3
+  var wfCol=hit?(stg==='p1'?'#FF5533':'#44FF88'):'#1A3050';
+  var wfW=hit?3:2;
+  k.push(React.createElement('rect',{key:'wf',x:44,y:38,width:212,height:147,fill:'none',stroke:wfCol,strokeWidth:wfW,rx:2}));
+  // GREEN dodge overlay + "УКЛОНЕНИЕ!" текст
+  if(hit&&stg!=='p1'){
+    k.push(React.createElement('rect',{key:'wfl',x:44,y:38,width:212,height:147,fill:'#00FF88',opacity:.07,rx:2}));
+    k.push(React.createElement('text',{key:'dodtxt',x:150,y:58,fill:'#44FF88',fontSize:9,textAnchor:'middle',fontFamily:'monospace',fontWeight:'bold',opacity:.9},'✓ УКЛОНЕНИЕ'));
+  }
 
   // ═══ BIG FUEL BAR in left cockpit panel ═══
   var fbY=56, fbH=100, fbW=12, fbX=6;
@@ -6547,37 +6555,62 @@ function AutopilotMech({ room, onDone }) {
 
   // message panels
   var msgEl=null;
-  if(stg==='p1end')msgEl=React.createElement('div',{style:{background:'#1A0808',border:'1px solid #FF444432',borderRadius:12,padding:'12px 14px'}},
-    React.createElement('div',{style:{fontWeight:800,marginBottom:6,color:'#FF5544',fontSize:13}},'🤖 ИИ-автопилот:'),
-    React.createElement('div',{style:{fontSize:12,color:'#FF9977',lineHeight:1.5,marginBottom:8}},'"Выполняю команду: лечу к Земле! Уклоняться от препятствий? Такого в промпте не было."'),
-    React.createElement('div',{style:{fontSize:11,color:'#CC7755',lineHeight:1.45,marginBottom:12,padding:'8px 10px',background:'#0E0404',borderRadius:8,borderLeft:'3px solid #FF5544'}},
-      '⚠ В промпте было только ',React.createElement('strong',{style:{color:'#FFB0A0'}},'«Лететь к Земле!»'),
-      ' — про руль, астероиды, препятствия ни слова. ИИ выполнил буквально.'
+  if(stg==='p1end')msgEl=React.createElement('div',{style:{background:'#180808',border:'2px solid #FF444444',borderRadius:12,padding:'13px 14px'}},
+    React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:8}},
+      React.createElement('span',{style:{fontSize:20}},'💥'),
+      React.createElement('div',{style:{fontWeight:800,color:'#FF5544',fontSize:14}},'Авария! Промпт был слишком коротким')
     ),
-    React.createElement('button',{onClick:function(){runPhase(2);},style:{display:'block',width:'100%',background:'rgba(0,245,255,.08)',border:'2px solid '+C.neon,color:C.neon,borderRadius:10,padding:'10px',fontSize:13,fontWeight:700,cursor:'pointer'}},
-      '🔓 Добавить: «объезжай астероиды» →')
-  );
-  if(stg==='p2end')msgEl=React.createElement('div',{style:{background:'#15100A',border:'1px solid #FFD70030',borderRadius:12,padding:'12px 14px'}},
-    React.createElement('div',{style:{fontWeight:800,marginBottom:6,color:'#FFD700',fontSize:13}},'🤖 ИИ-автопилот:'),
-    React.createElement('div',{style:{fontSize:12,color:'#FFB844',lineHeight:1.5,marginBottom:8}},'"Астероиды объехал — задача выполнена! Топливо кончилось в '+Math.round(prog)+'% пути. Земля была уже близко..."'),
-    React.createElement('div',{style:{fontSize:11,color:'#CC9933',lineHeight:1.45,marginBottom:12,padding:'8px 10px',background:'#0A0800',borderRadius:8,borderLeft:'3px solid #FFD700'}},
-      '⚠ Не сказал ИИ: ',React.createElement('strong',{style:{color:'#FFD090'}},'«следи за топливом»'),
-      '. Долетел почти до Земли — и стоп!'
+    React.createElement('div',{style:{fontSize:12,color:'#FF9977',lineHeight:1.6,marginBottom:10,fontStyle:'italic'}},
+      '"Лечу к Земле — выполняю! Астероид? Уклоняться? Про это в задании ничего не было..."'
     ),
-    React.createElement('button',{onClick:function(){runPhase(3);},style:{display:'block',width:'100%',background:'rgba(255,215,0,.08)',border:'2px solid #FFD700',color:'#FFD700',borderRadius:10,padding:'10px',fontSize:13,fontWeight:700,cursor:'pointer'}},
-      '⛽ Полный промпт — лететь до Земли! →')
+    React.createElement('div',{style:{fontSize:11,lineHeight:1.6,marginBottom:6,padding:'8px 10px',background:'#0E0404',borderRadius:8,borderLeft:'3px solid #FF5544'}},
+      React.createElement('div',{style:{color:'#FF8866',marginBottom:4,fontWeight:700}},'🧠 Почему так произошло?'),
+      React.createElement('div',{style:{color:'#CC7755'}},
+        'ИИ — это не человек. Он не ',React.createElement('em',null,'догадывается'),', не ',React.createElement('em',null,'додумывает'),'. ',
+        'Ты написал: ',React.createElement('strong',{style:{color:'#FFB0A0'}},'«Лететь к Земле!»'),
+        ' — ИИ летит ровно прямо и врезается. Руль не включён — потому что ты его не попросил.'
+      )
+    ),
+    React.createElement('button',{onClick:function(){runPhase(2);},style:{display:'block',width:'100%',background:'rgba(0,245,255,.08)',border:'2px solid '+C.neon,color:C.neon,borderRadius:10,padding:'11px',fontSize:13,fontWeight:700,cursor:'pointer'}},
+      '✏️ Улучшить промпт: добавить «объезжай астероиды» →')
   );
-  if(isDone)msgEl=React.createElement('div',{style:{background:'#0A1A0C',border:'2px solid #44CC88',borderRadius:12,padding:'14px',textAlign:'center'}},
-    React.createElement('div',{style:{marginBottom:6,fontWeight:700,color:'#44FF88',fontSize:14}},'🤖 Урок усвоен:'),
-    React.createElement('div',{style:{fontSize:12,color:C.textDim,lineHeight:1.65}},
-      'ИИ делает ',React.createElement('strong',{style:{color:'#FFF'}},'РОВНО'),' что говорят.',React.createElement('br',null),
-      'Без точных правил — катастрофа.',React.createElement('br',null),
-      React.createElement('strong',{style:{color:C.neon}},'Человек думает — ИИ выполняет!')
+  if(stg==='p2end')msgEl=React.createElement('div',{style:{background:'#141008',border:'2px solid #FFD70044',borderRadius:12,padding:'13px 14px'}},
+    React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:8}},
+      React.createElement('span',{style:{fontSize:20}},'⛽'),
+      React.createElement('div',{style:{fontWeight:800,color:'#FFD700',fontSize:14}},'Топливо кончилось! Почти долетели...')
+    ),
+    React.createElement('div',{style:{fontSize:12,color:'#FFB844',lineHeight:1.6,marginBottom:10,fontStyle:'italic'}},
+      '"Астероиды объезжал — выполнено! Но топливо закончилось на '+Math.round(prog)+'% пути. Земля была уже видна..."'
+    ),
+    React.createElement('div',{style:{fontSize:11,lineHeight:1.6,marginBottom:6,padding:'8px 10px',background:'#0A0800',borderRadius:8,borderLeft:'3px solid #FFD700'}},
+      React.createElement('div',{style:{color:'#FFD700',marginBottom:4,fontWeight:700}},'🧠 Что не так на этот раз?'),
+      React.createElement('div',{style:{color:'#CC9933'}},
+        'Ты добавил «объезжай», и рамка загоралась ',React.createElement('strong',{style:{color:'#44FF88'}},'зелёным'),
+        ' — ИИ успешно уворачивался! Но про топливо ты снова забыл.',React.createElement('br',null),
+        'ИИ делает только то, что написано в промпте. Нет правила — нет действия.'
+      )
+    ),
+    React.createElement('button',{onClick:function(){runPhase(3);},style:{display:'block',width:'100%',background:'rgba(255,215,0,.08)',border:'2px solid #FFD700',color:'#FFD700',borderRadius:10,padding:'11px',fontSize:13,fontWeight:700,cursor:'pointer'}},
+      '✏️ Добавить: «следи за топливом» — лететь к Земле! →')
+  );
+  if(isDone)msgEl=React.createElement('div',{style:{background:'#081408',border:'2px solid #44CC88',borderRadius:12,padding:'13px 14px'}},
+    React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:8}},
+      React.createElement('span',{style:{fontSize:22}},'🌍'),
+      React.createElement('div',{style:{fontWeight:800,color:'#44FF88',fontSize:14}},'Посадка! Полный промпт сработал')
+    ),
+    React.createElement('div',{style:{fontSize:11,lineHeight:1.65,padding:'8px 10px',background:'#040E06',borderRadius:8,borderLeft:'3px solid #44CC88'}},
+      React.createElement('div',{style:{color:'#44CC88',marginBottom:5,fontWeight:700}},'🧠 Главный урок:'),
+      React.createElement('div',{style:{color:'#88BB99'}},
+        'ИИ выполнил задание ',React.createElement('strong',{style:{color:'#FFF'}},'идеально'),
+        ' — потому что промпт был ',React.createElement('strong',{style:{color:'#FFF'}},'точным'),'. ',
+        'Каждое правило имеет значение. ',React.createElement('br',null),
+        React.createElement('strong',{style:{color:C.neon}},'Чем точнее задание — тем умнее кажется ИИ.')
+      )
     )
   );
 
   return React.createElement('div',{style:{padding:'10px',display:'flex',flexDirection:'column',gap:8}},
-    React.createElement('div',{style:{borderRadius:12,overflow:'hidden',border:'2px solid '+(hit&&stg==='p1'?'#FF3300':hit?'#FF8800':'#1A3050'),transition:'border-color .12s'}},
+    React.createElement('div',{style:{borderRadius:12,overflow:'hidden',border:'3px solid '+(hit&&stg==='p1'?'#FF3300':hit?'#33FF88':'#1A3050'),transition:'border-color .1s'}},
       React.createElement('svg',{width:'100%',viewBox:'0 0 300 220',style:{display:'block'}},k)
     ),
     React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:8,alignItems:'center'}},
