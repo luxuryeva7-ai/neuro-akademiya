@@ -7652,6 +7652,8 @@ function RadarMech({room,onDone}){
   var verdState=React.useState(null),verdict=verdState[0],setVerdict=verdState[1];
   var phaseState=React.useState('examine'),phase=phaseState[0],setPhase=phaseState[1];
   var scoreState=React.useState(0),score=scoreState[0],setScore=scoreState[1];
+  var usedState=React.useState(false),lupaUsed=usedState[0],setLupaUsed=usedState[1];
+  var shakeState=React.useState(false),shaking=shakeState[0],setShaking=shakeState[1];
   var containerRef=React.useRef(null);
   var LUPA_R=72, total=RADAR_SCENES.length, scene=RADAR_SCENES[sceneIdx];
 
@@ -7659,9 +7661,15 @@ function RadarMech({room,onDone}){
     if(!containerRef.current||phase!=='examine')return;
     var r=containerRef.current.getBoundingClientRect();
     setLupaPos({x:cx-r.left,y:cy-r.top});
+    if(!lupaUsed) setLupaUsed(true);
   };
   var giveVerdict=function(v){
     if(phase!=='examine')return;
+    if(!lupaUsed){
+      setShaking(true);
+      setTimeout(function(){setShaking(false);},500);
+      return;
+    }
     var isOk=(v==='notrust')===scene.isFake;
     setVerdict(v);
     setScore(function(s){return s+(isOk?25:0);});
@@ -7671,7 +7679,7 @@ function RadarMech({room,onDone}){
     var add=(verdict==='notrust')===scene.isFake?25:0;
     if(sceneIdx+1>=total){onDone(score+add,100);return;}
     setSceneIdx(function(i){return i+1;});
-    setPhase('examine');setVerdict(null);setLupaPos({x:-999,y:-999});
+    setPhase('examine');setVerdict(null);setLupaPos({x:-999,y:-999});setLupaUsed(false);
   };
   var isOk=verdict!==null&&(verdict==='notrust')===scene.isFake;
   var stampClr=verdict==='notrust'?'#FF4444':'#44CC88';
@@ -7736,15 +7744,30 @@ function RadarMech({room,onDone}){
         }},verdict==='notrust'?'ФЕЙК!':'РЕАЛЬНО')
       )
     ),
-    phase==='examine'&&React.createElement('div',{style:{display:'flex',gap:10}},
-      React.createElement('button',{onClick:function(){giveVerdict('trust');},
-        style:{flex:1,padding:'14px 0',borderRadius:12,background:'#44CC8815',
-          border:'2px solid #44CC88',color:'#44CC88',fontSize:14,fontWeight:800,cursor:'pointer'}
-      },'✅ ДОВЕРЯТЬ'),
-      React.createElement('button',{onClick:function(){giveVerdict('notrust');},
-        style:{flex:1,padding:'14px 0',borderRadius:12,background:'#FF444415',
-          border:'2px solid #FF4444',color:'#FF4444',fontSize:14,fontWeight:800,cursor:'pointer'}
-      },'🚫 НЕ ДОВЕРЯТЬ')
+    phase==='examine'&&React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:8}},
+      !lupaUsed&&React.createElement('div',{style:{
+        textAlign:'center',fontSize:11,color:C.purple,fontWeight:700,
+        animation:shaking?'shake .4s ease-out':'none',
+        padding:'6px 12px',borderRadius:8,
+        background:shaking?C.purple+'22':'transparent',
+        transition:'background .2s'
+      }},shaking?'🔍 Сначала осмотри изображение лупой!':'🔍 Осмотри изображение лупой перед ответом'),
+      React.createElement('div',{style:{display:'flex',gap:10,opacity:lupaUsed?1:.35,transition:'opacity .3s'}},
+        React.createElement('button',{onClick:function(){giveVerdict('trust');},
+          style:{flex:1,padding:'14px 0',borderRadius:12,
+            background:lupaUsed?'#44CC8815':'#44CC8808',
+            border:'2px solid '+(lupaUsed?'#44CC88':'#44CC8855'),
+            color:lupaUsed?'#44CC88':'#44CC8888',
+            fontSize:14,fontWeight:800,cursor:lupaUsed?'pointer':'not-allowed'}
+        },'✅ ДОВЕРЯТЬ'),
+        React.createElement('button',{onClick:function(){giveVerdict('notrust');},
+          style:{flex:1,padding:'14px 0',borderRadius:12,
+            background:lupaUsed?'#FF444415':'#FF444408',
+            border:'2px solid '+(lupaUsed?'#FF4444':'#FF444455'),
+            color:lupaUsed?'#FF4444':'#FF444488',
+            fontSize:14,fontWeight:800,cursor:lupaUsed?'pointer':'not-allowed'}
+        },'🚫 НЕ ДОВЕРЯТЬ')
+      )
     ),
     phase==='result'&&React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:10,textAlign:'center'}},
       React.createElement('div',{style:{fontSize:13,fontWeight:700,color:isOk?'#44CC88':'#FF6644'}},
