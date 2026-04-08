@@ -6344,7 +6344,7 @@ function AutopilotMech({ room, onDone }) {
         }
       }
       // grow
-      var growRate=n===1?1.8:n===2?0.75:0.55;
+      var growRate=n===1?0.95:n===2?0.42:0.30;
       var maxSz=n===1?95:n===2?30:24;
       gc.asts=gc.asts.map(function(a){return{id:a.id,ox:a.ox,oy:a.oy,sz:Math.min(a.sz+growRate,maxSz+4),t:a.t};}).filter(function(a){return a.sz<maxSz+4;});
       // collision p1 (instant kill — no steering!)
