@@ -7229,8 +7229,247 @@ function MissionMech({room,onDone}){
   );
 }
 
+// ═══ MECHANIC: RADAR-LUPA (Level 5 — ИИ-лупа) ════════════════════════════
+function _rStars(n,seed){
+  var a=[],x=(seed|1)&0x7FFFFFFF;
+  for(var i=0;i<n;i++){
+    x=(x^(x<<13))&0x7FFFFFFF;x=(x^(x>>7))&0x7FFFFFFF;x=(x^(x<<17))&0x7FFFFFFF;
+    var px=x%334+3;
+    x=(x^(x<<13))&0x7FFFFFFF;x=(x^(x>>7))&0x7FFFFFFF;
+    var py=x%204+3;
+    x=(x^(x<<13))&0x7FFFFFFF;
+    var r=0.5+(x%13)/13,op=0.35+r*0.4;
+    a.push(React.createElement('circle',{key:'s'+i,cx:px,cy:py,r:r,fill:'white',opacity:op}));
+  }
+  return a;
+}
+var RADAR_SCENES=[
+  {id:'r1',title:'📡 Сигнал с орбитальной станции',
+   desc:'Астронавт прислал фото. Изучи ИИ-лупой — доверять?',
+   isFake:true,
+   lesson:'На руке 6 пальцев! ИИ не умеет рисовать руки — всегда считай пальцы на ИИ-изображениях. Это главный признак дипфейка.',
+   svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#050A18'}),
+     _rStars(35,11111),
+     React.createElement('rect',{key:'fl',x:0,y:145,width:340,height:75,fill:'#1A2030'}),
+     React.createElement('rect',{key:'pn',x:40,y:88,width:260,height:62,fill:'#1E2840',rx:4}),
+     React.createElement('line',{key:'pl',x1:40,y1:112,x2:300,y2:112,stroke:'#2A3A55',strokeWidth:2}),
+     React.createElement('rect',{key:'pa',x:78,y:96,width:28,height:16,fill:'#2A4060',rx:2}),
+     React.createElement('rect',{key:'pb',x:153,y:96,width:28,height:16,fill:'#2A4060',rx:2}),
+     React.createElement('rect',{key:'pc',x:228,y:96,width:28,height:16,fill:'#2A4060',rx:2}),
+     React.createElement('rect',{key:'sl',x:138,y:148,width:68,height:75,fill:'#C8CCCC',rx:16}),
+     React.createElement('rect',{key:'si',x:146,y:151,width:52,height:65,fill:'#B8BCBC',rx:12}),
+     React.createElement('rect',{key:'sd1',x:150,y:164,width:44,height:3,fill:'#999',rx:1}),
+     React.createElement('rect',{key:'sd2',x:150,y:172,width:44,height:3,fill:'#999',rx:1}),
+     React.createElement('ellipse',{key:'gv',cx:173,cy:151,rx:30,ry:15,fill:'#7A7E80'}),
+     React.createElement('rect',{key:'f1',x:144,y:113,width:14,height:42,fill:'#7A7E80',rx:7}),
+     React.createElement('rect',{key:'f2',x:160,y:107,width:14,height:48,fill:'#7A7E80',rx:7}),
+     React.createElement('rect',{key:'f3',x:176,y:109,width:14,height:46,fill:'#7A7E80',rx:7}),
+     React.createElement('rect',{key:'f4',x:192,y:115,width:14,height:40,fill:'#7A7E80',rx:7}),
+     React.createElement('rect',{key:'f5',x:126,y:130,width:12,height:32,fill:'#7A7E80',rx:6,transform:'rotate(-22 126 138)'}),
+     React.createElement('rect',{key:'f6',x:207,y:121,width:12,height:28,fill:'#7A7E80',rx:6,transform:'rotate(10 207 129)'}),
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:84,height:18,fill:'rgba(0,0,0,.65)',rx:3}),
+     React.createElement('text',{key:'lbt',x:49,y:19,fill:'#88AACC',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'ФОТО #4471'),
+   ])
+  },
+  {id:'r2',title:'📻 Сообщение с базы Тау-3',
+   desc:'База просит помощи. Прочитай надпись — доверять?',
+   isFake:true,
+   lesson:'Текст на табличке — "H3LP ##@! Xkdfj" — полная бессмыслица! ИИ не умеет генерировать читаемый текст. Буквы-мусор на картинке = явный признак подделки.',
+   svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#1A0800'}),
+     React.createElement('rect',{key:'sky',width:340,height:135,fill:'#2D1200'}),
+     React.createElement('ellipse',{key:'gl1',cx:170,cy:0,rx:205,ry:80,fill:'#8B3000',opacity:.5}),
+     React.createElement('rect',{key:'gr',x:0,y:143,width:340,height:77,fill:'#5C2800'}),
+     React.createElement('rect',{key:'grl',x:0,y:143,width:340,height:9,fill:'#7A3800'}),
+     React.createElement('ellipse',{key:'rk1',cx:38,cy:150,rx:34,ry:14,fill:'#6A3200'}),
+     React.createElement('ellipse',{key:'rk2',cx:302,cy:154,rx:30,ry:13,fill:'#6A3200'}),
+     React.createElement('rect',{key:'bl',x:85,y:68,width:170,height:82,fill:'#3A3A4A',rx:4}),
+     React.createElement('rect',{key:'bt',x:95,y:58,width:150,height:14,fill:'#4A4A5A',rx:2}),
+     React.createElement('rect',{key:'dr',x:150,y:108,width:40,height:42,fill:'#2A2A3A',rx:3}),
+     React.createElement('rect',{key:'w1',x:98,y:78,width:28,height:20,fill:'#669AAA',rx:2}),
+     React.createElement('rect',{key:'w2',x:214,y:78,width:28,height:20,fill:'#669AAA',rx:2}),
+     React.createElement('rect',{key:'sg',x:88,y:88,width:164,height:30,fill:'#F0DC50',rx:3}),
+     React.createElement('rect',{key:'sgi',x:91,y:91,width:158,height:24,fill:'#E0CC40',rx:2}),
+     React.createElement('text',{key:'sgt',x:170,y:107,fill:'#1A1A00',fontSize:12,textAnchor:'middle',fontFamily:'monospace',fontWeight:'bold'},'H3LP ##@! Xkdfj'),
+     React.createElement('line',{key:'ant',x1:170,y1:58,x2:170,y2:14,stroke:'#5A5A6A',strokeWidth:3}),
+     React.createElement('line',{key:'antl',x1:156,y1:22,x2:184,y2:22,stroke:'#5A5A6A',strokeWidth:2}),
+     React.createElement('circle',{key:'anc',cx:170,cy:12,r:5,fill:'#CC4400'}),
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:90,height:18,fill:'rgba(0,0,0,.65)',rx:3}),
+     React.createElement('text',{key:'lbt',x:52,y:19,fill:'#CC8844',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'БАЗА ТАУ-3'),
+   ])
+  },
+  {id:'r3',title:'🌌 Снимок туманности NGC-7293',
+   desc:'Телескоп прислал стандартный снимок. Доверять?',
+   isFake:false,
+   lesson:'Всё в порядке! Нет артефактов, нет странностей — обычная туманность. Не каждое изображение фейк. Важно проверять, а не подозревать всё подряд!',
+   svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#030610'}),
+     React.createElement('ellipse',{key:'nb1',cx:170,cy:112,rx:145,ry:98,fill:'#1A0830',opacity:.8}),
+     React.createElement('ellipse',{key:'nb2',cx:152,cy:102,rx:102,ry:72,fill:'#280840',opacity:.7}),
+     React.createElement('ellipse',{key:'nb3',cx:192,cy:128,rx:88,ry:62,fill:'#0A1A40',opacity:.7}),
+     React.createElement('ellipse',{key:'nb4',cx:170,cy:112,rx:58,ry:48,fill:'#3A1055',opacity:.65}),
+     React.createElement('ellipse',{key:'nb5',cx:164,cy:108,rx:32,ry:24,fill:'#6A1870',opacity:.55}),
+     React.createElement('circle',{key:'nc',cx:167,cy:110,r:10,fill:'#9A30A0',opacity:.6}),
+     React.createElement('ellipse',{key:'ns1',cx:98,cy:80,rx:58,ry:24,fill:'#1A1460',opacity:.5,transform:'rotate(-20 98 80)'}),
+     React.createElement('ellipse',{key:'ns2',cx:250,cy:150,rx:54,ry:20,fill:'#1A1460',opacity:.45,transform:'rotate(16 250 150)'}),
+     _rStars(55,88776),
+     React.createElement('circle',{key:'bs1',cx:78,cy:54,r:2,fill:'white',opacity:.9}),
+     React.createElement('circle',{key:'bs2',cx:280,cy:176,r:2.5,fill:'#AADDFF',opacity:.9}),
+     React.createElement('circle',{key:'bs3',cx:54,cy:186,r:1.5,fill:'white',opacity:.8}),
+     React.createElement('circle',{key:'bs4',cx:312,cy:40,r:2,fill:'#FFEEAA',opacity:.9}),
+     React.createElement('circle',{key:'bs5',cx:167,cy:110,r:4,fill:'white',opacity:.65}),
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:126,height:18,fill:'rgba(0,0,0,.65)',rx:3}),
+     React.createElement('text',{key:'lbt',x:70,y:19,fill:'#88CCFF',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'ТЕЛЕСКОП NGC-7293'),
+   ])
+  },
+  {id:'r4',title:'🌅 Пейзаж планеты Кеплер-452б',
+   desc:'Первый снимок новой планеты. Внимательно изучи.',
+   isFake:true,
+   lesson:'Тени от гор идут ВЛЕВО (правильно — солнце справа), а тени от деревьев — ВПРАВО (ошибка!). У одного солнца тени всегда в одну сторону. ИИ забыл физику!',
+   svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#080C20'}),
+     React.createElement('rect',{key:'sky',width:340,height:132,fill:'#0A1828'}),
+     React.createElement('ellipse',{key:'gl',cx:170,cy:0,rx:300,ry:96,fill:'#0A2040',opacity:.8}),
+     _rStars(20,44321),
+     React.createElement('circle',{key:'sun',cx:288,cy:30,r:22,fill:'#FFA030'}),
+     React.createElement('circle',{key:'sung',cx:288,cy:30,r:32,fill:'#FFA030',opacity:.22}),
+     React.createElement('rect',{key:'gr',x:0,y:132,width:340,height:88,fill:'#0D1F10'}),
+     React.createElement('rect',{key:'grl',x:0,y:132,width:340,height:7,fill:'#183020'}),
+     React.createElement('polygon',{key:'m1',points:'18,132 93,54 168,132',fill:'#152515'}),
+     React.createElement('polygon',{key:'m2',points:'103,132 178,48 250,132',fill:'#182818'}),
+     React.createElement('polygon',{key:'m3',points:'193,132 270,62 338,132',fill:'#152515'}),
+     React.createElement('ellipse',{key:'ms1',cx:38,cy:134,rx:52,ry:7,fill:'#071007',opacity:.88}),
+     React.createElement('ellipse',{key:'ms2',cx:148,cy:134,rx:50,ry:7,fill:'#071007',opacity:.88}),
+     React.createElement('ellipse',{key:'ms3',cx:238,cy:134,rx:46,ry:6,fill:'#071007',opacity:.88}),
+     React.createElement('rect',{key:'tr1',x:54,y:104,width:6,height:28,fill:'#1E3020'}),
+     React.createElement('ellipse',{key:'tc1',cx:57,cy:101,rx:14,ry:17,fill:'#1E4018'}),
+     React.createElement('ellipse',{key:'ts1',cx:78,cy:135,rx:22,ry:5,fill:'#071007',opacity:.92}),
+     React.createElement('rect',{key:'tr2',x:147,y:107,width:6,height:25,fill:'#1E3020'}),
+     React.createElement('ellipse',{key:'tc2',cx:150,cy:104,rx:13,ry:15,fill:'#1E4018'}),
+     React.createElement('ellipse',{key:'ts2',cx:170,cy:135,rx:19,ry:5,fill:'#071007',opacity:.92}),
+     React.createElement('rect',{key:'tr3',x:240,y:110,width:6,height:22,fill:'#1E3020'}),
+     React.createElement('ellipse',{key:'tc3',cx:243,cy:107,rx:12,ry:14,fill:'#1E4018'}),
+     React.createElement('ellipse',{key:'ts3',cx:262,cy:135,rx:17,ry:4,fill:'#071007',opacity:.92}),
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:114,height:18,fill:'rgba(0,0,0,.65)',rx:3}),
+     React.createElement('text',{key:'lbt',x:64,y:19,fill:'#88FFCC',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'КЕПЛЕР-452б #01'),
+   ])
+  },
+];
+function RadarMech({room,onDone}){
+  var sceneState=React.useState(0),sceneIdx=sceneState[0],setSceneIdx=sceneState[1];
+  var lupaState=React.useState({x:-999,y:-999}),lupaPos=lupaState[0],setLupaPos=lupaState[1];
+  var verdState=React.useState(null),verdict=verdState[0],setVerdict=verdState[1];
+  var phaseState=React.useState('examine'),phase=phaseState[0],setPhase=phaseState[1];
+  var scoreState=React.useState(0),score=scoreState[0],setScore=scoreState[1];
+  var containerRef=React.useRef(null);
+  var LUPA_R=72, total=RADAR_SCENES.length, scene=RADAR_SCENES[sceneIdx];
 
+  var handleMove=function(cx,cy){
+    if(!containerRef.current||phase!=='examine')return;
+    var r=containerRef.current.getBoundingClientRect();
+    setLupaPos({x:cx-r.left,y:cy-r.top});
+  };
+  var giveVerdict=function(v){
+    if(phase!=='examine')return;
+    var isOk=(v==='notrust')===scene.isFake;
+    setVerdict(v);
+    setScore(function(s){return s+(isOk?25:0);});
+    setPhase('result');
+  };
+  var goNext=function(){
+    var add=(verdict==='notrust')===scene.isFake?25:0;
+    if(sceneIdx+1>=total){onDone(score+add,100);return;}
+    setSceneIdx(function(i){return i+1;});
+    setPhase('examine');setVerdict(null);setLupaPos({x:-999,y:-999});
+  };
+  var isOk=verdict!==null&&(verdict==='notrust')===scene.isFake;
+  var stampClr=verdict==='notrust'?'#FF4444':'#44CC88';
+  var lupaOn=lupaPos.x>0&&lupaPos.y>0;
 
+  return React.createElement('div',{style:{padding:'12px 8px',display:'flex',flexDirection:'column',gap:12,animation:'fadeIn .4s ease-out'}},
+    React.createElement('div',{style:{display:'flex',gap:6,justifyContent:'center'}},
+      RADAR_SCENES.map(function(s,i){
+        return React.createElement('div',{key:s.id,style:{width:28,height:6,borderRadius:3,
+          background:i<sceneIdx?C.green:i===sceneIdx?C.purple:C.cardBorder,transition:'background .3s'}});
+      })
+    ),
+    React.createElement('div',{style:{textAlign:'center'}},
+      React.createElement('div',{style:{fontSize:15,fontWeight:800,color:C.purple,marginBottom:4}},scene.title),
+      React.createElement('div',{style:{fontSize:12,color:C.textDim,lineHeight:1.4}},scene.desc)
+    ),
+    React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',background:C.card,borderRadius:8,padding:'5px 12px'}},
+      React.createElement('span',{style:{fontSize:11,color:C.textDim}},'Снимок '+(sceneIdx+1)+' / '+total),
+      React.createElement('span',{style:{fontSize:13,fontWeight:800,color:C.gold}},'★ '+score+' XP')
+    ),
+    React.createElement('div',{
+      ref:containerRef,
+      onMouseMove:function(e){handleMove(e.clientX,e.clientY);},
+      onTouchMove:function(e){e.preventDefault();handleMove(e.touches[0].clientX,e.touches[0].clientY);},
+      onTouchStart:function(e){handleMove(e.touches[0].clientX,e.touches[0].clientY);},
+      style:{position:'relative',width:'100%',height:220,borderRadius:12,overflow:'hidden',
+        border:'2px solid '+C.cardBorder,userSelect:'none',touchAction:'none',
+        cursor:phase==='examine'?'none':'default',background:'#030610'}
+    },
+      React.createElement('div',{style:{position:'absolute',inset:0,filter:'blur(8px)',transform:'scale(1.06)'}},scene.svg),
+      React.createElement('div',{style:{position:'absolute',inset:0,
+        clipPath:'circle('+LUPA_R+'px at '+lupaPos.x+'px '+lupaPos.y+'px)'}},scene.svg),
+      lupaOn&&React.createElement('div',{style:{
+        position:'absolute',pointerEvents:'none',
+        width:LUPA_R*2,height:LUPA_R*2,borderRadius:'50%',
+        border:'2.5px solid '+C.purple,
+        boxShadow:'0 0 14px '+C.purple+'55,0 0 38px '+C.purple+'18',
+        left:lupaPos.x-LUPA_R,top:lupaPos.y-LUPA_R
+      }}),
+      lupaOn&&React.createElement('div',{style:{
+        position:'absolute',pointerEvents:'none',
+        width:4,height:24,borderRadius:2,
+        background:C.purple,opacity:.9,
+        left:lupaPos.x+LUPA_R*0.69-2,top:lupaPos.y+LUPA_R*0.69,
+        transform:'rotate(45deg)',transformOrigin:'top center'
+      }}),
+      !lupaOn&&phase==='examine'&&React.createElement('div',{style:{
+        position:'absolute',inset:0,display:'flex',flexDirection:'column',
+        alignItems:'center',justifyContent:'center',gap:8,background:'rgba(5,5,16,.5)'}},
+        React.createElement('div',{style:{fontSize:38,animation:'float 2s ease-in-out infinite'}},'🔍'),
+        React.createElement('div',{style:{fontSize:12,color:'rgba(200,210,255,.8)',textAlign:'center',padding:'0 28px'}},'Води ИИ-лупой по изображению')
+      ),
+      verdict&&React.createElement('div',{style:{
+        position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',
+        background:'rgba(0,0,0,.45)'}},
+        React.createElement('div',{style:{
+          fontSize:34,fontWeight:900,letterSpacing:2,
+          color:stampClr,border:'4px solid '+stampClr,
+          borderRadius:10,padding:'8px 28px',textDecoration:'line-through',
+          transform:'rotate(-12deg)',animation:'pop .4s ease-out',
+          textShadow:'0 0 20px '+stampClr+'55'
+        }},verdict==='notrust'?'ФЕЙК!':'РЕАЛЬНО')
+      )
+    ),
+    phase==='examine'&&React.createElement('div',{style:{display:'flex',gap:10}},
+      React.createElement('button',{onClick:function(){giveVerdict('trust');},
+        style:{flex:1,padding:'14px 0',borderRadius:12,background:'#44CC8815',
+          border:'2px solid #44CC88',color:'#44CC88',fontSize:14,fontWeight:800,cursor:'pointer'}
+      },'✅ ДОВЕРЯТЬ'),
+      React.createElement('button',{onClick:function(){giveVerdict('notrust');},
+        style:{flex:1,padding:'14px 0',borderRadius:12,background:'#FF444415',
+          border:'2px solid #FF4444',color:'#FF4444',fontSize:14,fontWeight:800,cursor:'pointer'}
+      },'🚫 НЕ ДОВЕРЯТЬ')
+    ),
+    phase==='result'&&React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:10,textAlign:'center'}},
+      React.createElement('div',{style:{fontSize:13,fontWeight:700,color:isOk?'#44CC88':'#FF6644'}},
+        isOk?'✅ Верно! +25 XP':'❌ Неверно! +0 XP'
+      ),
+      React.createElement('div',{style:{background:C.card,borderRadius:10,padding:'10px 12px',fontSize:12,color:C.text,lineHeight:1.5,textAlign:'left'}},
+        React.createElement('span',{style:{fontSize:14}},'💡 '),
+        scene.lesson
+      ),
+      React.createElement('button',{onClick:goNext,
+        style:{background:C.purple,color:'#fff',fontWeight:800,fontSize:14,padding:'12px 0',borderRadius:12,cursor:'pointer'}
+      },sceneIdx+1<total?'Следующий снимок →':'Финиш! 🎉')
+    )
+  );
+}
 
 
 const MODULES = [{
@@ -7394,8 +7633,8 @@ const MODULES = [{
   },
   rooms: [{
     name: "Космическая таможня",
-    type: "fake_detector",
-    desc: "4 сигнала — найди ляп ИИ и поставь печать ФЕЙК!"
+    type: "radar_lupa",
+    desc: "4 снимка — изучи ИИ-лупой и реши: доверять или нет?"
   }]
 }];
 
@@ -7542,6 +7781,7 @@ function App() {
       hallucination: HallucinationMech,
       mission: MissionMech,
       fake_detector: FakeDetectorMech,
+      radar_lupa: RadarMech,
       autopilot: AutopilotMech,
       space_game: SpaceGameMech,
       prompt_game: PromptGameMech
