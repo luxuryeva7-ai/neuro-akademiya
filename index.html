@@ -7380,6 +7380,23 @@ const MODULES = [{
     type: "prompt_game",
     desc: "3 раунда — от слабого промпта к сильному! Лучший промпт = лучший корабль!"
   }]
+}, {
+// ─── УРОВЕНЬ 5: РАДАР ПРАВДЫ (платный) ───────────────────────────────────────
+  id: "radar",
+  title: "РАДАР ПРАВДЫ",
+  subtitle: "Детектор дипфейков",
+  icon: "🔍",
+  color: C.purple,
+  xp: 120,
+  narrative: {
+    intro: "На борт поступают сигналы бедствия и фото с далёких планет. Но часть из них — фейки, сгенерированные ИИ! Используй ИИ-лупу: ищи ляпы нейросети и ставь печать ФЕЙК. Будь внимателен — ИИ умеет врать очень убедительно!",
+    complete: "🔍 РАДАР ПРАВДЫ активирован! Ты научился видеть ошибки ИИ: лишние пальцы, нечитаемый текст, неправильные тени. Теперь тебя не обманешь!"
+  },
+  rooms: [{
+    name: "Космическая таможня",
+    type: "fake_detector",
+    desc: "4 сигнала — найди ляп ИИ и поставь печать ФЕЙК!"
+  }]
 }];
 
 // ═══ MAIN APP ════════════════════════════════════
@@ -7539,7 +7556,7 @@ function App() {
       }
     }, "\u041C\u0435\u0445\u0430\u043D\u0438\u043A\u0430 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u0430: ", room.type);
   };
-  const hubMood = gs.modules.length === 6 ? "excited" : gs.modules.length >= 3 ? "happy" : gs.modules.length >= 1 ? "learning" : "confused";
+  const hubMood = gs.modules.length === 5 ? "excited" : gs.modules.length >= 3 ? "happy" : gs.modules.length >= 1 ? "learning" : "confused";
   const modCount = gs.modules.length;
   return /*#__PURE__*/React.createElement("div", {
     style: {
