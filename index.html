@@ -7386,50 +7386,60 @@ var RADAR_SCENES=[
      React.createElement('text',{key:'lbt',x:57,y:19,fill:'#CC88FF',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'БАЗА АВРОРА-9'),
    ])
   },
-  // ── СЦЕНА 3: Туманность — настоящее фото ─────────────────────────────────
-  {id:'r3',title:'🌌 Туманность «Столпы Творения»',
-   desc:'Телескоп прислал снимок. Изучи — доверять?',
+  // ── СЦЕНА 3: Земля из космоса — настоящее фото ───────────────────────────
+  {id:'r3',title:'🌍 Снимок Земли с орбиты',
+   desc:'Спутник передал фото планеты. Изучи — доверять?',
    isFake:false,
-   lesson:'Всё в порядке — звёзды правильные, форма туманности естественная, нет артефактов. Не каждое изображение фейк. Проверяй, но не подозревай всё подряд!',
+   lesson:'Всё в порядке! Земля выглядит нормально — океаны, материки, облака на месте. Не каждое изображение фейк. Проверяй, но не подозревай всё подряд!',
    svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
-     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#020510'}),
-     // Большая туманность — розово-красные столпы
-     React.createElement('ellipse',{key:'nb0',cx:170,cy:110,rx:160,ry:105,fill:'#180830',opacity:.9}),
-     // Столп 1 (левый) — тёмно-красный
-     React.createElement('rect',{key:'p1',x:70,y:30,width:45,height:170,fill:'#3A0815',rx:20}),
-     React.createElement('rect',{key:'p1l',x:75,y:40,width:18,height:155,fill:'#5A1020',rx:10,opacity:.8}),
-     React.createElement('ellipse',{key:'p1t',cx:92,cy:28,rx:25,ry:15,fill:'#4A1018'}),
-     // Столп 2 (центр) — самый яркий
-     React.createElement('rect',{key:'p2',x:145,y:15,width:55,height:185,fill:'#4A0A18',rx:22}),
-     React.createElement('rect',{key:'p2l',x:152,y:25,width:22,height:168,fill:'#7A1828',rx:11,opacity:.8}),
-     React.createElement('ellipse',{key:'p2t',cx:172,cy:12,rx:30,ry:18,fill:'#6A1420'}),
-     // Столп 3 (правый) — поменьше
-     React.createElement('rect',{key:'p3',x:228,y:50,width:38,height:152,fill:'#350712',rx:16}),
-     React.createElement('rect',{key:'p3l',x:234,y:60,width:15,height:138,fill:'#4A1018',rx:8,opacity:.8}),
-     React.createElement('ellipse',{key:'p3t',cx:247,cy:48,rx:21,ry:13,fill:'#401010'}),
-     // Газовые облака вокруг — оранжево-розовые
-     React.createElement('ellipse',{key:'gc1',cx:40,cy:80,rx:70,ry:60,fill:'#5A1A00',opacity:.5}),
-     React.createElement('ellipse',{key:'gc2',cx:300,cy:140,rx:65,ry:55,fill:'#3A0A20',opacity:.5}),
-     React.createElement('ellipse',{key:'gc3',cx:170,cy:110,rx:140,ry:90,fill:'#200818',opacity:.35}),
-     // Яркий газ между столпами
-     React.createElement('ellipse',{key:'glow1',cx:130,cy:90,rx:30,ry:50,fill:'#FF6030',opacity:.15}),
-     React.createElement('ellipse',{key:'glow2',cx:210,cy:120,rx:25,ry:40,fill:'#FF4060',opacity:.12}),
-     // Синеватые облака сверху
-     React.createElement('ellipse',{key:'bc1',cx:90,cy:20,rx:80,ry:30,fill:'#001A50',opacity:.6}),
-     React.createElement('ellipse',{key:'bc2',cx:270,cy:35,rx:70,ry:25,fill:'#001A50',opacity:.5}),
-     // Звёзды
-     _rStars(60,88776),
-     // Яркие звёзды
-     React.createElement('circle',{key:'bs1',cx:28,cy:18,r:2.5,fill:'#FFFFFF',opacity:.95}),
-     React.createElement('circle',{key:'bs1g',cx:28,cy:18,r:5,fill:'#AADDFF',opacity:.3}),
-     React.createElement('circle',{key:'bs2',cx:318,cy:195,r:3,fill:'#FFEEAA',opacity:.95}),
-     React.createElement('circle',{key:'bs2g',cx:318,cy:195,r:6,fill:'#FFEE88',opacity:.3}),
-     React.createElement('circle',{key:'bs3',cx:14,cy:200,r:2,fill:'#FFFFFF',opacity:.9}),
-     React.createElement('circle',{key:'bs4',cx:295,cy:12,r:2,fill:'#CCDDFF',opacity:.9}),
-     React.createElement('circle',{key:'bs5',cx:335,cy:80,r:1.5,fill:'#FFFFFF',opacity:.85}),
-     // Метка телескопа
-     React.createElement('rect',{key:'lbg',x:7,y:7,width:138,height:18,fill:'rgba(0,0,0,.75)',rx:3}),
-     React.createElement('text',{key:'lbt',x:76,y:19,fill:'#88CCFF',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'HUBBLE-2 • M16 EAGLE'),
+     // Космос
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#020508'}),
+     _rStars(55,33333),
+     React.createElement('circle',{key:'bs1',cx:18,cy:14,r:2,fill:'white',opacity:.9}),
+     React.createElement('circle',{key:'bs2',cx:322,cy:200,r:2.5,fill:'#AADDFF',opacity:.9}),
+     React.createElement('circle',{key:'bs3',cx:10,cy:205,r:1.5,fill:'white',opacity:.85}),
+     React.createElement('circle',{key:'bs4',cx:330,cy:18,r:2,fill:'#FFEEAA',opacity:.9}),
+     // Солнечный блик сверху-справа
+     React.createElement('circle',{key:'sungl',cx:310,cy:10,r:40,fill:'#FFFFFF',opacity:.04}),
+     // Тень космоса за планетой
+     React.createElement('circle',{key:'shadow',cx:185,cy:118,r:99,fill:'#010305'}),
+     // Земля — основной шар (синий океан)
+     React.createElement('circle',{key:'earth',cx:170,cy:112,r:96,fill:'#1464A0'}),
+     // Более тёмные глубины океана
+     React.createElement('circle',{key:'edeep',cx:170,cy:112,r:96,fill:'#0A3A70',opacity:.4}),
+     // Атмосферный ободок — голубой
+     React.createElement('circle',{key:'atm',cx:170,cy:112,r:96,fill:'none',stroke:'#55AAFF',strokeWidth:5,opacity:.35}),
+     React.createElement('circle',{key:'atm2',cx:170,cy:112,r:96,fill:'none',stroke:'#88CCFF',strokeWidth:2,opacity:.2}),
+     // Материки — зелёно-коричневые
+     // Европа + Азия (правый центр)
+     React.createElement('ellipse',{key:'eu',cx:200,cy:90,rx:38,ry:26,fill:'#4A7A30',opacity:.9}),
+     React.createElement('ellipse',{key:'as',cx:230,cy:105,rx:48,ry:30,fill:'#5A8A38',opacity:.85}),
+     React.createElement('ellipse',{key:'as2',cx:218,cy:118,rx:30,ry:18,fill:'#6A9040',opacity:.7}),
+     // Африка (правый низ)
+     React.createElement('ellipse',{key:'af',cx:198,cy:138,rx:22,ry:32,fill:'#7A7020',opacity:.9}),
+     React.createElement('ellipse',{key:'af2',cx:202,cy:148,rx:16,ry:20,fill:'#8A8028',opacity:.8}),
+     // Америка (левый центр)
+     React.createElement('ellipse',{key:'na',cx:120,cy:88,rx:28,ry:22,fill:'#4A6A28',opacity:.85}),
+     React.createElement('ellipse',{key:'sa',cx:128,cy:128,rx:18,ry:26,fill:'#5A7030',opacity:.8}),
+     // Антарктида (низ)
+     React.createElement('ellipse',{key:'ant',cx:170,cy:200,rx:45,ry:14,fill:'#E8EEF0',opacity:.8}),
+     // Облака — белые патчи
+     React.createElement('ellipse',{key:'cl1',cx:148,cy:75,rx:32,ry:10,fill:'white',opacity:.7,transform:'rotate(-15 148 75)'}),
+     React.createElement('ellipse',{key:'cl2',cx:210,cy:72,rx:28,ry:9,fill:'white',opacity:.65,transform:'rotate(10 210 72)'}),
+     React.createElement('ellipse',{key:'cl3',cx:140,cy:145,rx:35,ry:11,fill:'white',opacity:.6,transform:'rotate(-8 140 145)'}),
+     React.createElement('ellipse',{key:'cl4',cx:185,cy:162,rx:22,ry:8,fill:'white',opacity:.55}),
+     React.createElement('ellipse',{key:'cl5',cx:115,cy:110,rx:18,ry:7,fill:'white',opacity:.5,transform:'rotate(20 115 110)'}),
+     React.createElement('ellipse',{key:'cl6',cx:245,cy:130,rx:20,ry:7,fill:'white',opacity:.55,transform:'rotate(-12 245 130)'}),
+     // Тень (ночная сторона) — справа
+     React.createElement('circle',{key:'nightmask',cx:205,cy:112,r:96,fill:'#010305',opacity:.55}),
+     // Огни городов на ночной стороне
+     React.createElement('circle',{key:'city1',cx:218,cy:95,r:1.5,fill:'#FFCC44',opacity:.7}),
+     React.createElement('circle',{key:'city2',cx:228,cy:102,r:1,fill:'#FFDD66',opacity:.6}),
+     React.createElement('circle',{key:'city3',cx:222,cy:108,r:1.5,fill:'#FFCC44',opacity:.65}),
+     React.createElement('circle',{key:'city4',cx:235,cy:118,r:1,fill:'#FFDD66',opacity:.55}),
+     // Метка спутника
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:118,height:18,fill:'rgba(0,0,0,.75)',rx:3}),
+     React.createElement('text',{key:'lbt',x:66,y:19,fill:'#88CCFF',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'ISS-CAM • EARTH-3'),
    ])
   },
   // ── СЦЕНА 4: Закат на планете — неправильные тени ────────────────────────
