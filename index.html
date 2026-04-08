@@ -8,7 +8,8 @@
   <link href="https://fonts.bunny.net/css2?family=nunito:wght@400;600;700;800;900&family=orbitron:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#080C18;font-family:'Nunito',sans-serif;overflow-x:hidden;padding-top:var(--tg-safe-area-inset-top,0px)}
+    body{background:#080C18;font-family:'Nunito',sans-serif;overflow-x:hidden;padding-top:var(--tg-safe-area-inset-top,0px);overscroll-behavior:none;}
+    html{overscroll-behavior:none;}
     .safe-bottom{padding-bottom:max(var(--tg-safe-area-inset-bottom,0px),20px)}
     button{font-family:inherit;-webkit-tap-highlight-color:transparent;cursor:pointer;border:none;outline:none}
     ::-webkit-scrollbar{width:0}
@@ -3704,6 +3705,8 @@ if (TG.ready) TG.ready();
 if (TG.expand) TG.expand();
 if (TG.setHeaderColor) TG.setHeaderColor('#080C18');
 if (TG.setBackgroundColor) TG.setBackgroundColor('#080C18');
+if (TG.disableVerticalSwipes) TG.disableVerticalSwipes();
+if (TG.enableClosingConfirmation) TG.enableClosingConfirmation();
 const generateUnlockCode = uid => {
   const n = Math.abs(uid * 31337 + 99991 ^ 0xDEAD) % 900000 + 100000;
   return String(n);
@@ -7244,115 +7247,246 @@ function _rStars(n,seed){
   return a;
 }
 var RADAR_SCENES=[
-  {id:'r1',title:'📡 Сигнал с орбитальной станции',
-   desc:'Астронавт прислал фото. Изучи ИИ-лупой — доверять?',
+  // ── СЦЕНА 1: Спасательный отсек — рука с 6 пальцами ──────────────────────
+  {id:'r1',title:'📡 SOS с орбитальной станции',
+   desc:'Астронавт прислал снимок. Изучи ИИ-лупой — доверять?',
    isFake:true,
-   lesson:'На руке 6 пальцев! ИИ не умеет рисовать руки — всегда считай пальцы на ИИ-изображениях. Это главный признак дипфейка.',
+   lesson:'На руке 6 пальцев! ИИ не умеет рисовать руки — всегда считай пальцы на ИИ-изображениях. Это самый частый признак дипфейка.',
    svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
-     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#050A18'}),
-     _rStars(35,11111),
-     React.createElement('rect',{key:'fl',x:0,y:145,width:340,height:75,fill:'#1A2030'}),
-     React.createElement('rect',{key:'pn',x:40,y:88,width:260,height:62,fill:'#1E2840',rx:4}),
-     React.createElement('line',{key:'pl',x1:40,y1:112,x2:300,y2:112,stroke:'#2A3A55',strokeWidth:2}),
-     React.createElement('rect',{key:'pa',x:78,y:96,width:28,height:16,fill:'#2A4060',rx:2}),
-     React.createElement('rect',{key:'pb',x:153,y:96,width:28,height:16,fill:'#2A4060',rx:2}),
-     React.createElement('rect',{key:'pc',x:228,y:96,width:28,height:16,fill:'#2A4060',rx:2}),
-     React.createElement('rect',{key:'sl',x:138,y:148,width:68,height:75,fill:'#C8CCCC',rx:16}),
-     React.createElement('rect',{key:'si',x:146,y:151,width:52,height:65,fill:'#B8BCBC',rx:12}),
-     React.createElement('rect',{key:'sd1',x:150,y:164,width:44,height:3,fill:'#999',rx:1}),
-     React.createElement('rect',{key:'sd2',x:150,y:172,width:44,height:3,fill:'#999',rx:1}),
-     React.createElement('ellipse',{key:'gv',cx:173,cy:151,rx:30,ry:15,fill:'#7A7E80'}),
-     React.createElement('rect',{key:'f1',x:144,y:113,width:14,height:42,fill:'#7A7E80',rx:7}),
-     React.createElement('rect',{key:'f2',x:160,y:107,width:14,height:48,fill:'#7A7E80',rx:7}),
-     React.createElement('rect',{key:'f3',x:176,y:109,width:14,height:46,fill:'#7A7E80',rx:7}),
-     React.createElement('rect',{key:'f4',x:192,y:115,width:14,height:40,fill:'#7A7E80',rx:7}),
-     React.createElement('rect',{key:'f5',x:126,y:130,width:12,height:32,fill:'#7A7E80',rx:6,transform:'rotate(-22 126 138)'}),
-     React.createElement('rect',{key:'f6',x:207,y:121,width:12,height:28,fill:'#7A7E80',rx:6,transform:'rotate(10 207 129)'}),
-     React.createElement('rect',{key:'lbg',x:7,y:7,width:84,height:18,fill:'rgba(0,0,0,.65)',rx:3}),
-     React.createElement('text',{key:'lbt',x:49,y:19,fill:'#88AACC',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'ФОТО #4471'),
+     // Космос + туманность фоном
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#030818'}),
+     React.createElement('ellipse',{key:'nb1',cx:60,cy:50,rx:90,ry:60,fill:'#1A0840',opacity:.7}),
+     React.createElement('ellipse',{key:'nb2',cx:280,cy:170,rx:80,ry:55,fill:'#001A40',opacity:.6}),
+     React.createElement('ellipse',{key:'nb3',cx:170,cy:110,rx:150,ry:80,fill:'#0A0025',opacity:.5}),
+     _rStars(45,11111),
+     React.createElement('circle',{key:'bs1',cx:30,cy:20,r:2,fill:'#AADDFF',opacity:.9}),
+     React.createElement('circle',{key:'bs2',cx:310,cy:190,r:2.5,fill:'white',opacity:.9}),
+     React.createElement('circle',{key:'bs3',cx:15,cy:180,r:1.5,fill:'#FFEEAA',opacity:.9}),
+     // Станция — яркие панели
+     React.createElement('rect',{key:'st',x:0,y:60,width:340,height:100,fill:'#0E1B2E'}),
+     React.createElement('rect',{key:'stb',x:0,y:60,width:340,height:4,fill:'#00E5FF',opacity:.4}),
+     React.createElement('rect',{key:'stb2',x:0,y:160,width:340,height:4,fill:'#00E5FF',opacity:.3}),
+     // Солнечные панели — синие/золотые
+     React.createElement('rect',{key:'sp1',x:10,y:68,width:55,height:32,fill:'#1A3A6A',rx:2}),
+     React.createElement('line',{key:'sl1a',x1:10,y1:76,x2:65,y2:76,stroke:'#4488CC',strokeWidth:1}),
+     React.createElement('line',{key:'sl1b',x1:10,y1:84,x2:65,y2:84,stroke:'#4488CC',strokeWidth:1}),
+     React.createElement('line',{key:'sl1c',x1:10,y1:92,x2:65,y2:92,stroke:'#4488CC',strokeWidth:1}),
+     React.createElement('rect',{key:'sp2',x:275,y:68,width:55,height:32,fill:'#1A3A6A',rx:2}),
+     React.createElement('line',{key:'sl2a',x1:275,y1:76,x2:330,y2:76,stroke:'#4488CC',strokeWidth:1}),
+     React.createElement('line',{key:'sl2b',x1:275,y1:84,x2:330,y2:84,stroke:'#4488CC',strokeWidth:1}),
+     React.createElement('line',{key:'sl2c',x1:275,y1:92,x2:330,y2:92,stroke:'#4488CC',strokeWidth:1}),
+     // Центральный модуль
+     React.createElement('rect',{key:'cm',x:80,y:72,width:180,height:80,fill:'#162238',rx:6}),
+     React.createElement('rect',{key:'cmh',x:80,y:72,width:180,height:6,fill:'#00E5FF',opacity:.5,rx:3}),
+     // Иллюминаторы — светящиеся
+     React.createElement('circle',{key:'il1',cx:120,cy:112,r:16,fill:'#001830'}),
+     React.createElement('circle',{key:'il1g',cx:120,cy:112,r:14,fill:'#002848'}),
+     React.createElement('circle',{key:'il1i',cx:120,cy:112,r:10,fill:'#003060'}),
+     React.createElement('circle',{key:'il1gl',cx:120,cy:112,r:16,fill:'none',stroke:'#00E5FF',strokeWidth:1.5,opacity:.7}),
+     React.createElement('circle',{key:'il2',cx:175,cy:112,r:16,fill:'#001830'}),
+     React.createElement('circle',{key:'il2g',cx:175,cy:112,r:14,fill:'#FF6B2020'}),
+     React.createElement('circle',{key:'il2i',cx:175,cy:112,r:10,fill:'#FF3000',opacity:.4}),
+     React.createElement('circle',{key:'il2gl',cx:175,cy:112,r:16,fill:'none',stroke:'#FF4444',strokeWidth:1.5,opacity:.8}),
+     React.createElement('circle',{key:'il3',cx:230,cy:112,r:16,fill:'#001830'}),
+     React.createElement('circle',{key:'il3g',cx:230,cy:112,r:14,fill:'#003020'}),
+     React.createElement('circle',{key:'il3i',cx:230,cy:112,r:10,fill:'#00AA44',opacity:.4}),
+     React.createElement('circle',{key:'il3gl',cx:230,cy:112,r:16,fill:'none',stroke:'#44CC88',strokeWidth:1.5,opacity:.7}),
+     // Скафандр — оранжевый яркий
+     React.createElement('rect',{key:'sl',x:142,y:148,width:72,height:72,fill:'#E05010',rx:18}),
+     React.createElement('rect',{key:'si',x:150,y:154,width:56,height:60,fill:'#FF7A2A',rx:14}),
+     React.createElement('rect',{key:'sd1',x:154,y:168,width:48,height:4,fill:'#CC4400',rx:2}),
+     React.createElement('rect',{key:'sd2',x:154,y:176,width:48,height:4,fill:'#CC4400',rx:2}),
+     React.createElement('rect',{key:'sd3',x:154,y:184,width:48,height:4,fill:'#CC4400',rx:2}),
+     // Перчатка — светло-серая
+     React.createElement('ellipse',{key:'gv',cx:177,cy:152,rx:32,ry:16,fill:'#C8CCCE'}),
+     React.createElement('ellipse',{key:'gvi',cx:177,cy:152,rx:26,ry:11,fill:'#D8DCDE'}),
+     // === 6 ПАЛЬЦЕВ (ляп ИИ) ===
+     React.createElement('rect',{key:'f1',x:146,y:112,width:15,height:44,fill:'#C0C4C6',rx:7,stroke:'#A0A4A6',strokeWidth:.5}),
+     React.createElement('rect',{key:'f2',x:163,y:105,width:15,height:51,fill:'#C8CCCE',rx:7,stroke:'#A0A4A6',strokeWidth:.5}),
+     React.createElement('rect',{key:'f3',x:180,y:107,width:15,height:49,fill:'#C8CCCE',rx:7,stroke:'#A0A4A6',strokeWidth:.5}),
+     React.createElement('rect',{key:'f4',x:197,y:113,width:15,height:43,fill:'#C0C4C6',rx:7,stroke:'#A0A4A6',strokeWidth:.5}),
+     React.createElement('rect',{key:'f5',x:128,y:131,width:13,height:33,fill:'#B8BCBE',rx:6,transform:'rotate(-24 128 140)'}),
+     // Шестой лишний палец
+     React.createElement('rect',{key:'f6',x:213,y:118,width:13,height:30,fill:'#B8BCBE',rx:6,transform:'rotate(12 213 126)',stroke:'#FF6644',strokeWidth:.8}),
+     // Нашивка SOS красная
+     React.createElement('rect',{key:'sb',x:152,y:196,width:50,height:16,fill:'#CC0000',rx:3}),
+     React.createElement('text',{key:'st2',x:177,y:207,fill:'white',fontSize:10,textAnchor:'middle',fontFamily:'monospace',fontWeight:'bold'},'S.O.S'),
+     // Метка фото
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:96,height:18,fill:'rgba(0,0,0,.75)',rx:3}),
+     React.createElement('text',{key:'lbt',x:55,y:19,fill:'#00E5FF',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'КСТ-7 • БОРТ #4471'),
    ])
   },
-  {id:'r2',title:'📻 Сообщение с базы Тау-3',
-   desc:'База просит помощи. Прочитай надпись — доверять?',
+  // ── СЦЕНА 2: Инопланетная база — кракозябры на знаке ─────────────────────
+  {id:'r2',title:'🌋 Передача с базы Аврора-9',
+   desc:'База передала фото. Прочитай надпись на стене — доверять?',
    isFake:true,
-   lesson:'Текст на табличке — "H3LP ##@! Xkdfj" — полная бессмыслица! ИИ не умеет генерировать читаемый текст. Буквы-мусор на картинке = явный признак подделки.',
+   lesson:'Текст на знаке — "H3LP ##@! Xkdfj" — нечитаемый мусор! ИИ не умеет генерировать правильный текст. Если буквы на картинке выглядят как кракозябры — это фейк.',
    svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
-     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#1A0800'}),
-     React.createElement('rect',{key:'sky',width:340,height:135,fill:'#2D1200'}),
-     React.createElement('ellipse',{key:'gl1',cx:170,cy:0,rx:205,ry:80,fill:'#8B3000',opacity:.5}),
-     React.createElement('rect',{key:'gr',x:0,y:143,width:340,height:77,fill:'#5C2800'}),
-     React.createElement('rect',{key:'grl',x:0,y:143,width:340,height:9,fill:'#7A3800'}),
-     React.createElement('ellipse',{key:'rk1',cx:38,cy:150,rx:34,ry:14,fill:'#6A3200'}),
-     React.createElement('ellipse',{key:'rk2',cx:302,cy:154,rx:30,ry:13,fill:'#6A3200'}),
-     React.createElement('rect',{key:'bl',x:85,y:68,width:170,height:82,fill:'#3A3A4A',rx:4}),
-     React.createElement('rect',{key:'bt',x:95,y:58,width:150,height:14,fill:'#4A4A5A',rx:2}),
-     React.createElement('rect',{key:'dr',x:150,y:108,width:40,height:42,fill:'#2A2A3A',rx:3}),
-     React.createElement('rect',{key:'w1',x:98,y:78,width:28,height:20,fill:'#669AAA',rx:2}),
-     React.createElement('rect',{key:'w2',x:214,y:78,width:28,height:20,fill:'#669AAA',rx:2}),
-     React.createElement('rect',{key:'sg',x:88,y:88,width:164,height:30,fill:'#F0DC50',rx:3}),
-     React.createElement('rect',{key:'sgi',x:91,y:91,width:158,height:24,fill:'#E0CC40',rx:2}),
-     React.createElement('text',{key:'sgt',x:170,y:107,fill:'#1A1A00',fontSize:12,textAnchor:'middle',fontFamily:'monospace',fontWeight:'bold'},'H3LP ##@! Xkdfj'),
-     React.createElement('line',{key:'ant',x1:170,y1:58,x2:170,y2:14,stroke:'#5A5A6A',strokeWidth:3}),
-     React.createElement('line',{key:'antl',x1:156,y1:22,x2:184,y2:22,stroke:'#5A5A6A',strokeWidth:2}),
-     React.createElement('circle',{key:'anc',cx:170,cy:12,r:5,fill:'#CC4400'}),
-     React.createElement('rect',{key:'lbg',x:7,y:7,width:90,height:18,fill:'rgba(0,0,0,.65)',rx:3}),
-     React.createElement('text',{key:'lbt',x:52,y:19,fill:'#CC8844',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'БАЗА ТАУ-3'),
+     // Яркое небо — фиолетово-пурпурное
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#0D0022'}),
+     React.createElement('rect',{key:'sky',width:340,height:130,fill:'#180038'}),
+     React.createElement('ellipse',{key:'gl1',cx:170,cy:0,rx:220,ry:95,fill:'#4A0080',opacity:.5}),
+     React.createElement('ellipse',{key:'gl2',cx:80,cy:30,rx:100,ry:50,fill:'#2A0060',opacity:.4}),
+     React.createElement('ellipse',{key:'gl3',cx:260,cy:20,rx:80,ry:40,fill:'#600080',opacity:.4}),
+     _rStars(30,22222),
+     // Три луны
+     React.createElement('circle',{key:'mn1',cx:50,cy:35,r:18,fill:'#E8C88A'}),
+     React.createElement('circle',{key:'mn1s',cx:58,cy:30,r:18,fill:'#180038'}),
+     React.createElement('circle',{key:'mn2',cx:265,cy:25,r:10,fill:'#CCB880',opacity:.9}),
+     React.createElement('circle',{key:'mn3',cx:310,cy:60,r:7,fill:'#FFDDAA',opacity:.7}),
+     // Земля/поверхность — лиловая
+     React.createElement('rect',{key:'gr',x:0,y:140,width:340,height:80,fill:'#1A0035'}),
+     React.createElement('rect',{key:'grl',x:0,y:140,width:340,height:8,fill:'#5500AA'}),
+     // Кристаллы светящиеся
+     React.createElement('polygon',{key:'cr1',points:'30,140 42,100 54,140',fill:'#CC00FF',opacity:.7}),
+     React.createElement('polygon',{key:'cr1i',points:'34,140 42,108 50,140',fill:'#EE88FF',opacity:.5}),
+     React.createElement('polygon',{key:'cr2',points:'285,140 298,95 311,140',fill:'#FF00AA',opacity:.6}),
+     React.createElement('polygon',{key:'cr2i',points:'290,140 298,104 306,140',fill:'#FF88DD',opacity:.4}),
+     React.createElement('polygon',{key:'cr3',points:'10,140 19,118 28,140',fill:'#8800FF',opacity:.6}),
+     React.createElement('polygon',{key:'cr4',points:'318,140 326,120 334,140',fill:'#0088FF',opacity:.6}),
+     // Здание базы
+     React.createElement('rect',{key:'bl',x:80,y:65,width:180,height:82,fill:'#22003A',rx:5}),
+     React.createElement('rect',{key:'bt',x:80,y:65,width:180,height:5,fill:'#AA00FF',opacity:.8,rx:3}),
+     React.createElement('rect',{key:'bb',x:80,y:142,width:180,height:3,fill:'#AA00FF',opacity:.5}),
+     // Неоновые полосы на здании
+     React.createElement('rect',{key:'nl1',x:80,y:90,width:180,height:2,fill:'#FF00AA',opacity:.4}),
+     React.createElement('rect',{key:'nl2',x:80,y:115,width:180,height:2,fill:'#00AAFF',opacity:.4}),
+     // Дверь с подсветкой
+     React.createElement('rect',{key:'dr',x:148,y:104,width:44,height:41,fill:'#110020',rx:3}),
+     React.createElement('rect',{key:'drf',x:148,y:141,width:44,height:4,fill:'#AA00FF',opacity:.6}),
+     // Окна — светящиеся разными цветами
+     React.createElement('rect',{key:'w1',x:92,y:76,width:30,height:22,fill:'#001A40',rx:3}),
+     React.createElement('rect',{key:'w1g',x:94,y:78,width:26,height:18,fill:'#0044AA',rx:2,opacity:.7}),
+     React.createElement('rect',{key:'w1gl',x:92,y:76,width:30,height:22,fill:'none',stroke:'#00AAFF',strokeWidth:1,rx:3}),
+     React.createElement('rect',{key:'w2',x:218,y:76,width:30,height:22,fill:'#300020',rx:3}),
+     React.createElement('rect',{key:'w2g',x:220,y:78,width:26,height:18,fill:'#880044',rx:2,opacity:.7}),
+     React.createElement('rect',{key:'w2gl',x:218,y:76,width:30,height:22,fill:'none',stroke:'#FF0066',strokeWidth:1,rx:3}),
+     // Антенна с мигающим огнём
+     React.createElement('line',{key:'ant',x1:170,y1:65,x2:170,y2:18,stroke:'#8855AA',strokeWidth:3}),
+     React.createElement('line',{key:'antl1',x1:152,y1:30,x2:188,y2:30,stroke:'#8855AA',strokeWidth:2}),
+     React.createElement('circle',{key:'anc',cx:170,cy:16,r:6,fill:'#FF2200'}),
+     React.createElement('circle',{key:'ancg',cx:170,cy:16,r:10,fill:'#FF2200',opacity:.3}),
+     // === ЗНАК С КРАКОЗЯБРАМИ (ляп ИИ) ===
+     React.createElement('rect',{key:'sg',x:88,y:94,width:164,height:34,fill:'#FFEE00',rx:4}),
+     React.createElement('rect',{key:'sgi',x:91,y:97,width:158,height:28,fill:'#FFD800',rx:3}),
+     React.createElement('text',{key:'sgt',x:170,y:115,fill:'#1A1000',fontSize:13,textAnchor:'middle',fontFamily:'monospace',fontWeight:'bold',letterSpacing:1},'H3LP ##@! Xkdfj'),
+     // Метка
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:100,height:18,fill:'rgba(0,0,0,.75)',rx:3}),
+     React.createElement('text',{key:'lbt',x:57,y:19,fill:'#CC88FF',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'БАЗА АВРОРА-9'),
    ])
   },
-  {id:'r3',title:'🌌 Снимок туманности NGC-7293',
-   desc:'Телескоп прислал стандартный снимок. Доверять?',
+  // ── СЦЕНА 3: Туманность — настоящее фото ─────────────────────────────────
+  {id:'r3',title:'🌌 Туманность «Столпы Творения»',
+   desc:'Телескоп прислал снимок. Изучи — доверять?',
    isFake:false,
-   lesson:'Всё в порядке! Нет артефактов, нет странностей — обычная туманность. Не каждое изображение фейк. Важно проверять, а не подозревать всё подряд!',
+   lesson:'Всё в порядке — звёзды правильные, форма туманности естественная, нет артефактов. Не каждое изображение фейк. Проверяй, но не подозревай всё подряд!',
    svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
-     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#030610'}),
-     React.createElement('ellipse',{key:'nb1',cx:170,cy:112,rx:145,ry:98,fill:'#1A0830',opacity:.8}),
-     React.createElement('ellipse',{key:'nb2',cx:152,cy:102,rx:102,ry:72,fill:'#280840',opacity:.7}),
-     React.createElement('ellipse',{key:'nb3',cx:192,cy:128,rx:88,ry:62,fill:'#0A1A40',opacity:.7}),
-     React.createElement('ellipse',{key:'nb4',cx:170,cy:112,rx:58,ry:48,fill:'#3A1055',opacity:.65}),
-     React.createElement('ellipse',{key:'nb5',cx:164,cy:108,rx:32,ry:24,fill:'#6A1870',opacity:.55}),
-     React.createElement('circle',{key:'nc',cx:167,cy:110,r:10,fill:'#9A30A0',opacity:.6}),
-     React.createElement('ellipse',{key:'ns1',cx:98,cy:80,rx:58,ry:24,fill:'#1A1460',opacity:.5,transform:'rotate(-20 98 80)'}),
-     React.createElement('ellipse',{key:'ns2',cx:250,cy:150,rx:54,ry:20,fill:'#1A1460',opacity:.45,transform:'rotate(16 250 150)'}),
-     _rStars(55,88776),
-     React.createElement('circle',{key:'bs1',cx:78,cy:54,r:2,fill:'white',opacity:.9}),
-     React.createElement('circle',{key:'bs2',cx:280,cy:176,r:2.5,fill:'#AADDFF',opacity:.9}),
-     React.createElement('circle',{key:'bs3',cx:54,cy:186,r:1.5,fill:'white',opacity:.8}),
-     React.createElement('circle',{key:'bs4',cx:312,cy:40,r:2,fill:'#FFEEAA',opacity:.9}),
-     React.createElement('circle',{key:'bs5',cx:167,cy:110,r:4,fill:'white',opacity:.65}),
-     React.createElement('rect',{key:'lbg',x:7,y:7,width:126,height:18,fill:'rgba(0,0,0,.65)',rx:3}),
-     React.createElement('text',{key:'lbt',x:70,y:19,fill:'#88CCFF',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'ТЕЛЕСКОП NGC-7293'),
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#020510'}),
+     // Большая туманность — розово-красные столпы
+     React.createElement('ellipse',{key:'nb0',cx:170,cy:110,rx:160,ry:105,fill:'#180830',opacity:.9}),
+     // Столп 1 (левый) — тёмно-красный
+     React.createElement('rect',{key:'p1',x:70,y:30,width:45,height:170,fill:'#3A0815',rx:20}),
+     React.createElement('rect',{key:'p1l',x:75,y:40,width:18,height:155,fill:'#5A1020',rx:10,opacity:.8}),
+     React.createElement('ellipse',{key:'p1t',cx:92,cy:28,rx:25,ry:15,fill:'#4A1018'}),
+     // Столп 2 (центр) — самый яркий
+     React.createElement('rect',{key:'p2',x:145,y:15,width:55,height:185,fill:'#4A0A18',rx:22}),
+     React.createElement('rect',{key:'p2l',x:152,y:25,width:22,height:168,fill:'#7A1828',rx:11,opacity:.8}),
+     React.createElement('ellipse',{key:'p2t',cx:172,cy:12,rx:30,ry:18,fill:'#6A1420'}),
+     // Столп 3 (правый) — поменьше
+     React.createElement('rect',{key:'p3',x:228,y:50,width:38,height:152,fill:'#350712',rx:16}),
+     React.createElement('rect',{key:'p3l',x:234,y:60,width:15,height:138,fill:'#4A1018',rx:8,opacity:.8}),
+     React.createElement('ellipse',{key:'p3t',cx:247,cy:48,rx:21,ry:13,fill:'#401010'}),
+     // Газовые облака вокруг — оранжево-розовые
+     React.createElement('ellipse',{key:'gc1',cx:40,cy:80,rx:70,ry:60,fill:'#5A1A00',opacity:.5}),
+     React.createElement('ellipse',{key:'gc2',cx:300,cy:140,rx:65,ry:55,fill:'#3A0A20',opacity:.5}),
+     React.createElement('ellipse',{key:'gc3',cx:170,cy:110,rx:140,ry:90,fill:'#200818',opacity:.35}),
+     // Яркий газ между столпами
+     React.createElement('ellipse',{key:'glow1',cx:130,cy:90,rx:30,ry:50,fill:'#FF6030',opacity:.15}),
+     React.createElement('ellipse',{key:'glow2',cx:210,cy:120,rx:25,ry:40,fill:'#FF4060',opacity:.12}),
+     // Синеватые облака сверху
+     React.createElement('ellipse',{key:'bc1',cx:90,cy:20,rx:80,ry:30,fill:'#001A50',opacity:.6}),
+     React.createElement('ellipse',{key:'bc2',cx:270,cy:35,rx:70,ry:25,fill:'#001A50',opacity:.5}),
+     // Звёзды
+     _rStars(60,88776),
+     // Яркие звёзды
+     React.createElement('circle',{key:'bs1',cx:28,cy:18,r:2.5,fill:'#FFFFFF',opacity:.95}),
+     React.createElement('circle',{key:'bs1g',cx:28,cy:18,r:5,fill:'#AADDFF',opacity:.3}),
+     React.createElement('circle',{key:'bs2',cx:318,cy:195,r:3,fill:'#FFEEAA',opacity:.95}),
+     React.createElement('circle',{key:'bs2g',cx:318,cy:195,r:6,fill:'#FFEE88',opacity:.3}),
+     React.createElement('circle',{key:'bs3',cx:14,cy:200,r:2,fill:'#FFFFFF',opacity:.9}),
+     React.createElement('circle',{key:'bs4',cx:295,cy:12,r:2,fill:'#CCDDFF',opacity:.9}),
+     React.createElement('circle',{key:'bs5',cx:335,cy:80,r:1.5,fill:'#FFFFFF',opacity:.85}),
+     // Метка телескопа
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:138,height:18,fill:'rgba(0,0,0,.75)',rx:3}),
+     React.createElement('text',{key:'lbt',x:76,y:19,fill:'#88CCFF',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'HUBBLE-2 • M16 EAGLE'),
    ])
   },
-  {id:'r4',title:'🌅 Пейзаж планеты Кеплер-452б',
-   desc:'Первый снимок новой планеты. Внимательно изучи.',
+  // ── СЦЕНА 4: Закат на планете — неправильные тени ────────────────────────
+  {id:'r4',title:'🌅 Закат на планете Кеплер-452б',
+   desc:'Первый снимок поверхности. Изучи внимательно — доверять?',
    isFake:true,
-   lesson:'Тени от гор идут ВЛЕВО (правильно — солнце справа), а тени от деревьев — ВПРАВО (ошибка!). У одного солнца тени всегда в одну сторону. ИИ забыл физику!',
+   lesson:'Солнце справа — тени должны идти ВЛЕВО. Горы: тени влево ✓. Деревья: тени вправо ✗! У одного солнца все тени в одну сторону. ИИ забыл физику!',
    svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
-     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#080C20'}),
-     React.createElement('rect',{key:'sky',width:340,height:132,fill:'#0A1828'}),
-     React.createElement('ellipse',{key:'gl',cx:170,cy:0,rx:300,ry:96,fill:'#0A2040',opacity:.8}),
-     _rStars(20,44321),
-     React.createElement('circle',{key:'sun',cx:288,cy:30,r:22,fill:'#FFA030'}),
-     React.createElement('circle',{key:'sung',cx:288,cy:30,r:32,fill:'#FFA030',opacity:.22}),
-     React.createElement('rect',{key:'gr',x:0,y:132,width:340,height:88,fill:'#0D1F10'}),
-     React.createElement('rect',{key:'grl',x:0,y:132,width:340,height:7,fill:'#183020'}),
-     React.createElement('polygon',{key:'m1',points:'18,132 93,54 168,132',fill:'#152515'}),
-     React.createElement('polygon',{key:'m2',points:'103,132 178,48 250,132',fill:'#182818'}),
-     React.createElement('polygon',{key:'m3',points:'193,132 270,62 338,132',fill:'#152515'}),
-     React.createElement('ellipse',{key:'ms1',cx:38,cy:134,rx:52,ry:7,fill:'#071007',opacity:.88}),
-     React.createElement('ellipse',{key:'ms2',cx:148,cy:134,rx:50,ry:7,fill:'#071007',opacity:.88}),
-     React.createElement('ellipse',{key:'ms3',cx:238,cy:134,rx:46,ry:6,fill:'#071007',opacity:.88}),
-     React.createElement('rect',{key:'tr1',x:54,y:104,width:6,height:28,fill:'#1E3020'}),
-     React.createElement('ellipse',{key:'tc1',cx:57,cy:101,rx:14,ry:17,fill:'#1E4018'}),
-     React.createElement('ellipse',{key:'ts1',cx:78,cy:135,rx:22,ry:5,fill:'#071007',opacity:.92}),
-     React.createElement('rect',{key:'tr2',x:147,y:107,width:6,height:25,fill:'#1E3020'}),
-     React.createElement('ellipse',{key:'tc2',cx:150,cy:104,rx:13,ry:15,fill:'#1E4018'}),
-     React.createElement('ellipse',{key:'ts2',cx:170,cy:135,rx:19,ry:5,fill:'#071007',opacity:.92}),
-     React.createElement('rect',{key:'tr3',x:240,y:110,width:6,height:22,fill:'#1E3020'}),
-     React.createElement('ellipse',{key:'tc3',cx:243,cy:107,rx:12,ry:14,fill:'#1E4018'}),
-     React.createElement('ellipse',{key:'ts3',cx:262,cy:135,rx:17,ry:4,fill:'#071007',opacity:.92}),
-     React.createElement('rect',{key:'lbg',x:7,y:7,width:114,height:18,fill:'rgba(0,0,0,.65)',rx:3}),
-     React.createElement('text',{key:'lbt',x:64,y:19,fill:'#88FFCC',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'КЕПЛЕР-452б #01'),
+     // Небо — яркий оранжево-золотой закат
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#0A0015'}),
+     React.createElement('rect',{key:'sky',width:340,height:135,fill:'#1A0530'}),
+     // Градиент заката
+     React.createElement('ellipse',{key:'sk1',cx:300,cy:40,rx:200,ry:100,fill:'#8B2000',opacity:.6}),
+     React.createElement('ellipse',{key:'sk2',cx:280,cy:30,rx:150,ry:80,fill:'#CC4400',opacity:.5}),
+     React.createElement('ellipse',{key:'sk3',cx:295,cy:20,rx:100,ry:60,fill:'#FF7700',opacity:.35}),
+     // Горизонт — тёплое свечение
+     React.createElement('rect',{key:'hz',x:0,y:125,width:340,height:10,fill:'#FF8800',opacity:.3}),
+     _rStars(15,44321),
+     // Солнце закатное — правый верх
+     React.createElement('circle',{key:'sung3',cx:295,cy:35,r:45,fill:'#FF6600',opacity:.12}),
+     React.createElement('circle',{key:'sung2',cx:295,cy:35,r:32,fill:'#FF8800',opacity:.2}),
+     React.createElement('circle',{key:'sung1',cx:295,cy:35,r:22,fill:'#FFAA00',opacity:.5}),
+     React.createElement('circle',{key:'sun',cx:295,cy:35,r:16,fill:'#FFD000'}),
+     // Планета вдали
+     React.createElement('circle',{key:'pl',cx:55,cy:45,r:28,fill:'#3A1050',opacity:.8}),
+     React.createElement('circle',{key:'pls',cx:65,cy:40,r:28,fill:'#1A0530'}),
+     React.createElement('circle',{key:'plr',cx:55,cy:45,r:28,fill:'none',stroke:'#8844CC',strokeWidth:1.5,opacity:.5}),
+     // Земля — фиолетово-зелёная
+     React.createElement('rect',{key:'gr',x:0,y:135,width:340,height:85,fill:'#0A0A20'}),
+     React.createElement('rect',{key:'grl',x:0,y:135,width:340,height:6,fill:'#4400AA',opacity:.6}),
+     // Снежные горы — яркий акцент
+     React.createElement('polygon',{key:'m1',points:'10,135 85,48 160,135',fill:'#1A1A35'}),
+     React.createElement('polygon',{key:'m1s',points:'10,135 85,48 105,135',fill:'#0A0A25',opacity:.9}),
+     React.createElement('polygon',{key:'m1t',points:'65,70 85,48 105,70',fill:'#E8E8FF',opacity:.8}),
+     React.createElement('polygon',{key:'m2',points:'100,135 175,42 250,135',fill:'#1E1E38'}),
+     React.createElement('polygon',{key:'m2s',points:'100,135 175,42 128,135',fill:'#0A0A25',opacity:.9}),
+     React.createElement('polygon',{key:'m2t',points:'152,66 175,42 198,66',fill:'#E8E8FF',opacity:.8}),
+     React.createElement('polygon',{key:'m3',points:'190,135 258,58 325,135',fill:'#1A1A35'}),
+     React.createElement('polygon',{key:'m3s',points:'190,135 258,58 218,135',fill:'#0A0A25',opacity:.9}),
+     React.createElement('polygon',{key:'m3t',points:'238,78 258,58 278,78',fill:'#E8E8FF',opacity:.8}),
+     // Тени от гор ВЛЕВО (правильно — солнце справа)
+     React.createElement('ellipse',{key:'ms1',cx:48,cy:137,rx:52,ry:6,fill:'#050510',opacity:.9}),
+     React.createElement('ellipse',{key:'ms2',cx:132,cy:137,rx:50,ry:6,fill:'#050510',opacity:.9}),
+     React.createElement('ellipse',{key:'ms3',cx:218,cy:137,rx:46,ry:5,fill:'#050510',opacity:.9}),
+     // Пришельские деревья — тёмно-фиолетовые с яркими листьями
+     // Дерево 1
+     React.createElement('rect',{key:'tr1',x:52,y:100,width:7,height:35,fill:'#2A003A'}),
+     React.createElement('ellipse',{key:'tc1a',cx:55,cy:95,rx:18,ry:22,fill:'#3A0A55'}),
+     React.createElement('ellipse',{key:'tc1b',cx:55,cy:90,rx:13,ry:16,fill:'#5500AA',opacity:.7}),
+     React.createElement('circle',{key:'tc1c',cx:55,cy:86,r:8,fill:'#8800FF',opacity:.5}),
+     // Тень от дерева 1 — ВПРАВО (НЕПРАВИЛЬНО!)
+     React.createElement('ellipse',{key:'ts1',cx:80,cy:138,rx:26,ry:5,fill:'#050510',opacity:.95}),
+     // Дерево 2
+     React.createElement('rect',{key:'tr2',x:145,y:103,width:7,height:32,fill:'#2A003A'}),
+     React.createElement('ellipse',{key:'tc2a',cx:148,cy:98,rx:16,ry:20,fill:'#3A0A55'}),
+     React.createElement('ellipse',{key:'tc2b',cx:148,cy:93,rx:11,ry:14,fill:'#5500AA',opacity:.7}),
+     React.createElement('circle',{key:'tc2c',cx:148,cy:89,r:7,fill:'#8800FF',opacity:.5}),
+     // Тень от дерева 2 — ВПРАВО (НЕПРАВИЛЬНО!)
+     React.createElement('ellipse',{key:'ts2',cx:172,cy:138,rx:21,ry:5,fill:'#050510',opacity:.95}),
+     // Дерево 3
+     React.createElement('rect',{key:'tr3',x:238,y:107,width:6,height:28,fill:'#2A003A'}),
+     React.createElement('ellipse',{key:'tc3a',cx:241,cy:103,rx:14,ry:17,fill:'#3A0A55'}),
+     React.createElement('ellipse',{key:'tc3b',cx:241,cy:98,rx:10,ry:12,fill:'#5500AA',opacity:.7}),
+     // Тень от дерева 3 — ВПРАВО (НЕПРАВИЛЬНО!)
+     React.createElement('ellipse',{key:'ts3',cx:262,cy:138,rx:18,ry:4,fill:'#050510',opacity:.95}),
+     // Метка
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:118,height:18,fill:'rgba(0,0,0,.75)',rx:3}),
+     React.createElement('text',{key:'lbt',x:66,y:19,fill:'#FFAA44',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'КПЛ-452б • ЗАКАТ #01'),
    ])
   },
 ];
