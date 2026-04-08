@@ -8,8 +8,9 @@
   <link href="https://fonts.bunny.net/css2?family=nunito:wght@400;600;700;800;900&family=orbitron:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#080C18;font-family:'Nunito',sans-serif;overflow-x:hidden;padding-top:var(--tg-safe-area-inset-top,0px);overscroll-behavior:none;}
-    html{overscroll-behavior:none;}
+    html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none;}
+    body{background:#080C18;font-family:'Nunito',sans-serif;position:fixed;width:100%;padding-top:var(--tg-safe-area-inset-top,0px);}
+    #root{height:100%;height:100dvh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;}
     .safe-bottom{padding-bottom:max(var(--tg-safe-area-inset-bottom,0px),20px)}
     button{font-family:inherit;-webkit-tap-highlight-color:transparent;cursor:pointer;border:none;outline:none}
     ::-webkit-scrollbar{width:0}
@@ -3707,6 +3708,16 @@ if (TG.setHeaderColor) TG.setHeaderColor('#080C18');
 if (TG.setBackgroundColor) TG.setBackgroundColor('#080C18');
 if (TG.disableVerticalSwipes) TG.disableVerticalSwipes();
 if (TG.enableClosingConfirmation) TG.enableClosingConfirmation();
+// Блокируем свайп-закрытие: window не скроллится, только #root внутри
+document.addEventListener('touchmove', function(e){
+  // Разрешаем скролл только внутри #root
+  var el = e.target;
+  while(el && el !== document.body){
+    if(el.id==='root'||el.getAttribute('data-scroll')==='1') return;
+    el = el.parentElement;
+  }
+  e.preventDefault();
+},{passive:false});
 const generateUnlockCode = uid => {
   const n = Math.abs(uid * 31337 + 99991 ^ 0xDEAD) % 900000 + 100000;
   return String(n);
