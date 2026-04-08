@@ -7510,6 +7510,141 @@ var RADAR_SCENES=[
      React.createElement('text',{key:'lbt',x:66,y:19,fill:'#FFAA44',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'КПЛ-452б • ЗАКАТ #01'),
    ])
   },
+  // ── СЦЕНА 5: Шлем астронавта — отражение не то ───────────────────────────
+  {id:'r5',title:'🪐 Селфи в открытом космосе',
+   desc:'Астронавт сделал селфи. Посмотри в визор шлема — доверять?',
+   isFake:true,
+   lesson:'В визоре шлема отражается пляж с пальмами и закатом — но астронавт в открытом космосе! ИИ не умеет делать правильные отражения. В шлеме должен отражаться только космос и станция.',
+   svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
+     // Космос фон
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#020810'}),
+     _rStars(40,55555),
+     React.createElement('circle',{key:'bs1',cx:25,cy:15,r:2,fill:'white',opacity:.9}),
+     React.createElement('circle',{key:'bs2',cx:315,cy:195,r:2,fill:'#AADDFF',opacity:.9}),
+     React.createElement('circle',{key:'bs3',cx:8,cy:190,r:1.5,fill:'white',opacity:.8}),
+     // Солнце в углу
+     React.createElement('circle',{key:'sung',cx:308,cy:22,r:28,fill:'#FFCC00',opacity:.15}),
+     React.createElement('circle',{key:'sun',cx:308,cy:22,r:18,fill:'#FFE030'}),
+     // Скафандр — оранжевый, крупный
+     React.createElement('rect',{key:'body',x:90,y:130,width:160,height:95,fill:'#CC4A00',rx:20}),
+     React.createElement('rect',{key:'bodyi',x:98,y:136,width:144,height:85,fill:'#E05A10',rx:16}),
+     // Нашивки на костюме
+     React.createElement('rect',{key:'patch1',x:105,y:148,width:36,height:22,fill:'#1A2A6A',rx:3}),
+     React.createElement('rect',{key:'patch1f',x:108,y:151,width:30,height:16,fill:'#2244AA',rx:2}),
+     React.createElement('rect',{key:'stripes',x:198,y:145,width:40,height:6,fill:'#CC0000',rx:3}),
+     React.createElement('rect',{key:'stripes2',x:198,y:155,width:40,height:6,fill:'white',rx:3}),
+     React.createElement('rect',{key:'stripes3',x:198,y:165,width:40,height:6,fill:'#CC0000',rx:3}),
+     // Шея
+     React.createElement('rect',{key:'neck',x:148,y:108,width:44,height:28,fill:'#B84400',rx:8}),
+     // Шлем — большой круглый
+     React.createElement('circle',{key:'helm',cx:170,cy:88,r:62,fill:'#C8CCCE'}),
+     React.createElement('circle',{key:'helmi',cx:170,cy:88,r:58,fill:'#D8DCDE'}),
+     // Ободок шлема — золотой
+     React.createElement('circle',{key:'helmr',cx:170,cy:88,r:62,fill:'none',stroke:'#FFD700',strokeWidth:4}),
+     React.createElement('circle',{key:'helmr2',cx:170,cy:88,r:58,fill:'none',stroke:'#CC9900',strokeWidth:1.5,opacity:.6}),
+     // === ВИЗОР — ляп ИИ: отражается ПЛЯЖ вместо космоса ===
+     // Визор — тёмная зеркальная поверхность
+     React.createElement('ellipse',{key:'visor',cx:170,cy:90,rx:42,ry:34,fill:'#0A1A0A'}),
+     // Внутри визора — пляж с пальмами (НЕПРАВИЛЬНО!)
+     React.createElement('ellipse',{key:'vs_sky',cx:170,cy:78,rx:40,ry:20,fill:'#FF8C3A',opacity:.9}),
+     React.createElement('ellipse',{key:'vs_sun',cx:188,cy:70,rx:8,ry:8,fill:'#FFDD00',opacity:.95}),
+     React.createElement('rect',{key:'vs_sea',x:130,y:93,width:80,height:14,fill:'#1A88CC',opacity:.9}),
+     React.createElement('rect',{key:'vs_sand',x:130,y:100,width:80,height:10,fill:'#DDB86A',opacity:.9}),
+     // Пальмы в визоре
+     React.createElement('line',{key:'vs_p1t',x1:148,y1:107,x2:148,y2:75,stroke:'#5A3A00',strokeWidth:3}),
+     React.createElement('ellipse',{key:'vs_p1l',cx:142,cy:76,rx:10,ry:6,fill:'#2A7A00',opacity:.9,transform:'rotate(-20 142 76)'}),
+     React.createElement('ellipse',{key:'vs_p1r',cx:154,cy:74,rx:10,ry:6,fill:'#2A7A00',opacity:.9,transform:'rotate(20 154 74)'}),
+     React.createElement('line',{key:'vs_p2t',x1:192,y1:107,x2:192,y2:78,stroke:'#5A3A00',strokeWidth:3}),
+     React.createElement('ellipse',{key:'vs_p2l',cx:186,cy:79,rx:9,ry:5,fill:'#2A7A00',opacity:.9,transform:'rotate(-20 186 79)'}),
+     React.createElement('ellipse',{key:'vs_p2r',cx:198,cy:77,rx:9,ry:5,fill:'#2A7A00',opacity:.9,transform:'rotate(20 198 77)'}),
+     // Блик на визоре
+     React.createElement('ellipse',{key:'vglare',cx:148,cy:72,rx:12,ry:7,fill:'white',opacity:.18,transform:'rotate(-20 148 72)'}),
+     React.createElement('ellipse',{key:'vrim',cx:170,cy:90,rx:42,ry:34,fill:'none',stroke:'#44AAFF',strokeWidth:1.5,opacity:.5}),
+     // Метка
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:118,height:18,fill:'rgba(0,0,0,.75)',rx:3}),
+     React.createElement('text',{key:'lbt',x:66,y:19,fill:'#FFDD88',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'EVA-7 • СЕЛФИ #002'),
+   ])
+  },
+  // ── СЦЕНА 6: Луна — настоящее фото ───────────────────────────────────────
+  {id:'r6',title:'🌕 Посадка на Луну',
+   desc:'Снимок с лунной поверхности. Изучи — доверять?',
+   isFake:false,
+   lesson:'Всё в порядке! Лунный модуль, кратеры, Земля на горизонте — всё выглядит правильно, нет артефактов. Настоящий исторический снимок. Не все картинки фейк!',
+   svg:React.createElement('svg',{viewBox:'0 0 340 220',style:{width:'100%',height:'100%',display:'block'}},[
+     // Чёрный космос
+     React.createElement('rect',{key:'bg',width:340,height:220,fill:'#050508'}),
+     _rStars(50,66666),
+     React.createElement('circle',{key:'bs1',cx:20,cy:18,r:2.5,fill:'white',opacity:.95}),
+     React.createElement('circle',{key:'bs2',cx:320,cy:15,r:2,fill:'#CCDDFF',opacity:.9}),
+     React.createElement('circle',{key:'bs3',cx:12,cy:200,r:1.5,fill:'white',opacity:.85}),
+     React.createElement('circle',{key:'bs4',cx:335,cy:185,r:2,fill:'white',opacity:.9}),
+     // Земля вдали — маленькая синяя
+     React.createElement('circle',{key:'earth',cx:50,cy:55,r:24,fill:'#1464A0'}),
+     React.createElement('ellipse',{key:'econt',cx:46,cy:50,rx:10,ry:7,fill:'#4A7A30',opacity:.8}),
+     React.createElement('ellipse',{key:'econt2',cx:56,cy:58,rx:8,ry:5,fill:'#4A7A30',opacity:.7}),
+     React.createElement('ellipse',{key:'ecl',cx:44,cy:44,rx:12,ry:5,fill:'white',opacity:.6,transform:'rotate(-15 44 44)'}),
+     React.createElement('circle',{key:'eatm',cx:50,cy:55,r:24,fill:'none',stroke:'#55AAFF',strokeWidth:3,opacity:.3}),
+     // Лунный горизонт
+     React.createElement('ellipse',{key:'hor',cx:170,cy:148,rx:250,ry:18,fill:'#A0A0A0'}),
+     // Лунная поверхность — серая
+     React.createElement('rect',{key:'gr',x:0,y:148,width:340,height:72,fill:'#888890'}),
+     React.createElement('rect',{key:'grl',x:0,y:148,width:340,height:4,fill:'#AAAAAA',opacity:.6}),
+     // Текстура поверхности — неровности
+     React.createElement('ellipse',{key:'rk1',cx:30,cy:152,rx:22,ry:6,fill:'#7A7A82',opacity:.8}),
+     React.createElement('ellipse',{key:'rk2',cx:300,cy:155,rx:18,ry:5,fill:'#7A7A82',opacity:.7}),
+     React.createElement('ellipse',{key:'rk3',cx:200,cy:157,rx:12,ry:4,fill:'#7A7A82',opacity:.6}),
+     // Большой кратер слева
+     React.createElement('ellipse',{key:'cr1',cx:75,cy:165,rx:38,ry:12,fill:'#707078'}),
+     React.createElement('ellipse',{key:'cr1i',cx:75,cy:165,rx:32,ry:9,fill:'#606068'}),
+     React.createElement('ellipse',{key:'cr1rim',cx:75,cy:160,rx:38,ry:6,fill:'#909098',opacity:.5}),
+     // Кратер справа поменьше
+     React.createElement('ellipse',{key:'cr2',cx:270,cy:170,rx:28,ry:9,fill:'#707078'}),
+     React.createElement('ellipse',{key:'cr2i',cx:270,cy:170,rx:22,ry:7,fill:'#606068'}),
+     // Маленькие кратеры
+     React.createElement('ellipse',{key:'cr3',cx:140,cy:178,rx:12,ry:4,fill:'#686870'}),
+     React.createElement('ellipse',{key:'cr4',cx:230,cy:185,rx:8,ry:3,fill:'#686870'}),
+     React.createElement('ellipse',{key:'cr5',cx:310,cy:192,rx:10,ry:3,fill:'#686870'}),
+     // Следы астронавтов
+     React.createElement('ellipse',{key:'ft1',cx:152,cy:152,rx:4,ry:2,fill:'#666668',opacity:.8}),
+     React.createElement('ellipse',{key:'ft2',cx:160,cy:154,rx:4,ry:2,fill:'#666668',opacity:.8}),
+     React.createElement('ellipse',{key:'ft3',cx:168,cy:153,rx:4,ry:2,fill:'#666668',opacity:.8}),
+     React.createElement('ellipse',{key:'ft4',cx:176,cy:155,rx:4,ry:2,fill:'#666668',opacity:.8}),
+     // Лунный модуль (Apollo LM)
+     // Ноги посадочные
+     React.createElement('line',{key:'lg1',x1:148,y1:148,x2:132,y2:163,stroke:'#C0C0A8',strokeWidth:3}),
+     React.createElement('line',{key:'lg2',x1:192,y1:148,x2:208,y2:163,stroke:'#C0C0A8',strokeWidth:3}),
+     React.createElement('line',{key:'lg3',x1:152,y1:148,x2:138,y2:158,stroke:'#C0C0A8',strokeWidth:2}),
+     React.createElement('line',{key:'lg4',x1:188,y1:148,x2:202,y2:158,stroke:'#C0C0A8',strokeWidth:2}),
+     // Посадочные площадки
+     React.createElement('ellipse',{key:'fp1',cx:128,cy:165,rx:10,ry:4,fill:'#A0A090'}),
+     React.createElement('ellipse',{key:'fp2',cx:212,cy:165,rx:10,ry:4,fill:'#A0A090'}),
+     // Нижняя ступень
+     React.createElement('rect',{key:'ls',x:140,y:128,width:60,height:22,fill:'#C8C8A0',rx:3}),
+     React.createElement('rect',{key:'lsi',x:143,y:130,width:54,height:18,fill:'#D8D8B0',rx:2}),
+     // Двигатель снизу
+     React.createElement('ellipse',{key:'eng',cx:170,cy:152,rx:12,ry:5,fill:'#888870'}),
+     // Верхняя ступень — золотая фольга
+     React.createElement('rect',{key:'us',x:148,y:100,width:44,height:30,fill:'#D4A000',rx:4}),
+     React.createElement('rect',{key:'usi',x:151,y:102,width:38,height:26,fill:'#FFCC00',rx:3,opacity:.8}),
+     // Иллюминатор
+     React.createElement('circle',{key:'win',cx:170,cy:114,r:7,fill:'#001A30'}),
+     React.createElement('circle',{key:'winr',cx:170,cy:114,r:7,fill:'none',stroke:'#888870',strokeWidth:1.5}),
+     // Антенна
+     React.createElement('line',{key:'ant',x1:170,y1:100,x2:170,y2:80,stroke:'#C0C0A8',strokeWidth:2}),
+     React.createElement('line',{key:'antl',x1:162,y1:86,x2:178,y2:86,stroke:'#C0C0A8',strokeWidth:1.5}),
+     React.createElement('circle',{key:'antc',cx:170,cy:78,r:3,fill:'#CC0000'}),
+     // Американский флаг
+     React.createElement('line',{key:'fl',x1:110,y1:148,x2:110,y2:118,stroke:'#A0A090',strokeWidth:2}),
+     React.createElement('rect',{key:'flag',x:110,y:118,width:22,height:14,fill:'#CC0000',rx:1}),
+     React.createElement('rect',{key:'flagw1',x:110,y:120,width:22,height:3,fill:'white'}),
+     React.createElement('rect',{key:'flagw2',x:110,y:126,width:22,height:3,fill:'white'}),
+     React.createElement('rect',{key:'flagw3',x:110,y:129,width:22,height:3,fill:'white'}),
+     React.createElement('rect',{key:'flagb',x:110,y:118,width:9,height:8,fill:'#000066'}),
+     // Метка
+     React.createElement('rect',{key:'lbg',x:7,y:7,width:120,height:18,fill:'rgba(0,0,0,.75)',rx:3}),
+     React.createElement('text',{key:'lbt',x:67,y:19,fill:'#CCCCAA',fontSize:10,textAnchor:'middle',fontFamily:'monospace'},'ЛУНА • АПОЛЛОН-17'),
+   ])
+  },
 ];
 function RadarMech({room,onDone}){
   var sceneState=React.useState(0),sceneIdx=sceneState[0],setSceneIdx=sceneState[1];
