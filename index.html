@@ -5048,7 +5048,7 @@ function SortMech({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       color: C.neon,
-      fontSize: 9,
+      fontSize: 12,
       fontFamily: "'Orbitron'",
       marginTop: 4,
       letterSpacing: 1
@@ -5060,7 +5060,7 @@ function SortMech({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: C.textDim,
-      fontSize: 10,
+      fontSize: 13,
       fontFamily: "'Orbitron'",
       letterSpacing: 1,
       marginBottom: 6
@@ -5074,7 +5074,7 @@ function SortMech({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10,
+      fontSize: 13,
       color: C.textMuted,
       fontFamily: "'Orbitron'",
       marginBottom: 4
@@ -5082,7 +5082,7 @@ function SortMech({
   }, "\u041A\u0410\u0420\u0422\u041E\u0427\u041A\u0410 ", idx + 1, "/", items.length), streak >= 3 && /*#__PURE__*/React.createElement("div", {
     style: {
       color: C.gold,
-      fontSize: 10,
+      fontSize: 13,
       fontWeight: 800,
       fontFamily: "'Orbitron'"
     }
@@ -5294,7 +5294,7 @@ function FeedMech({
       onTouchStart: handleTouchStart,
       onTouchEnd: handleTouchEnd
     },
-      React.createElement('div', { style: { fontSize: 10, color: C.orange, fontFamily: "'Orbitron'", letterSpacing: 1.5, marginBottom: 8, fontWeight: 800 } },
+      React.createElement('div', { style: { fontSize: 13, color: C.orange, fontFamily: "'Orbitron'", letterSpacing: 1.5, marginBottom: 8, fontWeight: 800 } },
         '\uD83D\uDCE6 ДАННЫЕ #' + (idx + 1)
       ),
       React.createElement('div', { style: { fontSize: 44, marginBottom: 10 } }, cur.icon),
@@ -5302,7 +5302,7 @@ function FeedMech({
       feedback && React.createElement('div', { style: { fontSize: 26, marginTop: 8 } }, feedback === 'correct' ? '✅' : '❌')
     ),
     // Hint
-    React.createElement('div', { style: { textAlign: 'center', color: C.textDim, fontSize: 11, marginBottom: 14, letterSpacing: 0.5 } },
+    React.createElement('div', { style: { textAlign: 'center', color: C.textDim, fontSize: 13, marginBottom: 14, letterSpacing: 0.5 } },
       '\u2190 МУСОР  |  ХОРОШИЕ ДАННЫЕ \u2192'
     ),
     // Buttons
@@ -7985,12 +7985,12 @@ const MODULES = [{
       icon: "😊",
       text: "Face ID на iPhone",
       isAI: true,
-      why: "Face ID — нейросеть, которую обучили на миллионах лиц. Она предсказывает: «это тот же человек?»"
+      why: "Face ID — это ИИ! Он запомнил твоё лицо и узнаёт тебя каждый раз. Как очень умная охрана 🔐"
     }, {
       icon: "♟️",
-      text: "Шахматный компьютер против чемпиона мира",
+      text: "Компьютер играет в шахматы лучше людей",
       isAI: true,
-      why: "Deep Blue — шахматный компьютер. В 1997 году он впервые победил лучшего шахматиста планеты!"
+      why: "ИИ научился играть в шахматы, изучив миллионы партий. Теперь он побеждает даже чемпионов мира! 🏆"
     }, {
       icon: "🧮",
       text: "Обычный калькулятор",
@@ -8008,19 +8008,19 @@ const MODULES = [{
       why: "Простой светофор работает по таймеру — нет обучения, нет предсказаний. Умные светофоры с камерами — уже ИИ!"
     }, {
       icon: "🤖",
-      text: "ChatGPT отвечает на вопросы",
+      text: "Алиса отвечает на вопросы",
       isAI: true,
-      why: "ChatGPT — языковая модель, обученная на триллионах текстов. Предсказывает следующее слово в ответе"
+      why: "Алиса — это ИИ-помощник! Она читала миллиарды текстов и научилась отвечать на вопросы как человек"
     }, {
       icon: "🔍",
-      text: "Автокоррекция текста",
+      text: "Телефон исправляет ошибки при наборе",
       isAI: true,
-      why: "Автокоррекция — нейросеть предсказывает что ты хотел написать. Учится на миллиардах текстов"
+      why: "Когда телефон сам исправляет слово — это ИИ! Он угадывает что ты хотел написать, даже если ошибся"
     }, {
       icon: "🌡️",
-      text: "Обычный термостат",
+      text: "Обычный градусник",
       isAI: false,
-      why: "Термостат просто включает/выключает по температуре. Умный термостат (Nest) — уже с ИИ!"
+      why: "Градусник просто показывает температуру — и всё. Он не думает и не учится. Это просто прибор!"
     }]
   }]
 }, {
@@ -9016,17 +9016,19 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: `${C.white}03`,
-      border: `1px solid ${C.cardBorder}`,
+      background: `${C.neon}0A`,
+      border: `1px solid ${C.neon}30`,
       borderRadius: 12,
-      padding: "8px 12px",
+      padding: "11px 14px",
       marginBottom: 14,
       textAlign: "center"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      color: C.textDim,
-      fontSize: 11
+      color: C.text,
+      fontSize: 14,
+      lineHeight: 1.45,
+      fontWeight: 600
     }
   }, curMod.rooms[roomIdx].desc)), renderMech())), screen === "room_done" && curMod && /*#__PURE__*/React.createElement("div", {
     style: {
