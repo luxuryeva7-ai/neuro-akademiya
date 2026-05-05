@@ -87,6 +87,25 @@
   .win-title { color: #af8 !important; text-shadow: 0 0 20px #4f8 !important; }
   .lose-title { color: #f88 !important; text-shadow: 0 0 20px #f44 !important; }
 
+  .lesson-stats { background: rgba(0,245,255,.06); border: 1px solid rgba(0,245,255,.2); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+  .stat-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 14px; }
+  .stat-icon { font-size: 18px; width: 24px; }
+  .stat-label { flex: 1; color: #aac; }
+  .stat-val { font-weight: 700; font-size: 16px; color: #00f5ff; }
+  .stat-val.red { color: #f55; }
+  .stat-val.green { color: #4f8; }
+  .stat-grade { text-align: center; margin-top: 10px; font-size: 15px; font-weight: 700; color: #ffd700; }
+
+  .lesson-box { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 16px; text-align: left; }
+  .lesson-title { font-size: 16px; font-weight: 700; color: #00f5ff; margin-bottom: 10px; text-align: center; }
+  .lesson-p { font-size: 13px; color: #ccd; line-height: 1.6; margin-bottom: 10px; }
+  .lesson-p.gold { color: #ffd700; margin-bottom: 0; }
+  .lesson-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #ccd; line-height: 1.5; margin-bottom: 8px; }
+  .lesson-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .lesson-dot.blue { background: #4af; box-shadow: 0 0 6px #4af; }
+  .lesson-dot.red { background: #f55; box-shadow: 0 0 6px #f55; }
+  .lesson-sep { border-top: 1px solid rgba(255,255,255,.1); margin: 12px 0; }
+
   @media (max-width: 420px) {
     #game-root { width: 100vw; height: 100vh; }
     canvas, .overlay { border-radius: 0; }
@@ -120,11 +139,33 @@
   </div>
 
   <!-- Game Over -->
-  <div class="overlay" id="goScreen">
+  <div class="overlay" id="goScreen" style="overflow-y:auto;padding:20px 16px;justify-content:flex-start;padding-top:24px">
     <h2 id="goTitle">Игра окончена</h2>
     <div class="score-big" id="goScore">0</div>
     <p class="result-msg" id="goMsg"></p>
-    <button class="btn btn-green" id="restartBtn">🔄 ЕЩЁ РАЗ</button>
+
+    <!-- Урок (только при победе) -->
+    <div id="win-lesson" style="display:none;width:100%;max-width:360px;margin:14px auto 0">
+      <div class="lesson-stats">
+        <div class="stat-row"><span class="stat-icon">💡</span><span class="stat-label">Знаний поймано</span><span class="stat-val" id="stat-caught">0</span></div>
+        <div class="stat-row"><span class="stat-icon">💀</span><span class="stat-label">Вирусов поймано</span><span class="stat-val red" id="stat-virus">0</span></div>
+        <div class="stat-row"><span class="stat-icon">😢</span><span class="stat-label">Упущено знаний</span><span class="stat-val red" id="stat-missed">0</span></div>
+        <div class="stat-row"><span class="stat-icon">🎯</span><span class="stat-label">Чистота датасета</span><span class="stat-val green" id="stat-accuracy">0%</span></div>
+        <div class="stat-grade" id="stat-grade"></div>
+      </div>
+
+      <div class="lesson-box">
+        <div class="lesson-title">🧠 Что это было?</div>
+        <p class="lesson-p">Ты только что симулировал <b>обучение нейросети</b>.</p>
+        <div class="lesson-row"><span class="lesson-dot blue"></span><b>Синие, жёлтые, зелёные</b> шары — это <b>хорошие данные</b>: правильные примеры, верные ответы, качественная информация</div>
+        <div class="lesson-row"><span class="lesson-dot red"></span><b>Красные</b> шары — это <b>вирусы в датасете</b>: мусор, ошибки, ложные данные</div>
+        <div class="lesson-sep"></div>
+        <p class="lesson-p">ИИ учится только на том, что попадает внутрь.<br><b>Больше хороших данных → умнее ИИ.<br>Вирусы в датасете → глупые ошибки.</b></p>
+        <p class="lesson-p gold">Именно так обучают ChatGPT, Midjourney и всех других — миллиарды примеров, тщательно отфильтрованных людьми. 🌍</p>
+      </div>
+    </div>
+
+    <button class="btn btn-green" id="restartBtn" style="margin-top:16px">🔄 ЕЩЁ РАЗ</button>
     <button class="btn btn-green" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);margin-top:8px" onclick="notifyDone()">К КОРАБЛЮ →</button>
   </div>
 </div>
@@ -178,6 +219,7 @@ const BALL_DEF = {
 // ── State ──────────────────────────────────────────────────────
 let gameState = 'idle'; // idle | levelAnnounce | playing | transition
 let score=0, lives=3, level=1, combo=0, levelProgress=0;
+let caught=0, virusHits=0, missed=0;
 let balls=[], particles=[], floats=[];
 let shakeAmt=0, shakeTime=0;
 let spawnTimer=0, lastTS=0;
@@ -226,7 +268,7 @@ function shake(amt, dur) { shakeAmt=amt; shakeTime=dur; }
 function initLevel(lvl) {
   level=lvl; lives=3; balls=[]; particles=[]; floats=[];
   combo=0; levelProgress=0; spawnTimer=0;
-  if(lvl===1) score=0;
+  if(lvl===1){ score=0; caught=0; virusHits=0; missed=0; }
   chip.x=W/2; input.mouseX=-1;
 
   const cfg = LEVELS[lvl];
@@ -243,15 +285,26 @@ function endGame(win) {
   const title = document.getElementById('goTitle');
   const msg   = document.getElementById('goMsg');
   document.getElementById('goScore').textContent = score;
+  const total = caught + virusHits + missed;
+  const accuracy = total>0 ? Math.round(caught/total*100) : 0;
+
   if(win){
-    setTimeout(notifyDone, 5000);
+    setTimeout(notifyDone, 12000);
     title.textContent='🏆 Чип стал умным!';
     title.className='win-title';
-    msg.textContent='Поздравляем! Чип собрал все знания!\nТы настоящий помощник!';
+    msg.innerHTML='Чип прошёл все 3 уровня обучения!';
+    document.getElementById('win-lesson').style.display='block';
+    document.getElementById('stat-caught').textContent = caught;
+    document.getElementById('stat-virus').textContent = virusHits;
+    document.getElementById('stat-missed').textContent = missed;
+    document.getElementById('stat-accuracy').textContent = accuracy + '%';
+    const grade = accuracy>=85?'🧠 Чип — гений!':accuracy>=65?'✅ Хорошая нейросеть':accuracy>=45?'⚠️ Средний результат':'🤕 Много шума в данных';
+    document.getElementById('stat-grade').textContent = grade;
   } else {
+    document.getElementById('win-lesson').style.display='none';
     title.textContent='💔 Вирусы победили!';
     title.className='lose-title';
-    msg.textContent='Вирусы атаковали Чипа…\nПопробуй ещё раз — у тебя получится!';
+    msg.innerHTML='Слишком много вирусов попало в датасет…<br>Попробуй ещё раз — у тебя получится!';
   }
   setTimeout(()=>show('goScreen'), 600);
 }
@@ -301,7 +354,7 @@ function tick(ts) {
       if(Math.sqrt(dx*dx+dy*dy) < catchR+b.r-10 && b.y > chip.y-chip.h/2) {
         balls.splice(i,1);
         if(b.isGood) {
-          combo++;
+          combo++; caught++;
           const pts = combo>=6?3:combo>=3?2:1;
           score+=pts; levelProgress++;
           playSuccess();
@@ -313,7 +366,7 @@ function tick(ts) {
             else        setTimeout(()=>endGame(true), 700);
           }
         } else {
-          combo=0; lives--;
+          combo=0; lives--; virusHits++;
           playClick();
           shake(9,0.35);
           burst(b.x,b.y,'#f55',10);
@@ -327,7 +380,7 @@ function tick(ts) {
       if(b.y-b.r>H){
         balls.splice(i,1);
         if(b.isGood){
-          combo=0; lives--;
+          combo=0; lives--; missed++;
           shake(5,0.2);
           floatText(b.x, H-60,'😢 Упустил!','#f88');
           if(lives<=0){ gameState='transition'; setTimeout(()=>endGame(false),400); }
