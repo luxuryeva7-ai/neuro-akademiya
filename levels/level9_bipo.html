@@ -936,6 +936,44 @@ function showP3(step){
   S.p3lock=false;
 }
 
+function findPath(sr,sc,er,ec){
+  const wSet=new Set(S.maze.walls.map(([r,c])=>`${r},${c}`));
+  const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+  const q=[[sr,sc,[[sr,sc]]]];
+  const seen=new Set([`${sr},${sc}`]);
+  while(q.length){
+    const[r,c,path]=q.shift();
+    if(r===er&&c===ec) return path;
+    for(const[dr,dc] of dirs){
+      const nr=r+dr,nc=c+dc,k=`${nr},${nc}`;
+      if(nr>=0&&nr<S.rows&&nc>=0&&nc<S.cols&&!wSet.has(k)&&!seen.has(k)){
+        seen.add(k);
+        q.push([nr,nc,[...path,[nr,nc]]]);
+      }
+    }
+  }
+  return[[sr,sc]];
+}
+
+async function bipoWalkTo(destR,destC){
+  const path=findPath(S.bRow,S.bCol,destR,destC);
+  const dirMap={'-1,0':'up','1,0':'down','0,-1':'left','0,1':'right'};
+  const animMap={up:'walk-u',down:'walk-d',left:'walk-l',right:'walk-r'};
+  for(let i=1;i<path.length;i++){
+    const[nr,nc]=path[i];
+    const dr=nr-S.bRow,dc=nc-S.bCol;
+    const dir=dirMap[`${dr},${dc}`];
+    setPupils(dir);
+    const old=document.getElementById(`c${S.bRow}_${S.bCol}`);
+    if(old&&!old.classList.contains('wall')&&!old.classList.contains('module')) old.classList.add('trail');
+    setAnim(animMap[dir]);
+    S.bRow=nr; S.bCol=nc;
+    placeBipo(true);
+    await wait(380);
+    setAnim('');
+  }
+}
+
 async function p3pick(card,step){
   if(S.p3lock) return;
   S.p3lock=true;
@@ -943,15 +981,43 @@ async function p3pick(card,step){
 
   if(card.ok){
     document.getElementById('p3anim').textContent='';
-    setMood('excited'); setAnim('victory');
-    speak('Выполняю! 🤖✅',1800);
-    S.score+=90; S.p3step++;
-    confetti(7);
-    await wait(1800);
+    speak('Выполняю! 🤖✅',800);
+
+    if(step===0){
+      // Шаг 1: иди к модулю
+      setMood('happy');
+      await bipoWalkTo(S.modPos.r,S.modPos.c);
+      setMood('excited'); setAnim('victory');
+      speak('Нашёл! 🤩',1500);
+      confetti(7);
+      await wait(1600);
+    } else if(step===1){
+      // Шаг 2: взять модуль
+      setMood('excited'); setAnim('victory');
+      speak('Есть! Взял! 🤩',1800);
+      const mc=document.getElementById(`c${S.modPos.r}_${S.modPos.c}`);
+      if(mc){mc.classList.remove('module');mc.innerHTML='✅';}
+      S.gotModule=true;
+      confetti(8);
+      await wait(1800);
+    } else if(step===2){
+      // Шаг 3: вернись на базу
+      setMood('happy');
+      await bipoWalkTo(S.maze.bipo[0],S.maze.bipo[1]);
+      setMood('excited'); setAnim('victory');
+      speak('База! Миссия выполнена! 🎉',1800);
+      confetti(12);
+      await wait(1800);
+    } else {
+      setMood('excited'); setAnim('victory');
+      confetti(7);
+      await wait(1800);
+    }
+
     setAnim(''); setMood('happy');
+    S.score+=90; S.p3step++;
     document.getElementById('score-n').textContent=S.score;
     if(S.p3step>=P3STEPS.length){
-      // P3 done!
       await wait(300);
       showTip('💡 Точность команды = точность результата!','"Возьми всё блестящее" ≠ "Возьми модуль". Когда пишешь ChatGPT — "Напиши текст" даст что угодно. "Напиши короткий текст про котов для детей 8 лет" — то, что нужно!');
       endP3();
