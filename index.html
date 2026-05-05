@@ -7966,6 +7966,28 @@ function RadarMech({room,onDone}){
 }
 
 
+function IframeMech({ room, onDone }) {
+  const { useEffect, useRef } = React;
+  const iframeRef = useRef(null);
+  useEffect(() => {
+    function handleMsg(e) {
+      if (e.data && e.data.type === 'level_done') {
+        onDone(e.data.earned || 8, e.data.total || 10);
+      }
+    }
+    window.addEventListener('message', handleMsg);
+    return () => window.removeEventListener('message', handleMsg);
+  }, [onDone]);
+  return React.createElement('div', {
+    style: { position: 'fixed', inset: 0, zIndex: 10, background: '#050510' }
+  }, React.createElement('iframe', {
+    ref: iframeRef,
+    src: room.src,
+    style: { width: '100%', height: '100%', border: 'none', display: 'block' },
+    allow: 'autoplay'
+  }));
+}
+
 const MODULES = [{
   id: "core",
   title: "AI-ЯДРО",
@@ -8147,6 +8169,60 @@ const MODULES = [{
     type: "autopilot",
     desc: "Помоги ИИ-пилоту долететь до базы. Добавляй правила и учись контролировать ИИ!"
   }]
+},{
+// ─── УРОВЕНЬ 7: ДЕКОДЕР (платный) ────────────────────────────────────────────
+  id: "decoder",
+  title: "ДЕКОДЕР",
+  subtitle: "Расшифруй сигнал с орбиты",
+  icon: "📡",
+  color: '#00f5ff',
+  xp: 110,
+  narrative: {
+    intro: "Со станции на орбите пришёл зашифрованный сигнал! Нейро не может его разобрать — слова разбросаны как звёзды в туманности. Помоги собрать слова с радара и восстановить сообщение, как это делает языковая модель!",
+    complete: "📡 Декодер активирован! Ты понял секрет ChatGPT — он предсказывает слова по контексту, одно за другим. Теперь тебя не обмануть!"
+  },
+  rooms: [{
+    name: "Декодер сигналов",
+    type: "iframe_level",
+    src: "levels/level8_decoder.html",
+    desc: "Собери слова с радара и восстанови зашифрованное сообщение"
+  }]
+},{
+// ─── УРОВЕНЬ 8: БИПО (платный) ───────────────────────────────────────────────
+  id: "bipo",
+  title: "БИПО",
+  subtitle: "Запрограммируй робота-помощника",
+  icon: "🤖",
+  color: '#ffd700',
+  xp: 120,
+  narrative: {
+    intro: "В вентиляционной шахте застрял энергомодуль! Робот БИПО готов помочь, но у него проблема — он делает ТОЛЬКО то, что ты скажешь. Буквально. Запрограммируй маршрут и узнай главный секрет ИИ!",
+    complete: "🤖 Миссия БИПО выполнена! Ты понял: ИИ не думает сам — он исполняет. Чем точнее команда — тем лучше результат!"
+  },
+  rooms: [{
+    name: "БИПО — Робот-помощник",
+    type: "iframe_level",
+    src: "levels/level9_bipo.html",
+    desc: "Программируй маршрут для робота и учись давать точные команды"
+  }]
+},{
+// ─── УРОВЕНЬ 9: ЧИП (платный) ────────────────────────────────────────────────
+  id: "chip",
+  title: "ЧИП",
+  subtitle: "Помоги роботу собрать знания",
+  icon: "🧠",
+  color: '#4ade80',
+  xp: 130,
+  narrative: {
+    intro: "Робот Чип хочет стать умным, но на него летят и полезные знания, и опасные вирусы! Помоги Чипу собирать правильные данные и уклоняться от мусора — именно так обучаются настоящие нейросети!",
+    complete: "🧠 Чип стал умным! Ты понял как работает обучение нейросети: хорошие данные — умный ИИ, вирусы и мусор — сломанный ИИ!"
+  },
+  rooms: [{
+    name: "Чип собирает знания",
+    type: "iframe_level",
+    src: "levels/level10_filter.html",
+    desc: "Собирай полезные данные и уклоняйся от вирусов"
+  }]
 }];
 
 // ═══ MAIN APP ════════════════════════════════════
@@ -8295,7 +8371,8 @@ function App() {
       radar_lupa: RadarMech,
       autopilot: AutopilotMech,
       space_game: SpaceGameMech,
-      prompt_game: PromptGameMech
+      prompt_game: PromptGameMech,
+      iframe_level: IframeMech
     };
     const Comp = map[room.type];
     return Comp ? /*#__PURE__*/React.createElement(Comp, {
@@ -8307,7 +8384,7 @@ function App() {
       }
     }, "\u041C\u0435\u0445\u0430\u043D\u0438\u043A\u0430 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u0430: ", room.type);
   };
-  const hubMood = gs.modules.length === 6 ? "excited" : gs.modules.length >= 3 ? "happy" : gs.modules.length >= 1 ? "learning" : "confused";
+  const hubMood = gs.modules.length === 9 ? "excited" : gs.modules.length >= 3 ? "happy" : gs.modules.length >= 1 ? "learning" : "confused";
   const modCount = gs.modules.length;
   return /*#__PURE__*/React.createElement("div", {
     style: {
